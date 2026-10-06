@@ -197,3 +197,10 @@ Bisel oscuro (`#2D353C`) con pantalla `#CAD3C2`, retícula tenue de caracteres (
 | Editor (fuente/interlínea) | 14/24 | 13/21,45 | 14/24 |
 
 **Limitaciones.** Sin autocompletado, hover ni marcadores de error en línea (los errores salen en el panel de mensajes); sin guías de sangría ni plegado de código; el cursor es el nativo del navegador (1 px, no 2 px como Monaco); el texto del editor es 14 px y las líneas largas hacen scroll horizontal (como en el Lab); `syntax-highlight.js` es un archivo nuevo que **debe añadirse a la lista de archivos de runtime** en el próximo despliegue.
+
+## 10. NAV-1 — navegación cruzada con BITIRO Lab
+
+- **Lab → Simulador:** en la navegación principal del Lab (`primary-nav`), el enlace «Simulador» va inmediatamente a la derecha de «Inicio» y apunta a `https://simulador.nulljinx.com/`. Es un enlace normal (misma pestaña, sin `target`, sin clase propia, sin estilo de CTA ni estado activo) que hereda la tipografía, el espaciado y el foco de «Inicio». No aparece en la ruta de migas de las sesiones ni en la de los grupos.
+- **Simulador → Lab:** la marca completa de la cabecera («BITIRO Simulador / Simulador libre del IROH») enlaza a `https://bitiro-piloto.nulljinx.com/` con `aria-label="BITIRO Simulador: volver a BITIRO Lab"` (el nombre accesible contiene el texto visible). No se añadió ningún botón «Inicio» y la cabecera es idéntica a nivel de píxeles.
+- **CSP:** sin cambios. Un enlace de navegación no está regulado por `connect-src`, `script-src`, `form-action` ni `frame-ancestors`; se comprobó con la CSP real de producción (0 violaciones).
+- `tests/ui-contract.cjs` fija el destino, el `aria-label`, la ausencia de `target`/`rel`, que la cabecera solo tiene un enlace y que el único URL absoluto de `index.html` es el de la marca.
