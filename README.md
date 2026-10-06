@@ -1,6 +1,6 @@
 # BITIRO Simulador
 
-Simulador web libre para programar y experimentar con el robot educativo **IROH** desde el navegador.
+Simulador web gratuito para programar y experimentar con el robot educativo **IROH** desde el navegador.
 
 **Probar en línea:** https://simulador.nulljinx.com  
 **Repositorio:** https://github.com/nulljinx/BITIRO-Simulador  
