@@ -55,7 +55,7 @@ Abrir el formulario pausa la ejecución. Guardar o cerrar conserva esa pausa; pu
 
 `avanzar(izquierda, derecha)` establece las consignas. Una rueda izquierda más rápida gira hacia la derecha; una derecha más rápida gira hacia la izquierda. La telemetría muestra las **consignas**, mientras el movimiento aplica aceleración gradual.
 
-El editor es un **intérprete de un subconjunto de Arduino/C++**, no un compilador de firmware. No admite `for`, arrays, clases, funciones propias, `return`, `break` ni toda la biblioteca Arduino. `int` y `long` se truncan, pero no emulan los desbordamientos de cada placa; `float` usa la precisión de JavaScript. `botonInicio()` representa el inicio al pulsar Ejecutar código. Las funciones de cabeza, botón físico y encendido/apagado de pantalla sin modelo emiten un aviso.
+El editor es un **intérprete de un subconjunto de Arduino/C++**, no un compilador de firmware. Admite funciones propias (`void`, `int`, `float`, `long`, `bool`, `byte`, con parámetros por valor, `return` y hasta 64 llamadas anidadas), pero no `for`, arrays, clases, `break` ni toda la biblioteca Arduino. `int` y `long` se truncan, pero no emulan los desbordamientos de cada placa; `float` usa la precisión de JavaScript. `botonInicio()` representa el inicio al pulsar Ejecutar código. Las funciones de cabeza, botón físico y encendido/apagado de pantalla sin modelo emiten un aviso.
 
 ## Uso pedagógico
 

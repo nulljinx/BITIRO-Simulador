@@ -5,7 +5,8 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const R={x:0,y:0,th:0,L:0,R:0};
 const ir=[0,0];
 let btn=0; // pulsador: como en el Lab, alterna (Libre ↔ Presionado) y leerBoton() devuelve 1/0
-let running=0,halt=0,wait=0,waitingButton=0,it=null,prog,strict,ini={},warns=new Set(),lcd=['',''],scopes=[Object.create(null)],variableTypes=new WeakMap();
+let running=0,halt=0,wait=0,waitingButton=0,it=null,prog,strict,ini={},warns=new Set(),lcd=['',''],scopes=[Object.create(null)],variableTypes=new WeakMap(),callDepth=0;
+const MAX_CALL_DEPTH=64;   // llamadas anidadas de funciones propias (determinista; evita que f(){f();} congele el navegador)
 function reset(){ if(typeof window.resetRobot==='function')window.resetRobot(); }
 function lect(k){return typeof window.readLine==='function'?window.readLine(k):28;}
 function setIR(k,v){ir[k]=v?1:0;const b=$('ir'+k);b.setAttribute('aria-pressed',String(!!ir[k]));b.querySelector('strong').textContent=ir[k]?'Activo':'Libre';}
@@ -159,6 +160,7 @@ function parse(T){
       if(t.v==='if')return ifs();
       if(t.v==='while'){p++;ex('(');const c=expr();ex(')');return{k:'while',c,b:body(),ln:t.ln}}
       if(t.v==='for')throw{m:'«for» no está disponible en este simulador; usa «while»',ln:t.ln};
+      if(t.v==='return'){p++;let e=null;if(!is(';'))e=expr();ex(';');return{k:'ret',e,ln:t.ln}}
       if(TY.includes(t.v)){
         p++;const ds=[];
         do{const n=T[p++];if(!n||n.t!=='i')throw{m:'Falta el nombre de la variable',ln:t.ln};let e=null;if(is('=')){p++;e=expr()}ds.push({n:n.v,e,type:t.v,ln:t.ln})}while(is(',')&&++p);
@@ -194,49 +196,104 @@ function parse(T){
     if(t.v==='('){const e=expr();ex(')');return e}
     throw{m:'No esperaba «'+t.v+'» en este lugar',ln:t.ln};
   }
-  const globals=[],fn={},sketch=T.some(t=>t.v==='void');
+  const globals=[],fn={},fns=Object.create(null),sketch=T.some(t=>t.v==='void');
+  // Función propia: «tipo nombre(tipo a, tipo b) { ... }». Se declara en el nivel superior y puede usarse desde cualquier punto (sin prototipos).
+  function fdef(){
+    const t=T[p++],n=T[p++];ex('(');const params=[];
+    if(!is(')')){do{
+      const ty=T[p++];
+      if(!ty||ty.t!=='i'||!TY.includes(ty.v))throw{m:'Cada parámetro necesita un tipo (int, float, long, bool o byte) antes de su nombre',ln:(ty||last()).ln};
+      const nm=T[p++];
+      if(!nm||nm.t!=='i')throw{m:'Falta el nombre del parámetro',ln:ty.ln};
+      if(params.some(q=>q.n===nm.v))throw{m:'El parámetro «'+nm.v+'» está repetido en «'+n.v+'()»',ln:nm.ln};
+      params.push({n:nm.v,type:ty.v,ln:nm.ln});
+    }while(is(',')&&++p)}
+    ex(')');
+    if(is(';'))throw{m:'No hace falta declarar «'+n.v+'()» antes: escribe la función completa con sus llaves { ... }',ln:n.ln};
+    return{name:n.v,ret:t.v,params,body:block(),ln:n.ln};
+  }
   if(!sketch){fn.loop=[];while(p<T.length)fn.loop.push(stmt())}
   else{
     while(p<T.length){
       const t=T[p];
-      if(t.v==='void'){
+      if((t.v==='void'||TY.includes(t.v))&&T[p+1]&&T[p+1].t==='i'&&T[p+2]&&T[p+2].t==='p'&&T[p+2].v==='('){
+        const d=fdef();
+        if(d.name==='setup'||d.name==='loop'){
+          if(d.ret!=='void'||d.params.length)throw{m:'«'+d.name+'()» debe ser «void '+d.name+'()» y no recibe parámetros',ln:d.ln};
+          if(fn[d.name])throw{m:'«'+d.name+'()» ya está declarada; solo puede haber una',ln:d.ln};
+          fn[d.name]=d.body;
+        }else{
+          if(FN[d.name])throw{m:'«'+d.name+'» ya es una función del robot; elige otro nombre para tu función',ln:d.ln};
+          if(d.name in CONS)throw{m:'«'+d.name+'» es un valor reservado; elige otro nombre para tu función',ln:d.ln};
+          if(fns[d.name])throw{m:'La función «'+d.name+'()» ya está declarada (línea '+fns[d.name].ln+'); cada función propia necesita un nombre distinto',ln:d.ln};
+          fns[d.name]=d;
+        }
+      }
+      else if(t.v==='void'){
         p++;const n=T[p++];
         if(!n||n.t!=='i')throw{m:'Falta el nombre después de void',ln:t.ln};
-        if(n.v!=='setup'&&n.v!=='loop')throw{m:'Solo se pueden usar void setup() y void loop()',ln:n.ln};
-        ex('(');ex(')');fn[n.v]=block();
-      }else if(TY.includes(t.v))globals.push(stmt());
-      else throw{m:'Fuera de setup() y loop() solo puedes declarar variables',ln:t.ln};
+        ex('(');   // «void nombre» sin paréntesis: error genérico de «Falta «(»»
+      }
+      else if(TY.includes(t.v))globals.push(stmt());
+      else throw{m:'Fuera de las funciones solo puedes declarar variables',ln:t.ln};
     }
     if(!fn.loop)throw{m:'Falta la función void loop() { ... }',ln:1};
   }
-  chkS(globals.concat([{k:'blk',b:fn.setup||[]},{k:'blk',b:fn.loop}]),[]);
-  return{globals,fn,sketch};
+  const gnames=new Set(globals.flatMap(g=>g.ds.map(d=>d.n)));
+  for(const n in fns)if(gnames.has(n))throw{m:'«'+n+'» ya es una variable global; elige otro nombre para la función',ln:fns[n].ln};
+  UF=fns;
+  const vctx={ret:sketch?'void':null};   // en un programa sin funciones (script plano) «return» no tiene dónde volver
+  chkS(globals.concat([{k:'blk',b:fn.setup||[]},{k:'blk',b:fn.loop}]),[],vctx);
+  for(const n in fns){const f=fns[n];chkS(f.body,[gnames,new Set(f.params.map(q=>q.n))],{ret:f.ret,name:n});}
+  return{globals,fn,fns,sketch};
 }
 
 /* revisión antes de ejecutar (como el compilador) */
 function lev(a,b){const m=[];for(let i=0;i<=a.length;i++){m[i]=[i];for(let j=1;j<=b.length;j++)m[i][j]=i?Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]!==b[j-1])):j}return m[a.length][b.length]}
-function near(n){n=n.toLowerCase();let b=null,bd=3;for(const k in FN){const d=lev(n,k.toLowerCase());if(d<bd){bd=d;b=k}}return b}
-function vcall(e){
-  const f=FN[e.n];
-  if(!f){const s=near(e.n);throw{m:'No conozco la función «'+e.n+'()»'+(s?'. ¿Quisiste escribir «'+s+'()»?':''),ln:e.ln}}
-  if(!f[0].includes(e.a.length))throw{m:'«'+e.n+'()» necesita '+f[0].join(' o ')+' valor(es) entre paréntesis y tiene '+e.a.length,ln:e.ln};
+function near(n){n=n.toLowerCase();let b=null,bd=3;for(const k of [...Object.keys(FN),...Object.keys(UF)]){const d=lev(n,k.toLowerCase());if(d<bd){bd=d;b=k}}return b}
+// Funciones propias del programa en curso (nombre → {ret,params,body,ln}); se reemplaza en cada parse().
+let UF=Object.create(null);
+// Funciones del robot que NO devuelven valor (void): válidas como sentencia, rechazadas dentro de una expresión. El resto (lecturas) devuelve un número.
+const VOID_FN=new Set(['avanzar','retroceder','girarDerecha','girarIzquierda','detenerse','pausa','finPrograma','botonInicio','escribirPantalla','borrarPantalla','apagarPantalla','prenderPantalla','inicializarMovimiento','inicializarSensores','inicializarCabeza','inicializarGolpe','inicializarPantalla','apagarCabeza','moverServoYaw','moverServoPitch','moverServoGolpe']);
+const plural=k=>k+' valor'+(k===1?'':'es');
+// Resolución de una llamada: función del robot (FN) → función propia (UF) → error con sugerencia.
+function vcall(e,asValue){
+  const f=FN[e.n],u=UF[e.n];
+  if(f){
+    if(!f[0].includes(e.a.length))throw{m:'«'+e.n+'()» necesita '+f[0].join(' o ')+' valor(es) entre paréntesis y tiene '+e.a.length,ln:e.ln};
+    if(asValue&&VOID_FN.has(e.n))throw{m:'«'+e.n+'()» es una función void: no devuelve ningún valor y no puede usarse dentro de una expresión.',ln:e.ln};
+    return;
+  }
+  if(u){
+    if(u.params.length!==e.a.length)throw{m:'«'+e.n+'()» necesita '+plural(u.params.length)+' y recibió '+e.a.length+'.',ln:e.ln};
+    if(asValue&&u.ret==='void')throw{m:'«'+e.n+'()» es una función void: no devuelve ningún valor y no puede usarse dentro de una expresión.',ln:e.ln};
+    return;
+  }
+  const s=near(e.n);throw{m:'No conozco la función «'+e.n+'()»'+(s?'. ¿Quisiste escribir «'+s+'()»?':''),ln:e.ln}
 }
 function chkV(n,ln,sc){if(!sc.some(x=>x.has(n))&&!(n in CONS))throw{m:'La variable «'+n+'» no está declarada (falta escribir «int '+n+' = ...;» antes de usarla)',ln}}
-function chkE(e,sc){
+// asValue=false solo para la llamada que forma una sentencia completa (ahí una función void es válida).
+function chkE(e,sc,asValue=true){
   if(e.k==='v')chkV(e.n,e.ln,sc);
-  else if(e.k==='c'){vcall(e);e.a.forEach(a=>chkE(a,sc))}
+  else if(e.k==='c'){vcall(e,asValue);e.a.forEach(a=>chkE(a,sc))}
   else if(e.k==='b'){chkE(e.a,sc);chkE(e.b,sc)}
   else if(e.k==='u')chkE(e.a,sc);
 }
-function chkS(list,sc){
+function chkS(list,sc,ctx){
   sc=[...sc,new Set()];
   for(const s of list){
     if(s.k==='dec')for(const d of s.ds){if(d.e)chkE(d.e,sc);sc[sc.length-1].add(d.n)}
     else if(s.k==='as'){chkV(s.n,s.ln,sc);chkE(s.e,sc)}
-    else if(s.k==='ex')chkE(s.e,sc);
-    else if(s.k==='if'){chkE(s.c,sc);chkS(s.b,sc);if(s.e)chkS(s.e,sc)}
-    else if(s.k==='while'){chkE(s.c,sc);chkS(s.b,sc)}
-    else if(s.k==='blk')chkS(s.b,sc);
+    else if(s.k==='ex')chkE(s.e,sc,false);
+    else if(s.k==='ret'){
+      if(!ctx||ctx.ret==null)throw{m:'«return» solo se puede usar dentro de una función',ln:s.ln};
+      if(ctx.ret==='void'&&s.e)throw{m:'Una función void no devuelve valor: usa «return;» sin valor'+(ctx.name?' en «'+ctx.name+'()»':''),ln:s.ln};
+      if(ctx.ret!=='void'&&!s.e)throw{m:'La función '+ctx.ret+' «'+ctx.name+'()» necesita un valor: escribe «return valor;»',ln:s.ln};
+      if(s.e)chkE(s.e,sc);
+    }
+    else if(s.k==='if'){chkE(s.c,sc);chkS(s.b,sc,ctx);if(s.e)chkS(s.e,sc,ctx)}
+    else if(s.k==='while'){chkE(s.c,sc);chkS(s.b,sc,ctx)}
+    else if(s.k==='blk')chkS(s.b,sc,ctx);
   }
 }
 
@@ -287,28 +344,55 @@ function coerce(value,type,ln){
  if(type==='float')return value;
  const integer=Math.trunc(value);return type==='byte'?((integer%256)+256)%256:integer;
 }
-function declare(scope,d){
- const value=d.e?ev(d.e):0,types=variableTypes.get(scope)||Object.create(null);
+function* declare(scope,d){
+ const value=d.e?yield* ev(d.e):0,types=variableTypes.get(scope)||Object.create(null);
  types[d.n]=d.type;variableTypes.set(scope,types);scope[d.n]=coerce(value,d.type,d.ln);
 }
 function expressionType(e){
  if(e.k==='n')return e.numericType||'int';
  if(e.k==='v'){const scope=find(e.n,e.ln);return scope?(variableTypes.get(scope)?.[e.n]||'int'):'int';}
+ if(e.k==='c'){const u=UF[e.n];return u&&u.ret==='float'?'float':'int';}
  if(e.k==='u')return e.o==='!'?'int':expressionType(e.a);
  if(e.k==='b'&&['+','-','*','/','%'].includes(e.o))return expressionType(e.a)==='float'||expressionType(e.b)==='float'?'float':'int';
  return 'int';
 }
-function ev(e){
+/* Ejecutor cooperativo único. ev() y run() son generadores: un `yield` (pausa, botonInicio, while) sube por TODA la cadena de
+   llamadas (expresión → función propia → sentencia → ...) hasta update(), que es quien gobierna el tiempo simulado. Sin Promises ni timers. */
+// Llamada a una función propia: scope nuevo con globals + parámetros (por valor); los locales del llamador no son visibles.
+function* callUser(u,args,ln){
+ if(callDepth>=MAX_CALL_DEPTH)throw{m:'Demasiadas llamadas anidadas; revisa si una función se está llamando a sí misma sin terminar.',ln};
+ const saved=scopes,frame=Object.create(null),types=Object.create(null);
+ u.params.forEach((q,i)=>{types[q.n]=q.type;frame[q.n]=coerce(args[i],q.type,q.ln);});
+ variableTypes.set(frame,types);
+ callDepth++;scopes=[saved[0],frame];
+ try{
+  const r=yield* run(u.body);
+  if(halt||u.ret==='void')return 0;                       // finPrograma(): el valor ya no importa; nada posterior se ejecuta
+  if(!r)throw{m:'La función «'+u.name+'()» terminó sin devolver un valor.',ln};
+  return coerce(r.v,u.ret,ln);
+ }finally{scopes=saved;callDepth--;}                       // siempre: return, finPrograma() o error
+}
+function* ev(e){
   switch(e.k){
     case'n':case's':return e.v;
     case'v':{const s=find(e.n,e.ln);return s?s[e.n]:CONS[e.n]}
-    case'u':{const a=ev(e.a);return e.o==='!'?+!a:-a}
-    case'c':{vcall(e);return FN[e.n][1](e.a.map(a=>ev(a)))||0}
+    case'u':{const a=yield* ev(e.a);return e.o==='!'?+!a:-a}
+    case'c':{
+      vcall(e,false);
+      const args=[];for(const a of e.a)args.push(yield* ev(a));   // izquierda → derecha
+      if(halt)return 0;
+      const u=FN[e.n]?null:UF[e.n];
+      if(u)return yield* callUser(u,args,e.ln);
+      if(e.n==='pausa'){const ms=args[0];if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:e.ln};yield ms;return 0}
+      // botonInicio(): barrera cooperativa de NIVEL (como la librería real: espera hasta leerBoton()==1). No consume ni libera el Pulsador.
+      if(e.n==='botonInicio'){while(!btn){waitingButton=1;yield 0;}waitingButton=0;return 0}
+      return FN[e.n][1](args)||0;
+    }
     case'b':{
-      const a=ev(e.a);
-      if(e.o==='&&')return +Boolean(a&&ev(e.b));
-      if(e.o==='||')return +Boolean(a||ev(e.b));
-      const b=ev(e.b);
+      const a=yield* ev(e.a);
+      if(e.o==='&&')return +Boolean(a&&(yield* ev(e.b)));
+      if(e.o==='||')return +Boolean(a||(yield* ev(e.b)));
+      const b=yield* ev(e.b);
       switch(e.o){
         case'+':return a+b;case'-':return a-b;case'*':return a*b;case'%':if(!b)throw{m:'No se puede calcular el resto con divisor cero',ln:0};return a%b;
         case'/':if(!b)throw{m:'No se puede dividir por cero',ln:0};return expressionType(e)==='float'?a/b:Math.trunc(a/b);
@@ -318,35 +402,35 @@ function ev(e){
     }
   }
 }
+// Devuelve undefined, o {v} si se ejecutó «return» (se propaga hasta la función que la contiene).
 function* run(list){
   scopes.push(Object.create(null));
-  for(const s of list){
+  try{
+   for(const s of list){
     switch(s.k){
-      case'dec':for(const d of s.ds)declare(scopes[scopes.length-1],d);break;
-      case'as':{const sc=find(s.n,s.ln),v=ev(s.e);sc[s.n]=coerce(s.op==='='?v:s.op==='+'?sc[s.n]+v:sc[s.n]-v,variableTypes.get(sc)?.[s.n],s.ln);break}
-      case'ex':if(s.e.n==='pausa'){const ms=ev(s.e.a[0]);if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:s.ln};yield ms;}
-        // botonInicio(): barrera cooperativa de NIVEL (como la librería real: espera hasta leerBoton()==1). No consume ni libera el Pulsador.
-        else if(s.e.n==='botonInicio'){ev(s.e);while(!btn){waitingButton=1;yield 0;}waitingButton=0;}
-        else ev(s.e);break;
-      case'if':if(ev(s.c))yield*run(s.b);else if(s.e)yield*run(s.e);break;
-      case'while':while(!halt&&ev(s.c)){yield*run(s.b);if(!halt)yield 8}break;
-      case'blk':yield*run(s.b);break;
+      case'dec':for(const d of s.ds)yield* declare(scopes[scopes.length-1],d);break;
+      case'as':{const sc=find(s.n,s.ln),v=yield* ev(s.e);sc[s.n]=coerce(s.op==='='?v:s.op==='+'?sc[s.n]+v:sc[s.n]-v,variableTypes.get(sc)?.[s.n],s.ln);break}
+      case'ex':yield* ev(s.e);break;
+      case'ret':{const v=s.e?yield* ev(s.e):undefined;if(halt)return;return{v}}
+      case'if':{const r=(yield* ev(s.c))?yield* run(s.b):s.e?yield* run(s.e):undefined;if(r)return r;break}
+      case'while':while(!halt&&(yield* ev(s.c))){const r=yield* run(s.b);if(r)return r;if(!halt)yield 8}break;
+      case'blk':{const r=yield* run(s.b);if(r)return r;break}
     }
-    if(halt){scopes.pop();return;}
-  }
-  scopes.pop();
+    if(halt)return;
+   }
+  }finally{scopes.pop();}
 }
 function* main(){
-  for(const s of prog.globals)for(const d of s.ds)declare(scopes[0],d);
-  if(prog.fn.setup)yield*run(prog.fn.setup);
-  while(!halt){yield*run(prog.fn.loop);yield 0}
+  for(const s of prog.globals)for(const d of s.ds)yield* declare(scopes[0],d);
+  if(prog.fn.setup)yield* run(prog.fn.setup);
+  while(!halt){yield* run(prog.fn.loop);yield 0}
 }
 function fail(e){running=0;waitingButton=0;R.L=R.R=0;if(window.onCodeStopped)window.onCodeStopped();$('msg').innerHTML+='\n<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>'}
 function start(){
   let P;
   try{P=parse(lex($('src').value))}
   catch(e){reset();$('msg').innerHTML='<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>';return}
-  const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict};warns=new Set();
+  const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;UF=P.fns;callDepth=0;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict};warns=new Set();
   scopes=[Object.create(null)];variableTypes=new WeakMap();it=main();running=1;
   $('msg').innerHTML='<span class=ok>✔ Sintaxis validada. Intérprete didáctico en ejecución…</span>';
 }
