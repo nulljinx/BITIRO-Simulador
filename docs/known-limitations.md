@@ -2,6 +2,17 @@
 
 Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepancias que necesitan medición física antes de modificarse.
 
+## Prioridades actuales (tras SESSION-VALIDATION-2)
+
+| Prioridad | Elemento |
+|---|---|
+| **P0** | ninguno |
+| **P1** | HEAD-SERVO (cabeza yaw/pitch + sonar orientable); elementos de línea/intersección temporales para S03/S06 |
+| **P2** | diferencias de velocidad, sensores y sonar entre standalone y Lab; acoplamiento garra-sonar; IR/Pulsador sin rebote; `millis()` |
+| **P3** | `const`; aliases `*Robot`; starts prácticos; documentación y medición física |
+
+`millis()` es una limitación de compatibilidad (bonus opcional de S06), **no** el bloqueo principal de S06: lo que impide el 100 % de S06 es la intersección que el plotter oficial no imprime. Las funciones propias ya no figuran como pendientes.
+
 ## Cabeza y sonar orientable
 
 `inicializarCabeza()`, `moverServoYaw()`, `moverServoPitch()` y `apagarCabeza()` son reconocidas pero no tienen efecto físico. El sonar permanece fijo al eje frontal.

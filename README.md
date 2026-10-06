@@ -114,15 +114,25 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 ## Estado de las sesiones
 
-La última validación funcional completa anterior a la incorporación de funciones propias se ejecutó sobre la baseline `5b548f2`. Allí:
+Última validación funcional integral: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios), sobre un runtime que ya está desplegado en producción.
 
-- S01 y S02 fueron realizables completas;
-- S03, S05 y S08 fueron realizables con limitaciones;
-- S04, S06 y S07 no eran realizables completas.
+| Sesión | Estado |
+|---|---|
+| S01 | ✅ completa |
+| S02 | ✅ completa |
+| S03 | 🟡 parcial |
+| S04 | ✅ completa |
+| S05 | 🟡 parcial |
+| S06 | 🟡 parcial |
+| S07 | 🔴 no realizable completa |
+| S08 | 🟡 parcial |
 
-Desde `b5683f0`, el bloqueo de lenguaje de S04/S06 por funciones propias, parámetros y `return` fue eliminado. La **revalidación integral S01–S08 con esa capacidad nueva está pendiente**, por lo que no se declara todavía que S04 o S06 estén completas.
+- **S04** quedó validada completa tras `RUNTIME-FUNCTIONS-1`: gaps, intersecciones y meta con funciones propias reales.
+- **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
+- **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable).
+- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor.
 
-Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
+Producción pública (`simulador.nulljinx.com`) está desplegada con `RUNTIME-FUNCTIONS-1` y verificada en escritorio, tablet y móvil. Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
 
 ## Lenguaje soportado
 
