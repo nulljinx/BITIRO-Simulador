@@ -1,14 +1,43 @@
-BITIRO LAB v4 — INICIO RÁPIDO
+BITIRO SIMULADOR · INICIO RÁPIDO
 
-1. Extrae todo el ZIP y abre index.html con Chrome o Edge.
-2. Pulsa Calibrar sensores. Mide blanco, mide negro y guarda.
-3. Elige un ejemplo y pulsa Ejecutar código.
-4. Usa Pausar y Paso +0,1 s para observar sensores y movimiento.
-5. Usa Superior para ver las huellas de los tres sensores.
+En línea:
+https://simulador.nulljinx.com
 
-La calibración corresponde al banco virtual; no calibra hardware real.
-Demostración sigue una ruta predefinida. Ejecutar código prueba tu algoritmo.
-El código se guarda por pista en este navegador, si permite almacenamiento.
-No necesitas internet ni instalar programas para usar el simulador.
+1. Elige S01–S08, Óvalo u Ocho.
+2. Lee el objetivo de práctica de la pista.
+3. Modifica el código del editor.
+4. Pulsa Ejecutar.
+5. Usa Pulsador e IR cuando tu programa los lea.
+6. Observa sensores, sonar, motores, LCD y garra.
+7. Pausa, reinicia, corrige el código y vuelve a probar.
 
-Lee LEEME.md para consultar funciones, lógica pedagógica y límites.
+IMPORTANTE
+- Si tu código contiene botonInicio(), se detiene en esa llamada hasta presionar Pulsador.
+- Si no contiene botonInicio(), comienza inmediatamente.
+- La garra usa moverServoGolpe(-1), moverServoGolpe(0), moverServoGolpe(1).
+- Más -> Editar escenario permite añadir/mover/eliminar cajas.
+- La pista no corrige el código ni decide la ruta correcta.
+
+Ejemplo:
+
+void setup() {
+  inicializarMovimiento();
+  inicializarSensores();
+  botonInicio();
+}
+
+void loop() {
+  if (lineaCentral()) avanzar(30);
+  else if (lineaIzquierda()) avanzar(10, 30);
+  else if (lineaDerecha()) avanzar(30, 10);
+  else detenerse();
+}
+
+Funciones propias con parámetros y return también están soportadas.
+
+Documentación:
+README.md
+docs/user-guide.md
+docs/api-iroh.md
+docs/sesiones-s01-s08.md
+docs/known-limitations.md
