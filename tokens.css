@@ -1,0 +1,52 @@
+/* BITIRO Simulador · tokens semánticos.
+   Valores tomados de la interfaz actual de BITIRO Lab para que ambos productos se reconozcan como BITIRO.
+   Sin nombres ni marcas de aliados institucionales. docs/pilot-ui-reference.md documenta el origen. */
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-style:normal;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:500;font-style:normal;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:600;font-style:normal;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:400;font-style:normal;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:500;font-style:normal;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2')}
+:root{
+  /* Marca */
+  --brand-ink:#071426;--brand-ink-2:#0B1B32;--brand-blue:#2458A6;
+
+  /* Superficies */
+  --surface-page:#F5F3EE;--surface-panel:#FCFBF8;--surface-panel-raised:#FFFFFF;--surface-panel-muted:#ECEAE5;--surface-panel-soft:#F4F2ED;--surface-hover:#F7F5F0;
+
+  /* Instrumento (editor, escena) */
+  --instrument-bg:#0B0D10;--instrument-panel:#14181D;--instrument-panel-deep:#0E1216;--instrument-line:#262B31;--instrument-line-strong:#30363D;
+  --instrument-text:#ECE7DD;--instrument-text-muted:#AEB4BA;--instrument-text-soft:#8E949A;
+  --stage-bg:#0F1E2C;--stage-ink:#E7EDF0;--stage-ink-soft:#9DB0BC;
+  --editor-bg:#101419;--editor-line:#191F27;--editor-gutter:#8994A2;--editor-text:#E8E4DB;
+
+  /* Bordes */
+  --border-default:#D9D6CF;--border-subtle:#E3E0D9;--border-strong:#BEB9B0;
+
+  /* Texto */
+  --text-primary:#171D24;--text-secondary:#656B72;--text-inverse:#FAF9F6;--text-on-action:#FFFFFF;
+
+  /* Acción */
+  --action-primary:#0E0D9F;--action-primary-hover:#09085F;--action-primary-soft:#ECECF9;
+
+  /* Estado */
+  --status-success:#187548;--status-success-soft:#DCF3E7;--status-warning:#C98510;--status-danger:#B52E42;--status-danger-soft:#FFF5F6;--status-info:#146BFF;
+  --focus-ring:#2458A6;
+
+  /* Lecturas */
+  --readout-surface:#ECE9E3;--readout-border:#DAD5CC;--lcd-bg:#CAD3C2;--lcd-border:#BFC6B8;--lcd-text:#243127;
+
+  /* Radios */
+  --radius-panel:4px;--radius-control:6px;--radius-floating:10px;--radius-pill:999px;
+
+  /* Sombras: solo elementos flotantes y de acción */
+  --shadow-action:0 4px 10px rgba(14,13,159,.12);--shadow-floating:0 16px 44px rgba(11,13,16,.16);
+
+  /* Tipografía */
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;--font-mono:'IBM Plex Mono',Consolas,monospace;
+  --text-h1:24px;--text-body:14px;--text-label:12px;--text-micro:11px;--text-code:13px;
+
+  /* Espaciado y movimiento */
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
+  --motion-fast:160ms;--motion-panel:240ms;--ease-out:cubic-bezier(.22,1,.36,1);
+  --header-height:64px;
+}

@@ -1,0 +1,135 @@
+# Referencia de interfaz: patrones del BITIRO Lab a trasladar al Simulador
+
+- **Fecha:** 2026-10-06
+- **Estado:** inspección y decisión de patrones. No se ha modificado ningún archivo del producto.
+- **Fuente inspeccionada (solo lectura):** repositorio local `BITIRO-Lab` (v8.00.0, último commit `a2cb096`). No se modificó nada en BITIRO-Lab.
+- **Evidencia visual:** capturas del Lab en `BITIRO-Lab/test-results/` (`premium-s01-1440.png`, `premium-s01-390.png`, `s01-runtime-ejecutando.png`) y capturas propias del simulador v4 actual (1440 y 390 px).
+- **Principio:** el Simulador debe reconocerse de inmediato como BITIRO. No se diseña una identidad nueva y se elimina todo lo propio de sesiones pedagógicas.
+
+## 1. Estado actual: v4 frente al Lab
+
+| Aspecto | Simulador v4 (hoy) | BITIRO Lab (referencia) |
+|---|---|---|
+| Disposición | Encabezado grande («La pista es tu laboratorio»), banda de controles, tarjeta «Tu experimento» y solo después el simulador; en 1440×900 el 3D queda **bajo el pliegue** | Una línea de título, simulador y editor lado a lado y visibles desde el primer pantallazo |
+| Controles visibles | 9 botones + 3 selectores + toggles (Calibrar, Demostración, Pausar, Paso, Reiniciar, Golpe, Ocultar editor, velocidad, calidad 3D, rastro) | Cambio de vista, zoom, Restablecer, velocidad, Pausar/Detener, y «Probar código» junto al editor |
+| Tipografía | Declara IBM Plex pero **no incluye `@font-face`**: sin la fuente instalada cae a la sans del sistema (se ve en la captura) | IBM Plex Sans y Mono empaquetadas (`@fontsource`) |
+| Color de acción | Cobre y verde azulado (paleta anterior) | Azul de acción `#0E0D9F` (hover `#09085F`), superficies cálidas neutras, paneles de instrumento oscuros |
+| Bordes y radios | Paneles de ~14 px, bordes de tarjeta | Radios pequeños: paneles 4 px, controles 6 px, flotantes 10 px |
+| Editor | `<textarea>` plano en panel oscuro, intro larga | Panel oscuro con barra de archivo, estado «Guardado local», números de línea, resaltado de sintaxis y barra inferior con la acción principal |
+| Telemetría | Columna de tarjetas con muchas etiquetas | Columna estrecha junto al 3D: sensor, pulsador, IR, LCD (verde apagado, `#CAD3C2`) |
+| Móvil | Se apila, pero con la banda de controles completa | Simulador arriba, barra de ejecución, telemetría colapsable («Sensores y telemetría») y editor debajo |
+
+## 2. Patrones que se trasladan
+
+Cada patrón indica su origen en el Lab para poder verificarlo.
+
+### 2.1 Jerarquía visual y layout
+- **Título de una línea con eyebrow** (`.workspace-heading`, 24 px, `letter-spacing -.55px`; eyebrow en mayúsculas de 9,5–11 px). En el Simulador el eyebrow dice `Simulador libre` y el título es la pista elegida; **sin misión, sesión ni progreso**.
+- **Rejilla de dos columnas** (`.workspace-grid`: 39 fr / 61 fr entre 1024 y 1439 px; ~41/59 en tablets anchos). El simulador es dominante y el editor queda asociado a su derecha. Espaciado entre paneles: 7–10 px.
+- **El workspace ocupa la altura de la ventana** (`height` fijo con `dvh`; paneles internos con scroll propio) para que simulador y editor se vean sin desplazarse.
+- **Modo foco / pantalla completa** del simulador (`is-simulation-focused`, atajo `Ctrl + \`): se conserva como control secundario.
+
+### 2.2 Paneles, bordes, radios y espaciado
+- Tokens semánticos `--surface-*`, `--border-*`, `--text-*`, `--instrument-*`, `--radius-panel: 4px`, `--radius-control: 6px`, `--radius-floating: 10px`, escala `--space-1…12` (4–48 px), movimiento 130–300 ms con `cubic-bezier(.22,1,.36,1)`.
+- Sombras solo en elementos flotantes o de acción (`--shadow-floating`, `--shadow-action`).
+- Paneles de instrumento: fondo `#14181D`/`#0B1B32`, línea `#262B31`, texto `#ECE7DD`.
+
+### 2.3 Tipografía
+- **IBM Plex Sans** (texto) e **IBM Plex Mono** (código, números, etiquetas técnicas).
+- Escala del Lab: display 46, h1 32, h2 24, h3 17, cuerpo 14, etiqueta 12, micro 11, código 13 px. Etiquetas técnicas en mayúsculas con `letter-spacing` de ~.1em.
+- **Cambio necesario:** empaquetar las fuentes localmente (ver §5), porque hoy el v4 no las carga.
+
+### 2.4 Lenguaje de botones y controles compactos
+- Botón base con borde fino, fondo de panel, hover `--surface-panel-muted` y borde `--border-strong`; **primario** relleno azul de acción con texto blanco y hover más oscuro; deshabilitado en gris de panel.
+- Controles de barra compactos: 29–35 px de alto, fuente 10–11 px, icono de 15 px más etiqueta, radio 6 px.
+- Conmutador segmentado de cámara (`.camera-mode-switch`: Superior / Perspectiva / Seguir IROH) con `aria-pressed`.
+- Zoom `− 100 % +` y pantalla completa como botones de icono.
+- Selector de velocidad con icono de velocímetro (`1×`).
+- Iconografía: `lucide` (trazo fino). **No se instalará** ninguna librería; se usarán SVG en línea del mismo estilo.
+
+### 2.5 Estados hover y foco
+- Hover: cambio de fondo sutil, sin desplazamientos.
+- Foco: `outline: 3px solid var(--focus-ring)` (`#2458A6`), `outline-offset: 4px` (reemplaza el actual `#42aaca`/3 px).
+- Objetivos táctiles ≥ 44 px en móvil; compactos solo en escritorio.
+- `prefers-reduced-motion` respetado (ya existe en v4).
+
+### 2.6 Editor
+- Panel oscuro (`bitiro-night`: fondo `#101419`, línea activa `#191F27`, cursor `#FFAF75`, comentarios `#A3AAB2`, palabras clave `#82B6D9`, cadenas `#9FD4AF`, números `#F4C07A`).
+- **Barra de archivo** con nombre y estado «Guardado local».
+- **Barra inferior** con la acción principal grande: «Probar código» en el Lab; en el Simulador la acción se llama **«Ejecutar»** y es el único botón primario de toda la pantalla.
+- Lo que se conserva del v4: el intérprete, los ejemplos y el guardado local por pista (sin cambios de comportamiento).
+- No se instala Monaco. El `<textarea>` actual se mantiene en este piloto, con números de línea y resaltado ligeros solo si caben sin dependencias; de lo contrario queda como mejora posterior.
+
+### 2.7 Presentación del simulador y telemetría
+- Cabecera del panel: identificador de pista (`S01`), conmutador de cámara, zoom/pantalla completa.
+- Rótulo en el lienzo («BITIRO / S01 / 3D · Arrastra para orbitar · rueda para zoom»).
+- **Barra de ejecución inferior** (`.runtime-bar`): Restablecer, velocidad, Pausar/Continuar, Paso; a la derecha, estado con punto de color y tiempo (`0.0 s`).
+- **Telemetría compacta** en columna estrecha junto al 3D: lecturas de los tres sensores de línea, sonar, LCD 16×2 y estado del golpe. Los controles manuales de IR se mueven a un panel secundario.
+- LCD con el aspecto del Lab (fondo `#CAD3C2`, texto `#243127`, `IBM Plex Mono`).
+
+### 2.8 Responsive
+Puntos de corte del Lab: **≥ 1440, 1024–1439, 768–1023, ≤ 767, ≤ 520 px**.
+- **Escritorio:** dos columnas y workspace de altura de ventana.
+- **Tablet:** pestañas Código / Simulador (`workspace-tabs`) o columnas más estrechas.
+- **Móvil:** simulador arriba (alto `clamp(220px, 32dvh, 360px)`), barra de ejecución, telemetría **colapsable** («Sensores y telemetría»), editor debajo con su botón de ejecutar. Al ejecutar con éxito, el foco vuelve al simulador; si hay error, al editor.
+
+## 3. Qué NO se copia (propio de sesiones pedagógicas)
+
+Objetivos, misiones y su contador («Objetivos de la misión 0/4»), OA, progreso, mentor y paneles de solución, estados de «completado», mensajes de cumplimiento o evaluación, navegación curricular («Sesión 01», «Mi programa», explorador de sesiones, guía por sesión), tutorial guiado de sesión, cuentas y login, espacios institucionales, Supabase, y los textos pedagógicos de v4 («Tu experimento», «Calibra / Predice / Comprueba», lecciones por pista).
+
+Tampoco se copian los nombres ni elementos de **marcas de aliados institucionales**: el Lab define una paleta institucional (`--mustakis-*`) cuyo azul se usa como color de acción. Para reconocerse como BITIRO se reutiliza el **valor** del azul de acción bajo nombres neutros (`--action-primary`), no los identificadores ni logotipos del aliado. Esto debe confirmarse (ver §6).
+
+## 4. Jerarquía de controles del Simulador
+
+**Visibles siempre (barra principal):**
+1. Selector de pista.
+2. Selector de cámara (Superior / Perspectiva / Seguir IROH; «Ver robot» queda como cuarta opción).
+3. **Ejecutar** (único primario; también `Ctrl + Enter`).
+4. Pausar / Continuar.
+5. Reiniciar.
+6. Paso (+0,1 s), activo solo en pausa.
+7. Editor, simulador, LCD y telemetría compacta.
+
+**Secundarios (menú «Más» o panel desplegable):** velocidad, calidad 3D, rastro del recorrido, zoom/pantalla completa, demostración guiada, botón de golpe manual, estímulos IR manuales, plotter original, calibración (banco v1 actual hasta SIM-7), ejemplos de código.
+
+**No aparecen en la vista normal:** deslizadores de parámetros físicos, edición manual de X/Y o del ángulo, parámetros de motores, manipulación directa de sensores, tarjetas informativas. El robot se controla por código.
+
+## 5. Consideraciones de implementación (sin ejecutar nada todavía)
+
+- **Fuentes offline:** copiar los `woff2` latinos de IBM Plex Sans (400/500/600) y Mono (400/500) desde `BITIRO-Lab/node_modules/@fontsource/*` a `assets/fonts/` con `@font-face` y `font-display: swap` (licencia OFL; incluir su texto de licencia). Es copia de archivos, no instalación de dependencias. Peso aproximado: decenas de KB por archivo.
+- **Logo:** el Lab usa `public/brand/bitiro-symbol-*.png`; el Simulador ya tiene `assets/bitiro-symbol.png` (128 px). Pendiente decidir el nombre del producto en la barra superior (§6).
+- **Tokens:** crear `tokens.css` con nombres semánticos del Lab (sin los alias `mustakis-*` ni las ~100 variables `legacy-color-*`); solo los que el Simulador usa.
+- **Compatibilidad con tests:** `smoke.cjs`, `regression.cjs` y `sim1.cjs` usan un DOM simulado que acepta cualquier id; aun así los ids que leen o escriben `simulator.js` y `iroh-runtime.js` (`#src`, `#msg`, `#lcd`, `#track`, `#speed`, `#pause`, `#step`, `#strike`, `#demo`, `#calibrate`, `#ir0`, `#ir1`, `#statusBadge`, etc.) **se conservan**. Cambiar de sitio un control no debe cambiar su id ni su comportamiento.
+- **Sin cambios en** física, runtime, goldens, pistas ni claves de `localStorage`.
+- **Verificación visual:** capturas con Playwright (ya disponible en el Lab; solo lectura) a 1440, 1024, 768 y 390 px, antes y después.
+
+## 6. Decisiones (resueltas el 2026-10-06)
+
+1. **Alcance de PILOT-1:** rediseño de la interfaz en HTML/CSS/JS plano, sin tocar física, runtime, goldens ni claves de `localStorage`; sin React, Vite ni Three.
+2. **Nombre:** «BITIRO Simulador» (mismo símbolo y tipografía que el Lab).
+3. **Azul de acción:** se reutiliza el valor `#0E0D9F` bajo el nombre neutro `--action-primary`; sin identificadores ni marcas de aliados.
+4. **Calibración v1:** el botón «Calibrar sensores» se **oculta** de la interfaz hasta SIM-7 (el nodo y el diálogo siguen en el DOM porque `simulator.js` los cablea).
+
+## 7. Resultado de PILOT-1 (interfaz)
+
+**Archivos nuevos o modificados:** `index.html` y `styles.css` (reescritos), `tokens.css`, `ui-shell.js`, `assets/fonts/*` (IBM Plex Sans 400/500/600 y Mono 400/500, latín, más la licencia OFL), `tests/ui-contract.cjs`. Ningún script v4 (`simulator.js`, `iroh-runtime.js`, `renderer3d.js`, `calibration.js`, `strike-physics.js`, pistas) fue modificado.
+
+**Qué cambió:**
+- Una línea de título; simulador y editor lado a lado y visibles sin desplazarse en 1440×900.
+- Barra del simulador: selector de pista, selector de cámara, zoom y pantalla completa. Barra inferior: Ejecutar (solo visible si el editor está oculto o en vistas apiladas), Pausar/Continuar, Paso y Reiniciar, más el tiempo. **Ejecutar** es el único botón primario y vive en la barra inferior del editor (como en el Lab).
+- Telemetría compacta: tres sensores de línea, sonar, LCD, golpe y «Más datos» (motores, posición, objetos, relación lectura→acción).
+- Menú «Más»: velocidad, calidad 3D, rastro, estímulos IR manuales, demostración guiada, golpe manual y plotter original.
+- Editor con barra de archivo, números de línea (los errores del intérprete citan «línea N») y barra inferior con ejemplo y Ejecutar.
+- Móvil (≤ 767 px): simulador arriba, controles, estado, telemetría colapsable y editor debajo; tablet apilado.
+- Eliminado de la vista: encabezado grande, banda de controles, «Tu experimento», lecciones, pie de página, «Huella de sensores», ocho botones de la banda, texto de calibración en la introducción.
+
+**Compatibilidad:** los ids que usan los scripts se conservan. Cinco nodos ocultos (`#calibrate`, `#calibrationSummary`, `#lessonTitle`, `#lessonGoal`, `#lessonQuestion`) siguen en el DOM dentro de un contenedor `hidden` + `aria-hidden` (sin caja, fuera del orden de tabulación y del árbol de accesibilidad) porque `simulator.js` los lee o escribe y `regression.cjs` los comprueba; se retirarán al extraer el core (SIM-3) y reemplazar la calibración (SIM-7).
+
+**Verificación:**
+- `node tests/smoke.cjs`, `regression.cjs`, `sim1.cjs` sin cambios (goldens intactos) y `tests/ui-contract.cjs` (7 comprobaciones; su control negativo detecta un `#workspace` ausente, un error real que apareció durante el trabajo).
+- Capturas en Chromium a 1440, 1100, 768 y 390 px; 16 interacciones comprobadas en navegador (ejecutar, pausa/paso, reiniciar, cámara, cambio de pista, error amigable, menú, editor oculto, `Ctrl+Enter`, telemetría móvil y orden en móvil) sin errores de consola ni desbordamiento horizontal. Ese guion usa el Playwright del Lab y no forma parte del repositorio.
+
+**Limitaciones conocidas:**
+- La escena 3D (renderer Canvas procedural) recorta parte de la pista en paneles más estrechos que el v4 porque el encuadre no cambió; se resolverá con el renderer de SIM-5.
+- El editor sigue siendo un `<textarea>` (sin resaltado de sintaxis ni autocompletado).
+- La capa de interfaz usa un `requestAnimationFrame` ligero para sincronizar los números de línea, porque el código cambia también por programa (ejemplos, cambio de pista) sin disparar `input`.

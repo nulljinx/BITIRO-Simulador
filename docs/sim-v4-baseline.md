@@ -103,9 +103,40 @@ Goldens (`tests/golden/*.json`): `s01_straight`, `s01_turn`, `s02_three_sensors`
 
 ## 10. Discrepancia conocida: wheelbase — estado **UNRESOLVED / PENDING PHYSICAL MEASUREMENT**
 
-| Fuente | Valor |
-|---|---|
-| Física (`simulator.js`, `base=12`) | 12 cm entre ruedas |
-| Render (`renderer3d.js`, `const mid=side*9.1`, `side ∈ {−1, 1}`) | centros de rueda a ±9,1 cm ≈ **18,2 cm** |
+### 10.1 Registro de valores (actualizado 2026-10-06)
 
-No se ha determinado cuál refleja el IROH real, y este baseline **no asume que 18,2 sea correcto**. Se mantiene `base = 12` y no se corrige. Efecto: la tasa de giro simulada (`ω = (vL − vR)/base`) depende directamente de este valor; con 18,2 sería 0,5055 rad/s en lugar de 0,7667 rad/s para `girarDerecha(20)`. El control negativo de `tests/sim1.cjs` demuestra que cambiarlo rompe los goldens de giro.
+| Concepto | Valor | Estado |
+|---|---|---|
+| physics baseline (`simulator.js`, `base=12`) | 12 cm | congelado; **no se cambia** |
+| physical observation (dos fotografías con regla del IROH real) | ≈ 9,0–9,3 cm centro-centro entre ruedas principales | observación aproximada, no perpendicular |
+| exact physical measurement | — | **pending** (requiere medición perpendicular definitiva) |
+| renderer effective wheelbase | 18,2 unidades de mundo del renderer (= cm de pista); fidelidad al IROH real **TO BE VERIFIED** | ver 10.2 |
+
+No se asume que 18,2 cm sea el wheelbase real. Tampoco se asume que 12 cm lo sea. Los goldens y el producto no se modifican por esta evidencia.
+
+### 10.2 Cadena matemática: de la constante del renderer a la posición dibujada (`renderer3d.js`)
+
+1. Constante: `wheel(forward, side, width, radius)` con `mid = side·9.1`, llamada con `side ∈ {−1, +1}`, `forward = −2.3`, `width = 2.2`, `radius = 5.2`. `mid` es el desplazamiento lateral del **centro de cada rueda** respecto al eje del robot; por tanto cada rueda está a 9,1 cm del eje y entre ambas hay **18,2 cm**. El valor 9,1 es un semi-ancho de vía, no una distancia centro-centro.
+2. Caras del neumático: cara interior en `mid − side·width/2` = ±8,0; cara exterior en `mid + side·width/2` = ±10,2. Eje de rueda a altura 4 con radio 5,2 (la rueda baja a −1,2 y sube a 9,2).
+3. Marco local: `local(f, r, y) = (X(robot.x) + f·f2[0] + r·r2[0], y, Z(robot.y) + f·f2[1] + r·r2[1])`, con `heading = th − π/2`, `f2 = [cos h, sin h] = [sin th, −cos th]` y `r2 = [−sin h, cos h] = [cos th, sin th]`. Son exactamente el vector «adelante» y «derecha» de la física (`IROH_MECHANICS.basis`). El eje lateral `r` de la rueda comparte base con el desplazamiento físico.
+4. A mundo: `X(x) = x − pista.w/2`, `Z(z) = z − pista.h/2`. Es una traslación; **no hay factor de escala**. Las unidades del mundo del renderer son cm de pista (la rejilla se dibuja cada 10 unidades y la pista mide `physicalWidthCm × physicalHeightCm`).
+5. Proyección: `rel = v − cámara`, `depth = rel·adelante`, `x_px = w/2 + (rel·derecha)·focal/depth`, `y_px = 0,46·h − (rel·arriba)·focal/depth`, con `focal = min(w,h)·1,68`. Es perspectiva pura; solo depende de la distancia a la cámara. No hay transformación posterior de escala, ni en la carga ni en el dibujo.
+
+### 10.3 Evidencia ejecutable (`tests/sim1/wheelbase-probe.cjs`, comprobada en `tests/sim1.cjs`)
+
+- Con `face()` instrumentada en memoria (el producto no se toca), las caras de los neumáticos están en `|r| ∈ [8,0; 10,2]` para ambos lados, centros de rueda en `|r| = 9,1`, **separación centro-centro 18,2**, `f = −2,3`, radio 5,2, ancho 2,2. Resultado idéntico en cuatro poses/pistas (S01, S05, óvalo; rumbos 0, 0,7, 2,2 y −1,3).
+- Misma base que la física: el vector rueda izquierda → derecha, en coordenadas de pista, es `18,2·(cos th, sin th)`.
+- Comprobación independiente en píxeles (vista superior, `th = 0`): la rejilla da 2,5 px por unidad; la separación de las tapas de las ruedas mide ≈ 20,43 unidades (esperado 20,4 = 18,2 + 2·1,1) → centros ≈ 18,23. Es decir, una unidad de mundo se dibuja como 1 cm de pista.
+
+### 10.4 Conclusión sobre las hipótesis
+
+- (a) **Sí**: dentro del renderer significa 18,2 entre centros de rueda.
+- (b) **No**: no existe transformación o escala posterior.
+- (c) **Parcial**: 9,1 es el semi-ancho; no es otra dimensión distinta del ancho de vía.
+- (d) **No**: el sistema de coordenadas es coherente con la física (misma base adelante/derecha, mismas unidades).
+
+Observación sin verificar: el valor 9,1 coincide numéricamente con la medida física aproximada de 9,0–9,3 cm centro-centro. Una posible explicación (hipótesis, no establecida) es que una distancia centro-centro completa se haya usado como semi-ancho; si fuera así, otras medidas del modelo visual que dependen del mismo marco también podrían estar en discusión (casco octogonal ±8,1; motores a ±6,7 con ancho 3,2; rueda de 10,4 de diámetro y 2,2 de ancho). Nada de esto se ha corregido ni confirmado.
+
+### 10.5 Efecto en la simulación
+
+La tasa de giro depende directamente de `base` (`ω = (vL − vR)/base`): para `girarDerecha(20)` es 0,7667 rad/s con 12 cm, 0,5055 con 18,2 y 1,0222 con 9 cm. El control negativo de `tests/sim1.cjs` demuestra que cambiar `base` rompe los goldens de giro; cuando se decida el valor real habrá que regenerarlos conscientemente (`SIM1_UPDATE=1`).
