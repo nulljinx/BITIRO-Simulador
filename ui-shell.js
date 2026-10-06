@@ -128,6 +128,38 @@
  const syncName=()=>{if(trackSel&&fileName)fileName.textContent='programa_'+trackSel.value+'.ino';};
  trackSel?.addEventListener('change',syncName);syncName();
 
+ /* ── Código inicial por pista (S01–S08) y práctica libre (Óvalo/Ocho) ───────────────
+    S01–S08 abren con su starter (sin la solución); el código guardado se conserva salvo que sea EXACTAMENTE uno de los
+    ejemplos legacy que la versión anterior cargaba sola. Óvalo y Ocho conservan ejemplos completos. La resolución es una
+    función pura (starters.js); aquí solo se aplica al abrir cada pista y se alterna «Ejemplo» ↔ «Restaurar código inicial». */
+ const STARTERS=window.BITIRO_STARTERS,exampleField=$('exampleField'),restoreBtn=$('restoreStarter'),restoreDialog=$('restoreDialog');
+ if(STARTERS&&src&&trackSel){
+  const storedCode=id=>{try{return typeof BITIRO_STORAGE!=='undefined'&&BITIRO_STORAGE?BITIRO_STORAGE.get('bitiro:standalone:code:'+id):null;}catch{return null;}};
+  const syncMode=()=>{const free=STARTERS.isFree(trackSel.value);if(exampleField)exampleField.hidden=!free;if(restoreBtn)restoreBtn.hidden=free;};
+  const applyTrackCode=()=>{
+   const id=trackSel.value,want=STARTERS.resolve(id,storedCode(id),typeof EJ!=='undefined'?EJ[0]:'');
+   if(src.value!==want)src.value=want;
+   syncMode();
+  };
+  const say=text=>{if(msg)msg.textContent=text;};
+  const doRestore=()=>{
+   const target=STARTERS.starter(trackSel.value);if(target===null)return;
+   src.value=target;src.dispatchEvent(new Event('input',{bubbles:true}));   // simulator.js guarda el código al recibir «input»
+   say('Código inicial restaurado.');src.focus({preventScroll:true});
+  };
+  trackSel.addEventListener('change',applyTrackCode);
+  restoreBtn?.addEventListener('click',()=>{
+   const id=trackSel.value,target=STARTERS.starter(id);if(target===null)return;
+   if(src.value===target){say('El código ya es el código inicial.');return;}
+   // Solo se pide confirmación si hay algo que perder (código distinto del inicial y no vacío).
+   if(src.value.trim()!==''&&STARTERS.isModified(id,src.value)&&restoreDialog&&typeof restoreDialog.showModal==='function'){restoreDialog.showModal();$('restoreCancel')?.focus();return;}
+   doRestore();
+  });
+  $('restoreConfirm')?.addEventListener('click',()=>{restoreDialog?.close();doRestore();});
+  $('restoreCancel')?.addEventListener('click',()=>{restoreDialog?.close();restoreBtn?.focus({preventScroll:true});});
+  applyTrackCode();
+ }
+
  /* ── Editor: números de línea, resaltado de sintaxis y línea activa ───────────────────
     El <textarea> sigue siendo la entrada real (texto, selección, scroll, teclado). La capa .hl (aria-hidden,
     pointer-events:none) pinta encima el mismo texto coloreado y se desplaza con su scroll. Las funciones IROH

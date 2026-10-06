@@ -14,19 +14,21 @@ window.BITIRO_RENDER_QUALITY='standard';
 const worldCv=$app('scene');
 const ui={track:$app('track'),name:$app('trackName'),size:$app('trackSize'),badge:$app('statusBadge'),stage:$app('stageLabel'),origin:$app('sceneSource'), feedback:$app('feedback')};
 const shorten=(str,n=35)=>str.length>n?str.slice(0,n-1)+'…':str;
-function toScene(t){return {id:t.id,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,obstacles:t.obstacles,start:t.start};}
+// SCENARIO PROP: cajas/obstáculos del mundo; no pertenecen a la geometría impresa de la pista.
+const propsFor=t=>[...(t.obstacles||[]),...((window.BITIRO_SCENARIO_PROPS||{})[t.id]||[])];
+function toScene(t){return {id:t.id,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,obstacles:propsFor(t),start:t.start};}
 function changeTrack(name){
  if(track&&$app('src'))BITIRO_STORAGE.set('bitiro:standalone:code:'+chosen,$app('src').value);
  chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);
  if($app('src'))$app('src').value=BITIRO_STORAGE.get('bitiro:standalone:code:'+chosen)||EJ[0];ui.name.textContent=track.id.toUpperCase()+' / '+shorten(track.name.replace(/^S\d+ · /,''),32);ui.size.textContent=track.w+' × '+track.h+' cm';ui.stage.textContent=track.id.toUpperCase();
- ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso con trazado S03 (sin pista S07 propia)':track.id.startsWith('s')?'Digitalización visual aproximada · '+track.id.toUpperCase():'Circuito libre no institucional';
+ ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
  $app('reference').hidden=!sourceImageForTrack(name);
  camera={azimuth:.10,elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
  ui.feedback.textContent=track.note;ui.track.value=name;updateLesson();updateZoom();draw();
 }
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
- activeObstacles=track.obstacles.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
+ activeObstacles=propsFor(track).map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
@@ -34,6 +36,7 @@ window.resetRobot=function(){
  $app('step').disabled=true;
  setState('EN ESPERA');$app('pause').disabled=true;$app('pause').textContent='Pausar';
  if(typeof setIR==='function'){setIR(0,0);setIR(1,0);}
+ if(typeof setButton==='function')setButton(0);
  if(mode==='idle')ui.feedback.textContent='Listo. Inicia una demostración o ejecuta tu código.';
  updateTelemetry();
 };
@@ -125,21 +128,36 @@ function stroke(angle){
 }
 window.setStrikerAngle=stroke;
 function createDemoPath(t){
- // Recorridos didácticos: se separan explícitamente del código del alumno.
- const by=id=>t.paths.find(p=>p.id===id)?.p||[];
+ // Recorridos didácticos: se separan explícitamente del código del alumno. Eligen trazos impresos por su `role` (descriptivo).
+ const roleOf=r=>t.paths.filter(p=>p.role===r).map(p=>p.p);
+ const up=pts=>pts[0][1]<pts[pts.length-1][1]?[...pts].reverse():pts; // orienta hacia y decreciente (hacia arriba)
+ const trunk=()=>roleOf('trunk').sort((a,b)=>Math.max(...b.map(q=>q[1]))-Math.max(...a.map(q=>q[1]))).flatMap(up);
+ // Un arco que pasa por la bifurcación se divide en su vértice más bajo (apex) y cada mitad sale hacia su extremo.
+ const arcHalves=()=>{const a=roleOf('arc')[0],k=a.reduce((m,q,i)=>q[1]>a[m][1]?i:m,0);return {right:a.slice(0,k+1).reverse(),left:a.slice(k)};};
+ const stubAt=(end)=>{const s=roleOf('stub').find(q=>Math.hypot(q[0][0]-end[0],q[0][1]-end[1])<4||Math.hypot(q[q.length-1][0]-end[0],q[q.length-1][1]-end[1])<4);return s?up(s):[];};
  if(t.id==='s01'){
-  const upper=by('path268');const mid=Math.floor(upper.length/2);
+  const upper=roleOf('arc')[0];const mid=Math.floor(upper.length/2);
   const branch=(ir[1]&&!ir[0])?upper.slice(mid):upper.slice(0,mid+1).reverse();
-  return [[50,130],...by('line266'),...branch];
+  return [[50,130],...roleOf('stem')[0],...branch];
  }
  if(t.id==='s02'){
-  const branch=ir[0]&&ir[1]?'branch-right':ir[1]?'branch-left':ir[0]?'branch-center':'branch-center';
-  return [[t.start.x,t.start.y],...by('stem'),...by(branch)];
+  const h=arcHalves(),pick=ir[0]&&ir[1]?h.right:ir[1]?h.left:null;
+  return [[t.start.x,t.start.y],...roleOf('stem')[0],...(pick||[...roleOf('branch-center')[0]].reverse())];
  }
- if(t.id==='s04')return [[t.start.x,t.start.y],...by('linea-principal'),...by('curva')];
- if(t.id==='s05')return [[t.start.x,t.start.y],...by('tronco'),...by(ir[0]&&ir[1]?'rama-derecha':ir[1]?'rama-izquierda':'rama-central')];
- if(t.id==='s08')return [[t.start.x,t.start.y],...by('principal-inferior'),...by('principal-superior')];
- const first=t.paths.find(p=>p.p.length>3)||t.paths[0];return [[t.start.x,t.start.y],...(first?.p||[])];
+ if(t.id==='s04'||t.id==='s08')return [[t.start.x,t.start.y],...trunk()];
+ if(t.id==='s05'){
+  const h=arcHalves(),pick=ir[0]&&ir[1]?h.right:ir[1]?h.left:null;
+  const branch=pick?[...pick,...stubAt(pick[pick.length-1])]:up(roleOf('branch-center')[0]);
+  return [[t.start.x,t.start.y],...trunk(),...branch];
+ }
+ const first=t.paths.find(p=>p.p.length>3)||t.paths[0];
+ let pts=first?.p||[];
+ if(pts.length){ // sigue el trazo desde el punto más cercano a la salida (circuitos cerrados: se rota el lazo)
+  let k=0,best=Infinity;pts.forEach((q,i)=>{const d=Math.hypot(q[0]-t.start.x,q[1]-t.start.y);if(d<best){best=d;k=i;}});
+  const closed=Math.hypot(pts[0][0]-pts[pts.length-1][0],pts[0][1]-pts[pts.length-1][1])<1;
+  if(k>0)pts=closed?[...pts.slice(k,-1),...pts.slice(0,k+1)]:pts.slice(k);
+ }
+ return [[t.start.x,t.start.y],...pts];
 }
 function demoDrive(){
  if(demoPath.length<2){R.L=R.R=0;return;}
@@ -261,13 +279,14 @@ function cameraUI(name){
 document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>cameraUI(b.dataset.view)));
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
-$app('demo').addEventListener('click',()=>{const inputs=[...ir];window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));demoPath=resamplePath(createDemoPath(track));demoIndex=0;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
+$app('demo').addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
 $app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':'EJECUTANDO');$app('step').disabled=!paused;acc=0;});
 $app('step').addEventListener('click',()=>{if(!paused||mode==='idle')return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
 $app('reset').addEventListener('click',()=>{window.resetRobot();$app('msg').textContent='Simulación reiniciada; tu código se conserva.';});
 $app('strike').addEventListener('click',()=>{
  if(mode==='code'){ui.feedback.textContent='En modo código, utiliza moverServoGolpe() en tu programa.';return;}stroke(65);striker.pulse=1;striker.returning=false;
 });
+$app('pulsador').addEventListener('click',()=>setButton(!btn));
 for(const k of [0,1])$app('ir'+k).addEventListener('click',()=>{setIR(k,!ir[k]);if(mode==='demo'){demoPath=resamplePath(createDemoPath(track));demoIndex=Math.min(demoIndex,demoPath.length-2);}});
 const codePanel=$app('codePanel');
 const codeKey=id=>'bitiro:standalone:code:'+id;
@@ -294,9 +313,9 @@ $app('zoomIn').addEventListener('click',()=>{camera.distance=Math.max(.24,camera
 $app('zoomOut').addEventListener('click',()=>{camera.distance=Math.min(3.4,camera.distance*1.17);updateZoom();});
 $app('full').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $app('viewportHost').requestFullscreen();}catch(e){ui.feedback.textContent='Este navegador no permite pantalla completa desde este archivo.';}});
 const referenceDialog=$app('referenceDialog');
-function sourceImageForTrack(id){return ['s01','s02','s03','s04','s05','s06','s08'].includes(id)?id:id==='s07'?'s03':null;}
+function sourceImageForTrack(id){return ['s01','s02','s03','s04','s05','s06','s08'].includes(id)?id:null;}
 $app('reference').addEventListener('click',()=>{const id=sourceImageForTrack(chosen);if(!id)return;
- $app('referenceHeading').textContent=chosen==='s07'?'S07 · Repaso: referencia S03':'Plotter de referencia · '+chosen.toUpperCase();
+ $app('referenceHeading').textContent='Plotter de referencia · '+chosen.toUpperCase();
  $app('referenceImg').src='assets/plotters/'+id+'.png';
  $app('referenceImg').alt='Imagen de referencia del plotter '+id.toUpperCase();
  referenceDialog.showModal();});
@@ -326,7 +345,7 @@ function updateLesson(){
  s04:['Recordar el último movimiento','Explora qué ocurre cuando la línea se interrumpe y limita el tiempo de búsqueda.','¿Qué haces si no hay línea?'],
  s05:['Decidir con entradas IR','Cambia las entradas IR manuales y explica cómo tu programa elige una rama.','¿Qué pasa con ambos IR activos?'],
  s06:['Distancia y velocidad','Observa el sonar, reduce la velocidad y detente antes del contacto.','¿Frenas antes de tocar la caja?'],
- s07:['Repetir y comparar','Reutiliza el trazado S03 y cambia una sola condición entre ensayos.','¿Qué cambio explica el resultado?'],
+ s07:['Repetir y comparar','Superficie neutra sin plotter oficial: elige cualquier otra pista y cambia una sola condición entre ensayos.','¿Qué cambio explica el resultado?'],
  s08:['Integrar estrategias','Combina sensores y memoria de estado. La clasificación requiere tu propia lógica.','¿Qué evidencia valida tu decisión?'],
  oval:['Ajustar el seguimiento','Compara dos velocidades y observa cuánto tiempo detecta línea el robot.','¿Más rápido sigue siendo preciso?'],
  ocho:['Resolver un cruce','Observa el patrón de sensores en el cruce y decide cómo conservar el rumbo.','¿Cruce o final del recorrido?']

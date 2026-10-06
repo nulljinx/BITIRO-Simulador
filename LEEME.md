@@ -76,7 +76,7 @@ En S01 la demostración se detiene ante la caja; **Golpe** la desplaza y el reco
 
 ## Geometría y límites
 
-Se conservan las diez pistas y las referencias aportadas. S01 y S02 derivan del material del proyecto. S03–S06 y S08 son aproximaciones; S07 reutiliza S03. Óvalo y ocho son circuitos libres. Las zonas pintadas no realizan una evaluación automática.
+Se conservan las diez pistas y las referencias aportadas. S01–S06 y S08 son los plotters oficiales reconstruidos desde los PDF vectoriales (ver `docs/track-model.md`); S07 · Repaso no tiene pista propia y es una superficie neutra. Óvalo y ocho son circuitos libres. Las zonas pintadas no realizan una evaluación automática.
 
 El IROH y sus dimensiones siguen siendo ilustrativos. Se usa geometría 3D proyectada en Canvas, sin CAD medido ni WebGL. Se conserva la física de contacto del golpe de v3. La interfaz se adapta a móvil y escritorio; **Estándar** reduce el coste de dibujo respecto de **Alta**.
 

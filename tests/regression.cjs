@@ -106,10 +106,17 @@ test('Todos los ejemplos validan y comienzan sin errores',()=>{
  js("changeTrack('s01')");for(let n=0;n<5;n++){program(js(`EJ[${n}]`));tick(.1);assert.doesNotMatch(el('msg').innerHTML,/class=err/);}
 });
 test('Los circuitos cerrados comienzan alineados con sensores sobre línea',()=>{
- for(const id of ['s03','s07','oval','ocho']){
+ for(const id of ['s03','oval','ocho']){
   js(`changeTrack('${id}')`);assert.ok(js('[0,1,2].some(k=>LINE_SENSOR.detected(readLine(k),k))'),id);
   program(js('EJ[0]'));tick(.5);assert.ok(js('runDistance')>1,id+' avanza con su código');
  }
+});
+test('S07 · Repaso: superficie neutra sin plotter oficial (sin línea, zonas ni cajas) y sin copiar S03',()=>{
+ js("changeTrack('s07')");assert.equal(js('track.paths.length+track.zones.length+track.markers.length+activeObstacles.length'),0);
+ assert.equal(js('track.neutral'),true);assert.equal(js('track.official'),false);assert.match(js('track.name'),/sin pista propia/);
+ assert.equal(js("document.getElementById('reference').hidden"),true,'sin plotter de referencia');
+ assert.ok(js('readLine(0)')<200&&js('readLine(1)')<200,'toda la superficie es blanca');
+ program(js('EJ[0]'));tick(.5);js("changeTrack('s01')");
 });
 test('Demo real S01: parar, golpear, continuar y finalizar sin reiniciar',()=>{
  js("changeTrack('s01')");el('demo').events.click();let struck=false;

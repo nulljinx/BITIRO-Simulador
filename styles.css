@@ -118,6 +118,16 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .pop-panel small{color:var(--text-secondary);font-size:11px;line-height:1.4}
 
 /* Barra de ejecución (≈31 px en el Lab) */
+/* Entradas del robot: Pulsador e IR, siempre visibles (alternan, como en el Lab) */
+.inputs-strip{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;padding:5px 8px;background:var(--surface-panel-soft);border-top:1px solid var(--border-default)}
+.inputs-strip .tlabel{margin-right:2px}
+.input-chip{display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:3px 10px;border:1px solid var(--border-default);border-radius:var(--radius-control);background:var(--surface-panel-raised);font-size:var(--text-label);font-weight:500;line-height:1.3;cursor:pointer;white-space:nowrap;transition:background var(--motion-fast) var(--ease-out),border-color var(--motion-fast) var(--ease-out)}
+.input-chip:hover{background:var(--surface-panel-muted);border-color:var(--border-strong)}
+.input-chip .dot{width:8px;height:8px;flex:none;border-radius:50%;border:1.5px solid var(--text-secondary);background:transparent}
+.input-chip strong{font:500 11px var(--font-mono);color:var(--text-secondary)}
+.input-chip[aria-pressed=true]{background:var(--action-primary-soft);border-color:var(--action-primary);color:var(--action-primary)}
+.input-chip[aria-pressed=true] .dot{background:var(--action-primary);border-color:var(--action-primary)}
+.input-chip[aria-pressed=true] strong{color:var(--action-primary);font-weight:600}
 .runtime-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:3px 6px;border-top:1px solid var(--border-default);background:var(--surface-panel-raised);flex-wrap:wrap}
 .runtime-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .runtime-actions button{min-height:28px;padding:4px 12px;font-weight:600}
@@ -169,6 +179,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .example-field{display:flex;min-width:0}
 .example-field select{height:32px;min-width:0;max-width:150px;padding:5px 26px 5px 10px;background-color:var(--editor-secondary-bg);border:1px solid var(--editor-border);color:var(--editor-secondary-text);font-weight:500}
 .example-field select:hover{border-color:var(--instrument-text-soft)}
+.restore-button{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:5px 12px;border:1px solid var(--editor-border);border-radius:var(--radius-control);background:var(--editor-secondary-bg);color:var(--editor-secondary-text);font:500 var(--text-label)/1.3 var(--font-sans);cursor:pointer;white-space:nowrap}
+.restore-button:hover{border-color:var(--instrument-text-soft)}
 .execute-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:1;height:32px;padding:5px 8px;border:1px solid;cursor:pointer;font-weight:600}
 .execute-button:disabled{background:var(--instrument-line);border-color:var(--instrument-line)}
 
@@ -180,6 +192,11 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .reference-title button{border:0;background:transparent;font-size:16px;cursor:pointer;min-width:44px;min-height:44px;border-radius:var(--radius-control)}
 .reference-dialog img{max-height:70vh;width:auto;margin:var(--space-3) auto 0;display:block}
 .reference-dialog p{font-size:var(--text-label);color:var(--text-secondary)}
+
+.confirm-dialog{width:min(92vw,420px)}
+.confirm-dialog h2{margin:0 0 var(--space-2);font-size:17px}
+.confirm-dialog p{margin:0 0 var(--space-4);font-size:var(--text-label);color:var(--text-secondary);line-height:1.5}
+.confirm-actions{display:flex;justify-content:flex-end;gap:var(--space-2)}
 
 /* 1024–1279: dos columnas con el canvas dominante; la telemetría puede ocupar dos filas */
 @media(min-width:1024px) and (max-width:1279px){
@@ -208,7 +225,7 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
  .run-proxy{display:inline-flex!important}
  .editor-bottom-bar .primary{background:transparent;border-color:var(--editor-border);color:var(--instrument-text);font-weight:500}
  .editor-bottom-bar .primary:hover:not(:disabled){background:var(--instrument-line);box-shadow:none;border-color:var(--instrument-text-soft)}
- .button,.runtime-actions button,.camera-mode-switch button,.zoom-controls button,.editor-bottom-bar button,.menu>summary,.menu-item,.toggle-ir,select,.more-data>summary,#codeClose,.telemetry>summary,.example-field select,.execute-button{min-height:44px}
+ .input-chip,.restore-button,.button,.runtime-actions button,.camera-mode-switch button,.zoom-controls button,.editor-bottom-bar button,.menu>summary,.menu-item,.toggle-ir,select,.more-data>summary,#codeClose,.telemetry>summary,.example-field select,.execute-button{min-height:44px}
  .zoom-controls button{min-width:44px}
  .simulator-toolbar{flex-wrap:wrap;row-gap:var(--space-2);padding:8px}
  .track-field{flex:1 1 0;max-width:none}
@@ -217,6 +234,10 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
  .camera-mode-switch{order:3;flex:1 1 100%;gap:4px}
  .camera-mode-switch button{flex:1 1 0;padding:3px 4px;min-width:0}
  .menu-check{min-height:44px}
+ .inputs-strip{padding:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px}
+ .inputs-strip .tlabel{grid-column:1/-1}
+ .input-chip{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:4px 8px;white-space:normal}
+ .input-chip .dot{display:none}
  .menu-check input{width:20px;height:20px}
  #codeClose{width:44px}
  .code-panel summary{display:flex;align-items:center;min-height:44px}
@@ -235,9 +256,10 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
  .runtime-clock{justify-content:flex-end}
  /* Orden en pantalla: canvas → controles → estado → telemetría */
  .simulation-panel .scene-wrap{order:1}
- .simulation-panel .runtime-bar{order:2}
- .simulation-panel .status-strip{order:3}
- .simulation-panel .telemetry{order:4}
+ .simulation-panel .inputs-strip{order:2}
+ .simulation-panel .runtime-bar{order:3}
+ .simulation-panel .status-strip{order:4}
+ .simulation-panel .telemetry{order:5}
  .simulation-panel .simulator-toolbar{order:0}
  .status-strip{border-radius:0}
 }

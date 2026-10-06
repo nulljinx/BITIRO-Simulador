@@ -4,10 +4,12 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const R={x:0,y:0,th:0,L:0,R:0};
 const ir=[0,0];
+let btn=0; // pulsador: como en el Lab, alterna (Libre ↔ Presionado) y leerBoton() devuelve 1/0
 let running=0,halt=0,wait=0,it=null,prog,strict,ini={},warns=new Set(),lcd=['',''],scopes=[Object.create(null)],variableTypes=new WeakMap();
 function reset(){ if(typeof window.resetRobot==='function')window.resetRobot(); }
 function lect(k){return typeof window.readLine==='function'?window.readLine(k):28;}
-function setIR(k,v){ir[k]=v?1:0;const b=$('ir'+k);b.setAttribute('aria-pressed',String(!!ir[k]));b.querySelector('strong').textContent=ir[k]?'SÍ':'NO';}
+function setIR(k,v){ir[k]=v?1:0;const b=$('ir'+k);b.setAttribute('aria-pressed',String(!!ir[k]));b.querySelector('strong').textContent=ir[k]?'Activo':'Libre';}
+function setButton(v){btn=v?1:0;const b=$('pulsador');b.setAttribute('aria-pressed',String(!!btn));b.querySelector('strong').textContent=btn?'Presionado':'Libre';}
 const EJ=[
 `// Tres sensores: usa la calibración guardada.
 // 1 = negro; 0 = blanco. Los motores reciben izq., der.
@@ -261,7 +263,7 @@ const FN={
  leerSensorLineaIzquierdo:[[0],()=>sens(0)],
  leerSensorLineaCentral:[[0],()=>sens(1)],
  leerSensorLineaDerecho:[[0],()=>sens(2)],
- leerBoton:[[0],unavailable("leerBoton")],
+ leerBoton:[[0],()=>btn],
  leerDistanciaSonar:[[0],()=>{if(strict&&!ini.s){warn('Inicializa los sensores antes de leer el sonar.');return 200;}return window.readSonarDistance?window.readSonarDistance():200;}],
  leerLineaNormalizada:[[1],a=>{const k=a[0];if(!Number.isInteger(k)||k<0||k>2)throw{m:'El sensor debe ser 0 (izquierdo), 1 (central) o 2 (derecho)',ln:0};if(strict&&!ini.s){sens(k);return 0;}return LINE_SENSOR.normalized(lect(k),k);}],
  leerUmbralLinea:[[0],()=>LINE_SENSOR.profile.threshold],
@@ -339,7 +341,7 @@ function start(){
   let P;
   try{P=parse(lex($('src').value))}
   catch(e){reset();$('msg').innerHTML='<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>';return}
-  const inputs=[...ir];reset();inputs.forEach((v,k)=>setIR(k,v));if(window.onCodeStarted)window.onCodeStarted();prog=P;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict};warns=new Set();
+  const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict};warns=new Set();
   scopes=[Object.create(null)];variableTypes=new WeakMap();it=main();running=1;
   $('msg').innerHTML='<span class=ok>✔ Sintaxis validada. Intérprete didáctico en ejecución…</span>';
 }

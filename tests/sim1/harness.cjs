@@ -15,7 +15,7 @@ function load({patches=[],storage={},blocked=false}={}){
  function el(id){
   if(!nodes.has(id))nodes.set(id,{
    id,value:id==='quality'?'standard':'',textContent:'',innerHTML:'',style:{},dataset:{},hidden:false,
-   disabled:false,classList:{toggle(){},add(){},remove(){}},setAttribute(){},
+   disabled:false,classList:{toggle(){},add(){},remove(){}},attrs:{},setAttribute(k,v){this.attrs[k]=String(v);},getAttribute(k){return k in this.attrs?this.attrs[k]:null;},
    events:{},addEventListener(type,fn){this.events[type]=fn;},querySelector(){return el(id+'.sub')},focus(){},
    showModal(){this.open=true;},close(){this.open=false;this.events.close?.();},
    getBoundingClientRect(){return {width:700,height:480}},scrollIntoView(){},requestFullscreen(){}

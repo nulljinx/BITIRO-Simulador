@@ -1,0 +1,321 @@
+{
+ "id": "s08",
+ "name": "S08 · Clasificación y desafío final",
+ "w": 100,
+ "h": 200,
+ "paths": [
+  {
+   "id": "p00_pdf74",
+   "w": 2.6,
+   "p": [
+    [
+     37.849,
+     65.454
+    ],
+    [
+     37.85,
+     88.928
+    ]
+   ],
+   "note": "end:recorte w/2"
+  },
+  {
+   "id": "p01_pdf74",
+   "w": 2.6,
+   "p": [
+    [
+     37.851,
+     101.528
+    ],
+    [
+     37.851,
+     123.288
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p02_pdf74",
+   "w": 2.6,
+   "p": [
+    [
+     37.852,
+     135.888
+    ],
+    [
+     37.853,
+     161.691
+    ]
+   ],
+   "note": "start:recorte w/2,end:empalme"
+  },
+  {
+   "id": "p03_pdf77",
+   "w": 2.6,
+   "p": [
+    [
+     9.736,
+     26.881
+    ],
+    [
+     17.136,
+     26.881
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p04_pdf79",
+   "w": 2.6,
+   "p": [
+    [
+     34.154,
+     26.881
+    ],
+    [
+     41.554,
+     26.881
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p05_pdf81",
+   "w": 2.6,
+   "p": [
+    [
+     58.572,
+     26.881
+    ],
+    [
+     65.972,
+     26.881
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p06_pdf83",
+   "w": 2.6,
+   "p": [
+    [
+     82.99,
+     26.881
+    ],
+    [
+     90.39,
+     26.881
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p07_pdf84",
+   "w": 2.6,
+   "p": [
+    [
+     13.436,
+     26.881
+    ],
+    [
+     13.431,
+     64.154
+    ]
+   ],
+   "note": "start:empalme,end:recorte w/2"
+  },
+  {
+   "id": "p08_pdf85",
+   "w": 2.6,
+   "p": [
+    [
+     37.854,
+     26.881
+    ],
+    [
+     37.849,
+     65.454
+    ]
+   ],
+   "note": "start:empalme,end:empalme"
+  },
+  {
+   "id": "p09_pdf86",
+   "w": 2.6,
+   "p": [
+    [
+     62.272,
+     26.881
+    ],
+    [
+     62.267,
+     64.154
+    ]
+   ],
+   "note": "start:empalme,end:recorte w/2"
+  },
+  {
+   "id": "p10_pdf87",
+   "w": 2.6,
+   "p": [
+    [
+     86.69,
+     26.881
+    ],
+    [
+     86.685,
+     64.154
+    ]
+   ],
+   "note": "start:empalme,end:recorte w/2"
+  },
+  {
+   "id": "p11_pdf88",
+   "w": 2.6,
+   "p": [
+    [
+     6.63,
+     44.569
+    ],
+    [
+     93.495,
+     44.569
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p12_pdf89",
+   "w": 2.6,
+   "p": [
+    [
+     6.63,
+     59.104
+    ],
+    [
+     93.495,
+     59.104
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  },
+  {
+   "id": "p13_pdf93",
+   "w": 2.6,
+   "p": [
+    [
+     29.112,
+     161.691
+    ],
+    [
+     46.512,
+     161.691
+    ]
+   ],
+   "note": "start:recorte w/2,end:recorte w/2"
+  }
+ ],
+ "zones": [
+  {
+   "id": "base1",
+   "label": "Base 1",
+   "x": 8.436,
+   "y": 16.881,
+   "width": 10.0,
+   "height": 10.0,
+   "kind": "finish-green"
+  },
+  {
+   "id": "base2",
+   "label": "Base 2",
+   "x": 32.854,
+   "y": 16.881,
+   "width": 10.0,
+   "height": 10.0,
+   "kind": "finish-green"
+  },
+  {
+   "id": "base3",
+   "label": "Base 3",
+   "x": 57.272,
+   "y": 16.881,
+   "width": 10.0,
+   "height": 10.0,
+   "kind": "finish-green"
+  },
+  {
+   "id": "base4",
+   "label": "Base 4",
+   "x": 81.69,
+   "y": 16.881,
+   "width": 10.0,
+   "height": 10.0,
+   "kind": "finish-green"
+  }
+ ],
+ "markers": [
+  {
+   "id": "base-inicial",
+   "label": "",
+   "kind": "start-red",
+   "x": 27.812,
+   "y": 161.691,
+   "width": 20.0,
+   "height": 20.0
+  }
+ ],
+ "obstacles": [],
+ "start": {
+  "x": 37.85,
+  "y": 154.8,
+  "heading": -1.5707963267948966
+ },
+ "startBasis": "SIN respaldo del Lab (S08 «pendiente de validación»). Analogía S04/S05; la vertical principal NO está en x=50",
+ "source": "Copia de ROB-002-S08-plotter-100x200(1).pdf",
+ "boxSlots": [
+  {
+   "x": 17.448,
+   "y": 125.588,
+   "width": 8.0,
+   "height": 8.0,
+   "pdfDrawing": 90
+  },
+  {
+   "x": 50.343,
+   "y": 125.588,
+   "width": 8.0,
+   "height": 8.0,
+   "pdfDrawing": 92
+  },
+  {
+   "x": 17.483,
+   "y": 91.228,
+   "width": 8.0,
+   "height": 8.0,
+   "pdfDrawing": 488
+  },
+  {
+   "x": 50.378,
+   "y": 91.228,
+   "width": 8.0,
+   "height": 8.0,
+   "pdfDrawing": 490
+  }
+ ],
+ "gapsPdf": [
+  {
+   "x": 32.812,
+   "y": 124.588,
+   "width": 10.0,
+   "height": 10.0,
+   "pdfDrawing": 91
+  },
+  {
+   "x": 32.847,
+   "y": 90.228,
+   "width": 10.0,
+   "height": 10.0,
+   "pdfDrawing": 489
+  }
+ ]
+}

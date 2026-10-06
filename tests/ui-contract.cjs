@@ -33,7 +33,7 @@ test('Clases que consultan los scripts existen (.cam con data-view, .threshold-m
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
- assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','renderer3d.js','simulator.js','syntax-highlight.js','ui-shell.js']);
+ assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','renderer3d.js','starters.js','simulator.js','syntax-highlight.js','ui-shell.js']);
 });
 test('Controles de la vista normal y ausencia de elementos pedagógicos visibles',()=>{
  for(const id of ['track','run','pause','reset','step','src','lcd','sonar','codeToggle'])assert.ok(ids.includes(id),id);
@@ -51,7 +51,8 @@ test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetr�
  assert.ok(!/workspace-heading/.test(html),'la fila de título redundante debe estar eliminada');
  assert.match(html,/<h1 class="sr-only">/,'conserva un h1 accesible');
  const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
- for(const id of ['codeToggle','speed','quality','showTrail','ir0','ir1','demo','strike','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ for(const id of ['codeToggle','speed','quality','showTrail','demo','strike','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ for(const id of ['ir0','ir1','pulsador'])assert.ok(!menu[1].includes(`id="${id}"`),id+' ya NO va en «Más»: es una entrada siempre visible');
  const strip=html.match(/<div class="telemetry-strip".*?<details class="more-data pop"/s);assert.ok(strip,'franja de telemetría');
  for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');
  for(const id of ['barL','barC','barR','stateL','stateC','stateR'])assert.ok(!strip[0].includes(`id="${id}"`),id+' no debe estar en la vista principal');
@@ -93,6 +94,22 @@ test('Micro-pulido: cabecera sin «Local · Sin conexión» (pasa a «Más»), s
  assert.match(css,/\.track-field select\{width:100%;text-overflow:ellipsis/);
  // Pausar / Paso / Reiniciar: misma altura que la toolbar (28 px) y deshabilitado visible sin depender de la opacidad.
  assert.match(css,/\.runtime-actions button\{min-height:28px;padding:4px 12px;font-weight:600\}/);assert.match(css,/\.runtime-actions button:disabled\{opacity:1;background:var\(--surface-panel-soft\)/);
+});
+test('PILOT-5: franja «Entradas» siempre visible con una sola representación interactiva por entrada',()=>{
+ const strip=html.match(/<div class="inputs-strip" role="group" aria-label="Entradas del robot">(.*?)<\/div>\n/s);assert.ok(strip,'franja de entradas');
+ const chips=[...strip[1].matchAll(/<button type="button" id="(\w+)" class="input-chip" aria-pressed="false" aria-label="([^"]+)">/g)].map(m=>[m[1],m[2]]);
+ assert.deepEqual(chips,[['pulsador','Pulsador'],['ir0','IR izquierdo'],['ir1','IR derecho']]);          // orden: Pulsador | IR izquierdo | IR derecho
+ for(const id of ['pulsador','ir0','ir1'])assert.equal(html.split(`id="${id}"`).length-1,1,id+' aparece una sola vez');
+ assert.ok(!/<details[^>]*>(?:(?!<\/details>).)*id="pulsador"/s.test(html),'las entradas no están dentro de ningún <details>/menú');
+ assert.ok(html.indexOf('class="inputs-strip"')<html.indexOf('class="runtime-bar"'),'las entradas van antes de los controles de ejecución');
+ assert.equal((strip[1].match(/<strong aria-hidden="true">Libre<\/strong>/g)||[]).length,3,'el estado visible no se duplica para lectores de pantalla (lo da aria-pressed)');
+});
+test('PILOT-5: S01–S08 sin selector de soluciones; «Restaurar código inicial» con confirmación; ejemplos solo en práctica libre',()=>{
+ assert.match(html,/<label class="example-field" id="exampleField" hidden>/,'el selector de ejemplos arranca oculto (la pista inicial es S01)');
+ assert.match(html,/<button type="button" id="restoreStarter" class="restore-button">Restaurar código inicial<\/button>/);
+ const dlg=html.match(/<dialog id="restoreDialog"[^>]*>(.*?)<\/dialog>/s);assert.ok(dlg);assert.match(dlg[1],/id="restoreConfirm"/);assert.match(dlg[1],/id="restoreCancel"/);assert.ok(!/<form/.test(dlg[1]),'sin <form> (CSP form-action none)');
+ assert.ok(fs.existsSync(path.join(root,'starters.js')));
+ const help=html.match(/<details><summary>Funciones y límites.*?<\/details>/s)[0];assert.match(help,/leerBoton\(\)/);assert.match(help,/leerSensorObstaculoIzquierdo\(\)/);
 });
 test('Fuentes locales referenciadas existen y no se cargan recursos externos (el único enlace absoluto es la marca hacia el Lab)',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
