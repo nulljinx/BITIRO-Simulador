@@ -111,32 +111,39 @@ const rodSegment=(angle,pose=R)=>MECH.segment(pose,angle);
 const rodTouchesBox=(angle,ob,pose=R)=>MECH.barOverlapsBox(pose,angle,ob);
 const bodyTouchesBox=(x,y,ob)=>MECH.bodyOverlapsBox({...R,x,y},ob);
 function moveRodTowards(desired,dt){
+ // `desired` y striker.angle están en GRADOS físicos (−75…+75, 0 = centro).
  if(Math.abs(desired-striker.angle)<1e-6)return;
  // El servo no atraviesa ni mueve cajas a distancia: una sola solución de
  // contacto valida el desplazamiento antes de modificar el mundo o la escena.
- const step=HIT.commandRate*dt*Math.sign(desired-striker.angle);
+ const step=HIT.angularRateDeg*dt*Math.sign(desired-striker.angle);
  const next=striker.angle+Math.sign(step)*Math.min(Math.abs(step),Math.abs(desired-striker.angle));
  const result=MECH.advance(R,striker.angle,next,activeObstacles,track);
- striker.angle=result.command;
+ striker.angle=result.angle;
  for(const [id,pos] of result.changes){
   const ob=activeObstacles.find(item=>item.id===id);
   if(ob){ob.x=pos.x;ob.y=pos.y;}
  }
+ // hitIds solo CUENTA cajas desplazadas por orden; nunca impide un contacto posterior (la física no lo consulta).
  for(const id of result.hits)if(!striker.hitIds.has(id)){
   movedCount++;striker.hitIds.add(id);
  }
- if(result.hits.length)ui.feedback.textContent='Golpe: la varilla central contactó la caja y la está desplazando.';
+ if(result.hits.length)ui.feedback.textContent='Garra: contactó una caja y la está desplazando.';
  if(result.blocked){striker.blocked=result.blocked;ui.feedback.textContent=result.blocked;}
  else striker.blocked=null;
 }
-function stroke(angle){
- const target=MECH.clamp(Number(angle)||0,0,HIT.maxCommand);
- const previousTarget=striker.target;
- if(previousTarget===target&&striker.pulse===0)return;striker.target=target;striker.pulse=0;striker.returning=false;
- if(target>0){if(previousTarget===0&&striker.angle<.5)striker.hitIds.clear();ui.feedback.textContent='Golpe solicitado. El servo gira desde su posición recogida: solo mueve objetos mediante contacto.';}
- else ui.feedback.textContent='Golpe: regreso controlado a la posición recogida.';
+// Posición pedagógica del servo (−1 izquierda, 0 centro, +1 derecha DEL ROBOT) → ángulo físico → objetivo del servo.
+// Devuelve false (sin mover nada) si el valor no es exactamente −1, 0 o 1.
+function setStrikerPosition(cmd){
+ const target=MECH.commandAngle(cmd);if(target===null)return false;
+ if(striker.target===target&&striker.pulse===0)return true;
+ if(target!==0)striker.hitIds.clear();   // nueva orden: se puede contar un nuevo golpe (la física no cambia)
+ striker.target=target;striker.pulse=0;striker.returning=false;
+ ui.feedback.textContent=target===0?'Garra: centro.':'Garra: '+(target<0?'izquierda':'derecha')+'. Solo mueve objetos por contacto.';
+ return true;
 }
-window.setStrikerAngle=stroke;
+window.setStrikerPosition=setStrikerPosition;
+// Solo para la demostración guiada: gira a un lado y, tras un instante, vuelve sola al centro (el control manual NO retorna solo).
+function demoStrike(cmd){if(!setStrikerPosition(cmd))return;striker.pulse=1;striker.returning=false;}
 function createDemoPath(t){
  // Recorridos didácticos: se separan explícitamente del código del alumno. Eligen trazos impresos por su `role` (descriptivo).
  const roleOf=r=>t.paths.filter(p=>p.role===r).map(p=>p.p);
@@ -189,21 +196,20 @@ function demoDrive(){
   ui.feedback.textContent='Demostración del trazado terminada; no implica superar la misión.';
  }
  const ob=nearbyObstacle(13);
- if(ob&&ob.forward-ob.ob.height/2<=HIT.pivotForward+HIT.length+1.2){R.L=R.R=0;mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;ui.feedback.textContent='Un objeto impide avanzar. Acércate lo suficiente y usa «Golpe» para apartarlo.';}
+ if(ob&&ob.forward-ob.ob.height/2<=HIT.pivotForward+HIT.length+1.2){R.L=R.R=0;mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;ui.feedback.textContent='Un objeto impide avanzar. Gira la garra a la derecha (Más → Garra manual) para apartarlo.';}
 }
 function update(dt){
  if(paused)return;
  previousPose={x:R.x,y:R.y,th:R.th,angle:striker.angle};
- // El golpe tiene una trayectoria RECOGIDA (-65°) → extensión (0°) →
- // barrido (+65°). La orden del alumno fija la posición del servo; el botón
- // de demostración realiza un ciclo y luego lo devuelve a reposo.
+ // La garra gira de forma continua entre −75° (izquierda), 0° (centro) y +75° (derecha). La orden del alumno (o el
+ // control manual) fija la posición objetivo; solo la demostración guiada usa un ciclo con retorno automático.
  if(striker.pulse>0){
   if(!striker.returning){
    moveRodTowards(striker.target,dt);
    if(Math.abs(striker.angle-striker.target)<.01||striker.blocked){striker.returning=true;striker.pulse=.55;}
   }else{
    striker.pulse=Math.max(0,striker.pulse-dt);
-   if(striker.pulse===0)striker.target=0;
+   if(striker.pulse===0)striker.target=0;   // ciclo de la demo guiada: vuelve al centro
   }
  }else if(Math.abs(striker.target-striker.angle)>.01){
   // En modo código, moverServoGolpe() también debe mover el servo de verdad.
@@ -230,18 +236,22 @@ function update(dt){
  // Subpasos de traslación/rotación: no permitir atravesar por tunnelling en
  // una sola actualización a altas velocidades o tras un giro brusco.
  const substeps=Math.max(1,Math.ceil(Math.abs(v*dt)/.30+Math.abs(omega*dt)/.025));
- let blocked=false;
+ let blocked=false,blockMessage='';
  for(let k=0;k<substeps;k++){
-  const pose={...R,th:R.th+omega*dt/substeps};
+  const pose={x:R.x,y:R.y,th:R.th+omega*dt/substeps};
   pose.x+=Math.sin(pose.th)*v*dt/substeps;
   pose.y-=Math.cos(pose.th)*v*dt/substeps;
-  if(activeObstacles.some(ob=>MECH.bodyOverlapsBox(pose,ob)||MECH.barOverlapsBox(pose,striker.angle,ob))){
-   blocked=true;R.L=R.R=0;wheel.left=wheel.right=0;break;
-  }
-  R.x=pose.x;R.y=pose.y;R.th=pose.th;
+  // Física compartida (strike-physics.js): la garra empuja por contacto una caja movible si hay espacio; si no, el robot se queda
+  // en la última pose válida. El cuerpo no empuja cajas. Los cambios solo afectan al MUNDO ACTIVO.
+  const step=MECH.advanceRobotPose({x:R.x,y:R.y,th:R.th},pose,striker.angle,activeObstacles,track);
+  if(step.blocked){blocked=true;blockMessage=step.blocked.message;R.L=R.R=0;wheel.left=wheel.right=0;break;}
+  for(const [id,pos] of step.changes){const ob=activeObstacles.find(item=>item.id===id);if(ob){ob.x=pos.x;ob.y=pos.y;}}
+  for(const id of step.hits)if(!striker.hitIds.has(id)){movedCount++;striker.hitIds.add(id);}
+  if(step.hits.length)ui.feedback.textContent='Garra: empuja una caja por contacto.';
+  R.x=step.pose.x;R.y=step.pose.y;R.th=step.pose.th;
  }
  if(blocked){
-  ui.feedback.textContent='Contacto con un obstáculo: el robot se detuvo. El golpe solo alcanza objetos frente al brazo; un contacto lateral requiere cambiar la trayectoria de tu programa.';
+  ui.feedback.textContent=blockMessage+' Cambia la trayectoria de tu programa o mueve la garra para apartarlo.';
   if(mode==='demo'){mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;}
  }
  if(blocked&&!wasContact)collisionCount++;wasContact=blocked;
@@ -266,7 +276,8 @@ function updateTelemetry(){
  updateLearningTelemetry();
  $app('sonar').textContent=window.readSonarDistance()+' cm';
  $app('position').textContent=Math.round(R.x)+', '+Math.round(R.y)+' cm';
- $app('strikerStatus').textContent=Math.round(striker.angle)+'° · '+(striker.blocked?'BLOQUEADO':striker.pulse>0?'EN MOVIMIENTO':Math.abs(striker.angle)<.5?'RECOGIDO':'POSICIÓN FIJA');
+ {const deg=Math.round(striker.angle),txt=(deg>0?'+':'')+deg+'°',moving=Math.abs(striker.angle-striker.target)>.5;
+  $app('strikerStatus').textContent=striker.blocked?txt+' · BLOQUEADO':moving?txt+' · EN MOVIMIENTO':Math.abs(striker.angle)<.5?'CENTRO · 0°':(deg<0?'IZQUIERDA':'DERECHA')+' · '+deg+'°';}
  $app('movedObjects').textContent=String(movedCount);
  $app('lcd').textContent=lcd[0].padEnd(16).slice(0,16)+'\n'+lcd[1].padEnd(16).slice(0,16);
 }
@@ -289,12 +300,17 @@ function cameraUI(name){
 document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>cameraUI(b.dataset.view)));
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
-$app('demo').addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
+$app('demo').addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
+ // Solo la demo visual: con cajas en el escenario, aparta la garra (−1) antes de acercarse; sin cajas no hay nada que preparar.
+ if(activeObstacles.length)setStrikerPosition(-1);
+ mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
 $app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':runLabel());$app('step').disabled=!paused;acc=0;});
 $app('step').addEventListener('click',()=>{if(!paused||mode==='idle')return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
 $app('reset').addEventListener('click',()=>{window.resetRobot();$app('msg').textContent='Simulación reiniciada; tu código se conserva.';});
-$app('strike').addEventListener('click',()=>{
- if(mode==='code'){ui.feedback.textContent='En modo código, utiliza moverServoGolpe() en tu programa.';return;}stroke(65);striker.pulse=1;striker.returning=false;
+// Garra manual: Izquierda (−1), Centro (0), Derecha (+1) del robot. Sin retorno automático: el usuario decide la posición.
+for(const [id,cmd] of [['clawLeft',-1],['clawCenter',0],['clawRight',1]])$app(id).addEventListener('click',()=>{
+ if(mode==='code'){ui.feedback.textContent='En modo código, usa moverServoGolpe() en tu programa.';return;}
+ if(resumeDemoAfterStrike&&cmd!==0)demoStrike(cmd);else setStrikerPosition(cmd);
 });
 $app('pulsador').addEventListener('click',()=>setButton(!btn));
 for(const k of [0,1])$app('ir'+k).addEventListener('click',()=>{setIR(k,!ir[k]);if(mode==='demo'){demoPath=resamplePath(createDemoPath(track));demoIndex=Math.min(demoIndex,demoPath.length-2);}});
@@ -368,7 +384,7 @@ function updateLearningTelemetry(){
  const label=mode==='demo'||resumeDemoAfterStrike?'Demo guiada por ruta':mode==='code'?'Órdenes de tu programa':'Último estado';
  $app('decision').textContent=label+': ['+bits.join(' · ')+'] → '+action+'.';
  $app('runEvidence').textContent=runDistance.toFixed(1)+' cm recorridos · '+(observedSeconds?(100*lineSeconds/observedSeconds).toFixed(0)+'% con línea detectada en movimiento':'sin muestras en movimiento')+' · '+collisionCount+' contactos. Evidencia del ensayo; no es una nota ni certifica la misión.';
- $app('strike').disabled=mode==='code';
+ for(const [id,angle] of [['clawLeft',-75],['clawCenter',0],['clawRight',75]]){const b=$app(id);b.disabled=mode==='code';b.setAttribute('aria-pressed',String(striker.target===angle));}
  $app('step').disabled=!paused||mode==='idle';
 }
 // API mínima para scenario-editor.js (el editor no toca el estado interno del simulador).

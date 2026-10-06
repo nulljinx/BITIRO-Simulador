@@ -92,22 +92,24 @@ void loop() {
   else {
     avanzar(90, 30);
   }
-}`,`// Golpe con sonar: acércate ANTES de accionar el servo.
-// El golpe no mueve objetos a distancia ni atraviesa cajas.
+}`,`// Golpe con sonar: la garra parte al centro (apunta al frente), así que primero se aparta a un lado.
+// El golpe no mueve objetos a distancia ni atraviesa cajas: solo desplaza lo que toca.
 void setup() {
   inicializarMovimiento();
   inicializarSensores();
   inicializarGolpe();
+  moverServoGolpe(-1);   // garra a la izquierda del robot, fuera del eje frontal
+  pausa(600);            // da tiempo a que la garra gire
 }
 
 void loop() {
   int distancia = leerDistanciaSonar();
   if (distancia <= 10) {
     detenerse();
-    moverServoGolpe(65);
-    pausa(950);  // espera a que el golpe termine el barrido
-    moverServoGolpe(0);
-    pausa(900);  // regreso a posición recogida
+    moverServoGolpe(1);   // barrido de izquierda a derecha
+    pausa(900);
+    moverServoGolpe(0);   // vuelve al centro
+    pausa(700);
   }
   else {
     avanzar(30);
@@ -275,8 +277,8 @@ const FN={
  apagarPantalla:[[0],unavailable("apagarPantalla")],prenderPantalla:[[0],unavailable("prenderPantalla")],
  inicializarMovimiento:[[0],()=>{ini.m=1}],
  inicializarSensores:[[0],()=>{ini.s=1}],
- inicializarCabeza:[[0],unavailable("inicializarCabeza")],inicializarGolpe:[[0],()=>{ini.g=1}],inicializarPantalla:[[0],NOP],
- apagarCabeza:[[0],unavailable("apagarCabeza")],moverServoYaw:[[1],unavailable("moverServoYaw")],moverServoPitch:[[1],unavailable("moverServoPitch")],moverServoGolpe:[[1],a=>{if(strict&&!ini.g){warn('Inicializa el golpe con inicializarGolpe() antes de moverlo.');return;}if(!Number.isFinite(a[0]))throw{m:'El ángulo debe ser finito',ln:0};if(a[0]<0||a[0]>65)warn('El mando del golpe admite 0–65; 0 es recogido y 65 completa el barrido.');if(window.setStrikerAngle)window.setStrikerAngle(a[0]);}]
+ inicializarCabeza:[[0],unavailable("inicializarCabeza")],inicializarGolpe:[[0],()=>{ini.g=1;if(window.setStrikerPosition)window.setStrikerPosition(0);}],inicializarPantalla:[[0],NOP],
+ apagarCabeza:[[0],unavailable("apagarCabeza")],moverServoYaw:[[1],unavailable("moverServoYaw")],moverServoPitch:[[1],unavailable("moverServoPitch")],moverServoGolpe:[[1],a=>{if(strict&&!ini.g){warn('Inicializa el golpe con inicializarGolpe() antes de moverlo.');return;}if(!Number.isFinite(a[0]))throw{m:'La posición del golpe debe ser un número finito',ln:0};if(a[0]!==-1&&a[0]!==0&&a[0]!==1){warn('moverServoGolpe() admite -1, 0 o 1.');return;}if(window.setStrikerPosition)window.setStrikerPosition(a[0]);}]
 };
 function find(n,ln){for(let i=scopes.length-1;i>=0;i--)if(Object.prototype.hasOwnProperty.call(scopes[i],n))return scopes[i];if(n in CONS)return null;throw{m:'La variable «'+n+'» no está declarada',ln}}
 function coerce(value,type,ln){

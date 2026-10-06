@@ -50,7 +50,7 @@ S.s01_demo_strike=o=>{const h=load(o);h.js("changeTrack('s01')");
  const out=[snap(h,0,{obstacles:true})];let struck=false,tick=0,strikeTick=null;
  for(;tick<120*80;){
   tick++;h.js('update(1/120)');
-  if(h.js('resumeDemoAfterStrike')&&!struck){h.el('strike').events.click();struck=true;strikeTick=tick;}
+  if(h.js('resumeDemoAfterStrike')&&!struck){h.el('clawRight').events.click();struck=true;strikeTick=tick;}
   const dense=struck&&tick-strikeTick<360;
   if(tick%(dense?6:24)===0)out.push(snap(h,tick,{obstacles:true}));
   if(struck&&h.js('mode')==='idle'&&!h.js('resumeDemoAfterStrike')){out.push(snap(h,tick,{obstacles:true}));break;}
@@ -78,11 +78,9 @@ S.sonar_range=o=>{const h=load(o);h.js("changeTrack('s01')");
 
 S.servo_sweep=o=>{const h=load(o);h.js("changeTrack('s01')");
  h.js('activeObstacles=[]');
- const out=[snap(h,0)];let tick=0,up=null,down=null;
- h.js('stroke(65)');
- for(;tick<1200;){tick++;h.js('update(1/120)');if(tick%6===0)out.push(snap(h,tick));
-  if(up===null&&h.js('striker.angle')>=65-1e-9){up=tick;h.js('stroke(0)');}
-  if(up!==null&&h.js('striker.angle')<=1e-9){down=tick;if(tick%6)out.push(snap(h,tick));break;}}
- return {meta:{track:'s01',note:'sin obstáculos; stroke(65) luego stroke(0)',tickReached65:up,tickBackTo0:down,stride:6},samples:out};};
+ const out=[snap(h,0)];let tick=0;const reached={left:null,right:null,center:null};
+ const go=(cmd,key,test)=>{h.js(`setStrikerPosition(${cmd})`);for(;tick<2400;){tick++;h.js('update(1/120)');if(tick%6===0)out.push(snap(h,tick));if(test(h.js('striker.angle'))){reached[key]=tick;if(tick%6)out.push(snap(h,tick));break;}}};
+ go(-1,'left',a=>a<=-75+1e-9);go(1,'right',a=>a>=75-1e-9);go(0,'center',a=>Math.abs(a)<=1e-9);
+ return {meta:{track:'s01',note:'sin obstáculos; moverServoGolpe(-1) → (+1) → (0): −75° → +75° → 0°',tickReachedLeft:reached.left,tickReachedRight:reached.right,tickBackToCenter:reached.center,stride:6},samples:out};};
 
 module.exports={S,snap};

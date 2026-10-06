@@ -61,7 +61,7 @@ console.log('Tolerancia numérica usada: '+(report.every(r=>r.exactVsFile)?'NING
 
 // ───────── 2. Aserciones explícitas sobre lo que congelan los goldens ─────────
 test('Goldens: ciclo del servo, caja desplazada una vez y rayos de sonar',()=>{
- const sv=traces.servo_sweep.meta;assert.equal(sv.tickReached65,83);assert.equal(sv.tickBackTo0,166);
+ const sv=traces.servo_sweep.meta;assert.equal(sv.tickReachedLeft,48);assert.equal(sv.tickReachedRight,143);assert.equal(sv.tickBackToCenter,191);   // −1 → +1 → 0: −75° → +75° → 0° a 190°/s
  const d=traces.s01_demo_strike.meta;assert.equal(d.movedCount,1);assert.equal(d.badge,'RECORRIDO VISUALIZADO');assert.equal(d.strikeTick,168);
  const sonar=Object.fromEntries(traces.sonar_range.cases.map(c=>[c.label,c.sonar]));
  assert.equal(sonar['frente d=18'],18);assert.equal(sonar['sin cajas'],200);assert.equal(sonar['lejos 300'],200);
@@ -118,7 +118,7 @@ test('Runtime: mensajes amigables y estados clave sin cambiar gramática',()=>{
  assert.deepEqual(g['lectura de línea (S01 inicio)'].vars,{a:1000,b:865,c:1,u:500});
  assert.equal(g['sonar con caja de práctica'].vars.d,18);
  assert.deepEqual(g['LCD escribirPantalla(col,fila,valor)'].lcd,['123             ','    45          ']);
- assert.ok(g['golpe moverServoGolpe(65) a 0,5 s'].striker>40);assert.equal(g['while con acumulador'].vars.n,3);
+ assert.equal(g['golpe moverServoGolpe(1) a 0,5 s'].striker,75);   // +1 llega a +75° (derecha del robot) en 0,39 s a 190°/sassert.equal(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].striker,0);assert.match(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].msg,/admite -1, 0 o 1/);assert.equal(g['while con acumulador'].vars.n,3);
  assert.match(g['error: función desconocida con sugerencia'].msg,/¿Quisiste escribir «avanzar\(\)»\?/);
  assert.match(g['error: variable no declarada'].msg,/no está declarada/);
  assert.match(g['error: falta loop'].msg,/Falta la función void loop/);

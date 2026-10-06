@@ -33,13 +33,19 @@ Pose del robot `R = {x, y, th, L, R}`. Vector adelante = `(sin th, −cos th)`; 
 | `bottomHeight` / `topHeight` | 5,18 / 6,32 |
 | `servoBodyHeight` | 4,4 |
 | `sonarHeight` | 15,1 |
-| `restAngle` | −65° |
-| `sweepPerCommand` | 2° por unidad de comando |
-| `maxCommand` | 65 |
-| `commandRate` | 95 comandos/s |
+| `minAngleDeg` / `centerAngleDeg` / `maxAngleDeg` | −75° / 0° / +75° (grados respecto del eje delantero; + = derecha DEL ROBOT) |
+| `angularRateDeg` | 190°/s (= 95 comandos/s × 2° del modelo v4; sin medición real que la sustituya) |
+| `subStepDeg` | 1,1° (resolución del barrido continuo; ≈ 0,55 comandos × 2° del modelo v4) |
 | `bodyRadius` (colisión cuerpo–caja, círculo) | 8,3 |
 
-Ángulo de la barra = `restAngle + sweepPerCommand × comando` (comando 0 → −65°; 65 → +65°).
+> **RUNTIME-SERVO-1 cambió INTENCIONALMENTE el baseline físico del golpe.** El modelo v4 (comandos 0–65, reposo «recogido» a −65°, barrido
+> unilateral) se reemplazó por la API oficial `moverServoGolpe(-1/0/1)` = izquierda / centro / derecha DEL ROBOT → −75° / 0° / +75° (servo real
+> 165°/90°/15° con 90° como eje delantero). La garra parte centrada (0°). Los valores de esta tabla y del texto siguiente sobre «comando 0–65»
+> describen el modelo v4 histórico y ya no están vigentes. La física trabaja siempre en grados; `IROH_MECHANICS.commandAngle` es la única traducción.
+> Además: el servo contacta en ambos sentidos y el robot que avanza con la barra fija empuja por contacto una caja movible
+> (`advanceRobotPose`); fija o sin espacio → el robot se detiene. Goldens regenerados como consecuencia: ver el informe de la tarea.
+
+(Histórico v4) Ángulo de la barra = `−65° + 2° × comando` (comando 0 → −65°; 65 → +65°).
 
 **Cajas:** rectángulos alineados a ejes `{x, y, width, height, movable, visualHeightCm}`; `visualHeightCm` por defecto 15,6. La caja de práctica de S01 es `practice-box` en (46, 94), 8×8 cm, movible.
 

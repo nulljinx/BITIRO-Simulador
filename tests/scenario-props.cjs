@@ -86,7 +86,7 @@ test('12. Impide solapar el cuerpo del IROH en defaultStart y atravesar el mecan
 test('13–14. Reiniciar restaura la caja configurada; el golpe mueve solo el MUNDO ACTIVO y no la configuración guardada',()=>{
  const h=fresh('s01');apply(h,[{id:'user-box-1',x:40,y:90,width:8,height:8,movable:true}]);
  const saved=h.saved.get(KEY('s01'));assert.deepEqual(obs(h).map(o=>[o.id,o.x,o.y]),[['user-box-1',40,90]]);
- h.js('R.x=48;R.y=116;R.th=0;previousPose={x:R.x,y:R.y,th:R.th,angle:0}');h.js('stroke(65)');h.tick(400);
+ h.js('R.x=48;R.y=116;R.th=0;striker.angle=-75;striker.target=-75;previousPose={x:R.x,y:R.y,th:R.th,angle:-75}');h.js('setStrikerPosition(1)');h.tick(400);
  const moved=obs(h)[0];assert.ok(moved.x!==40||moved.y!==90,'el golpe movió la caja activa');assert.ok(h.js('movedCount')>=1);
  assert.equal(h.saved.get(KEY('s01')),saved,'la configuración persistida no cambia');
  assert.deepEqual(h.js('BITIRO_WORLD.scenario()').map(o=>[o.x,o.y]),[[40,90]],'el escenario guardado en memoria tampoco');
@@ -106,7 +106,7 @@ test('15. El sonar ve una caja creada por el usuario y no ve una fuera de su con
 test('15b. Varias cajas: ninguna se atraviesa con otra tras un golpe',()=>{
  const h=fresh('s01');
  apply(h,[{id:'user-box-1',x:46,y:94,width:8,height:8,movable:true},{id:'user-box-2',x:55,y:94,width:8,height:8,movable:true}]);
- h.js('R.x=50;R.y=116;R.th=0;previousPose={x:R.x,y:R.y,th:R.th,angle:0}');h.js('stroke(65)');
+ h.js('R.x=50;R.y=116;R.th=0;striker.angle=-75;striker.target=-75;previousPose={x:R.x,y:R.y,th:R.th,angle:-75}');h.js('setStrikerPosition(1)');
  for(let n=0;n<600;n++){h.js('update(1/120)');assert.equal(h.js('IROH_MECHANICS.boxBox(activeObstacles[0],activeObstacles[1])'),false,'cajas solapadas en tick '+n);}
 });
 test('16. boxSlots de S08 son metadata: no generan obstáculos ni cajas',()=>{

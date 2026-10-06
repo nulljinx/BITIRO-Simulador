@@ -326,3 +326,11 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .scenario-footer{flex-wrap:wrap;margin-top:var(--space-4)}.scenario-spacer{flex:1 1 0}
 @media(max-width:1023px){.scenario-field input{min-height:44px}}
 @media(max-width:640px){.scenario-layout{grid-template-columns:minmax(0,1fr)}.scenario-map{max-height:38dvh}.scenario-dialog{padding:var(--space-4)}.scenario-spacer{display:none}.scenario-footer{position:sticky;bottom:calc(-1 * var(--space-4));margin-bottom:calc(-1 * var(--space-4));padding:var(--space-3) 0;background:var(--surface-panel-raised);justify-content:flex-end}}
+
+/* Garra manual (Más): tres posiciones del servo del robot; el menú queda abierto para encadenarlas. */
+.claw-group{display:grid;gap:var(--space-1)}
+.claw-label{font-size:var(--text-micro);font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+.claw-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-1)}
+.claw-row .menu-item{justify-content:center;padding:4px 6px}
+.claw-row .menu-item[aria-pressed=true]{background:var(--action-primary-soft);border-color:var(--action-primary);font-weight:600}
+.claw-row .menu-item:disabled{opacity:.55;cursor:not-allowed}

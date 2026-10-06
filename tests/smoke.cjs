@@ -30,20 +30,21 @@ assert.equal(js('Object.keys(sourceTracks).length'),10,'Diez pistas');
 assert.equal(js('HIT.pivotRight'),0,'Palo central en robot');
 assert.equal(js('HIT.sonarHeight'),15.1,'Altura sonar coherente');
 assert.equal(js('activeObstacles[0].visualHeightCm'),15.6,'Caja aproximadamente a altura sonar');
-assert.equal(js('rodTouchesBox(0,activeObstacles[0])'),false,'El palo recogido no nace atravesando caja');
-let rootAngle=js('window.IROH_MECHANICS.sweepAngle(0)'),endAngle=js('window.IROH_MECHANICS.sweepAngle(65)');
-assert.ok(rootAngle<0&&endAngle>0,'El golpe barre alrededor del eje central');
-assert.ok(Math.abs(rootAngle+endAngle)<1e-7,'Giro simétrico hacia ambos lados');
+assert.equal(js('rodTouchesBox(0,activeObstacles[0])'),false,'La garra centrada no nace atravesando caja');
+let leftAngle=js('window.IROH_MECHANICS.sweepAngle(window.IROH_MECHANICS.commandAngle(-1))'),centerAngle=js('window.IROH_MECHANICS.sweepAngle(window.IROH_MECHANICS.commandAngle(0))'),rightAngle=js('window.IROH_MECHANICS.sweepAngle(window.IROH_MECHANICS.commandAngle(1))');
+assert.ok(leftAngle<0&&centerAngle===0&&rightAngle>0,'La garra barre alrededor del eje central: izquierda − / centro 0 / derecha +');
+assert.ok(Math.abs(leftAngle+rightAngle)<1e-7,'Giro simétrico hacia ambos lados');
 // Sin cercanía, no hay contacto ni movimiento remoto.
-js('stroke(65)');for(let k=0;k<55;k++)js('update(1/60)');
+js('setStrikerPosition(1)');for(let k=0;k<55;k++)js('update(1/60)');
 assert.equal(js('movedCount'),0,'Golpe remoto no mueve caja');
 assert.equal(js('activeObstacles[0].x'),46,'Caja no se teletransporta');
-js("window.resetRobot();mode='demo';demoPath=createDemoPath(track);demoIndex=0;");
+js("window.resetRobot();setStrikerPosition(-1);mode='demo';demoPath=createDemoPath(track);demoIndex=0;");   // como la demo visual: garra apartada (−1) antes de acercarse
 for(let k=0;k<2400;k++){js('update(1/60)');if(js('mode')==='idle')break;}
 assert.equal(el('statusBadge').textContent,'OBSTÁCULO','Demo detecta caja');
-assert.equal(js('rodTouchesBox(striker.angle,activeObstacles[0])'),false,'Demo no penetra con el palo recogido');
+assert.equal(js('rodTouchesBox(striker.angle,activeObstacles[0])'),false,'Demo no penetra con la garra');
 const start=js('({x:activeObstacles[0].x,y:activeObstacles[0].y})');
-js('stroke(65)');
+// La garra ya está a la izquierda (−1): barrido de izquierda a derecha (+1).
+js('setStrikerPosition(1)');
 let last=js('({x:activeObstacles[0].x,y:activeObstacles[0].y})');
 for(let k=0;k<90;k++){
  js('update(1/60)');
@@ -55,18 +56,18 @@ for(let k=0;k<90;k++){
 }
 assert.equal(js('movedCount'),1,'Cuenta la caja una sola vez');
 assert.ok(js('activeObstacles[0].x')>start.x+10,'El golpe abre espacio por el lateral');
-assert.ok(js('striker.angle')>64,'El servo completa su barrido sin atravesar');
-js('stroke(0)');for(let k=0;k<80;k++){
+assert.ok(js('striker.angle')>74,'El servo completa su barrido sin atravesar');
+js('setStrikerPosition(0)');for(let k=0;k<80;k++){
  js('update(1/60)');assert.equal(js('rodTouchesBox(striker.angle,activeObstacles[0])'),false,'Retorno sin atravesar');
 }
-assert.ok(Math.abs(js('striker.angle'))<.01,'El servo vuelve a su posición recogida');
+assert.ok(Math.abs(js('striker.angle'))<.01,'El servo vuelve al centro');
 assert.equal(js('movedCount'),1,'Retraer no cuenta golpes falsos');
 // Una demostración detenida debe CONTINUAR tras el golpe, sin resetear la pista.
-js('window.resetRobot();mode="demo";demoPath=createDemoPath(track);demoIndex=0');
+js('window.resetRobot();setStrikerPosition(-1);mode="demo";demoPath=createDemoPath(track);demoIndex=0');
 for(let k=0;k<2400;k++){js('update(1/60)');if(js('mode')==='idle')break;}
 assert.equal(js('resumeDemoAfterStrike'),true);
 const beforeResume=js('({x:R.x,y:R.y})');
-js('stroke(65);striker.pulse=1;striker.returning=false;');
+js('demoStrike(1)');   // ciclo propio de la demo guiada: derecha → retorno automático al centro
 for(let k=0;k<250;k++){
  js('update(1/60)');
  if(js('mode')==='demo')break;
@@ -85,21 +86,21 @@ for(let k=0;k<1100;k++){
 assert.equal(js('movedCount'),1,'El ejemplo de sonar activa el golpe al llegar a la caja');
 assert.ok(js('activeObstacles[0].x')>46+8,'El ejemplo del editor desplaza físicamente la caja');
 // Objeto fijo: el servo se detiene, sin penetrar ni desplazar.
-js('window.resetRobot()');js('R.x=50; R.y=122.238; activeObstacles[0].movable=false; stroke(65)');
+js('window.resetRobot()');js('R.x=50; R.y=122.238; activeObstacles[0].movable=false; striker.angle=-75; striker.target=-75; previousPose.angle=-75; setStrikerPosition(1)');
 for(let k=0;k<70;k++){js('update(1/60)');assert.equal(js('rodTouchesBox(striker.angle,activeObstacles[0])'),false)}
-assert.ok(js('striker.angle')<65,'Objeto fijo bloquea servo');
+assert.ok(js('striker.angle')<75,'Objeto fijo bloquea servo');
 assert.equal(js('movedCount'),0,'Objeto fijo no desplazado');
 // Un programa del alumno debe impulsar el servo en modo código.
 js('window.resetRobot()');
-el('src').value='void setup(){ inicializarMovimiento(); inicializarSensores(); inicializarGolpe(); } void loop(){ moverServoGolpe(65); pausa(900); moverServoGolpe(0); pausa(900); }';
+el('src').value='void setup(){ inicializarMovimiento(); inicializarSensores(); inicializarGolpe(); } void loop(){ moverServoGolpe(1); pausa(900); moverServoGolpe(0); pausa(900); }';
 js('start()');for(let k=0;k<54;k++)js('update(1/60)');
 assert.equal(js('mode'),'code');
-assert.ok(js('striker.angle')>1,'moverServoGolpe(65) activa movimiento real');
+assert.ok(js('striker.angle')>1,'moverServoGolpe(1) activa movimiento real');
 assert.equal(js('rodTouchesBox(striker.angle,activeObstacles[0])'),false);
 // Persistencia del programa por pista.
 js("changeTrack('s02')");el('src').value='// pista S02';js("changeTrack('s01')");
 assert.ok(el('src').value.includes('moverServoGolpe'),'Código S01 conservado');
 js("changeTrack('s02')");assert.equal(el('src').value,'// pista S02');
-console.log('BITIRO pruebas OK: golpe central, barrido servo, altura sonar, colisión y desplazamiento continuo, retorno, obstáculo fijo, código y pistas.');
+console.log('BITIRO pruebas OK: garra −1/0/+1, barrido bidireccional, altura sonar, colisión y desplazamiento continuo, retorno, obstáculo fijo, código y pistas.');
 module.exports={ctx,js,el,saved};
 

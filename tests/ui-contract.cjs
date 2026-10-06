@@ -51,7 +51,7 @@ test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetr�
  assert.ok(!/workspace-heading/.test(html),'la fila de título redundante debe estar eliminada');
  assert.match(html,/<h1 class="sr-only">/,'conserva un h1 accesible');
  const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
- for(const id of ['codeToggle','speed','quality','showTrail','demo','strike','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ for(const id of ['codeToggle','speed','quality','showTrail','demo','clawLeft','clawCenter','clawRight','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
  for(const id of ['ir0','ir1','pulsador'])assert.ok(!menu[1].includes(`id="${id}"`),id+' ya NO va en «Más»: es una entrada siempre visible');
  const strip=html.match(/<div class="telemetry-strip".*?<details class="more-data pop"/s);assert.ok(strip,'franja de telemetría');
  for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');

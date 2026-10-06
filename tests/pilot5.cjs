@@ -78,7 +78,11 @@ test('Migración: Óvalo/Ocho no se migran (se conserva lo guardado, incluso un 
 });
 test('Ejemplos legacy congelados (SHA-256) y los ejemplos de práctica libre siguen intactos y completos',()=>{
  assert.deepEqual(S.legacyExamples.map(sha),['a80e20bf2b72cc8e','be9318c04b2c88ba','e37478a28796d735','32290bd6dc7ffcd3','3d0ea10305a5031e']);
- const h=load();assert.deepEqual(Array.from(h.js('EJ.slice()'),String),[...S.legacyExamples],'EJ (práctica libre) no cambió');
+ const h=load();const EJ=Array.from(h.js('EJ.slice()'),String);
+ assert.deepEqual(EJ.slice(0,4),[...S.legacyExamples].slice(0,4),'EJ[0–3] (práctica libre) no cambiaron');
+ // EJ[4] se migró a la API oficial −1/0/+1; la versión v4 (0–65) queda congelada en LEGACY para reconocer código guardado.
+ assert.notEqual(EJ[4],S.legacyExamples[4]);assert.ok(!/moverServoGolpe\(65\)/.test(EJ[4])&&/moverServoGolpe\(-1\)/.test(EJ[4])&&/moverServoGolpe\(1\)/.test(EJ[4])&&/moverServoGolpe\(0\)/.test(EJ[4]));
+ assert.ok(/moverServoGolpe\(65\)/.test(S.legacyExamples[4]),'LEGACY conserva el ejemplo v4 original');
  assert.ok(Object.isFrozen(S.legacyExamples));
  for(const id of ['oval','ocho']){const g=load();g.js(`changeTrack('${id}')`);g.js('setButton(1)');g.program(g.js('EJ[0]'));g.tick(120);assert.equal(g.js('running'),1);assert.doesNotMatch(g.el('msg').innerHTML,/class=err/);}
 });

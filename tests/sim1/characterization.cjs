@@ -22,8 +22,9 @@ function runtimeCases(){
  run('lectura de línea (S01 inicio)','int a=0;int b=0;bool c=false;int u=0;void setup(){inicializarSensores();} void loop(){a=leerLineaNormalizada(1);b=leerSensorLineaCentral();c=lineaCentral();u=leerUmbralLinea();finPrograma();}',10,{vars:['a','b','c','u']});
  run('sonar con caja de práctica','int d=0;void setup(){inicializarSensores();} void loop(){d=leerDistanciaSonar();finPrograma();}',10,{vars:['d']});
  run('LCD escribirPantalla(col,fila,valor)','void setup(){inicializarPantalla();} void loop(){escribirPantalla(0,0,123);escribirPantalla(4,1,45);finPrograma();}',10);
- run('golpe moverServoGolpe(65) a 0,5 s','void setup(){inicializarGolpe();} void loop(){moverServoGolpe(65);pausa(900);moverServoGolpe(0);pausa(900);}',60,{setup:h=>h.js('activeObstacles=[]')});
- run('golpe tras 1,5 s (ya retraído a medias)','void setup(){inicializarGolpe();} void loop(){moverServoGolpe(65);pausa(900);moverServoGolpe(0);pausa(900);}',180,{setup:h=>h.js('activeObstacles=[]')});
+ run('golpe moverServoGolpe(1) a 0,5 s','void setup(){inicializarGolpe();} void loop(){moverServoGolpe(1);pausa(700);moverServoGolpe(0);pausa(700);}',60,{setup:h=>h.js('activeObstacles=[]')});
+ run('golpe tras 1,5 s (ya volvió al centro y empezó otro ciclo)','void setup(){inicializarGolpe();} void loop(){moverServoGolpe(1);pausa(700);moverServoGolpe(0);pausa(700);}',180,{setup:h=>h.js('activeObstacles=[]')});
+ run('golpe moverServoGolpe(65): valor no admitido, no mueve','void setup(){inicializarGolpe();} void loop(){moverServoGolpe(65);pausa(100);}',60,{setup:h=>h.js('activeObstacles=[]')});
  run('while con acumulador','int n=0;void setup(){} void loop(){while(n<3){n+=1;}finPrograma();}',10,{vars:['n']});
  run('error: función desconocida con sugerencia','void setup(){} void loop(){avansar(30);}',2);
  run('error: variable no declarada','void setup(){} void loop(){x=3;}',2);

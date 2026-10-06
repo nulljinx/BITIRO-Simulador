@@ -123,7 +123,7 @@ test('Demo real S01: parar, golpear, continuar y finalizar sin reiniciar',()=>{
  js("changeTrack('s01')");el('demo').events.click();let struck=false;
  for(let n=0;n<120*80;n++){
   js('update(1/120)');
-  if(js('resumeDemoAfterStrike')&&!struck){el('strike').events.click();struck=true;}
+  if(js('resumeDemoAfterStrike')&&!struck){el('clawRight').events.click();struck=true;}
   if(struck&&js('mode')==='idle'&&!js('resumeDemoAfterStrike'))break;
  }
  assert.equal(js('movedCount'),1);assert.equal(el('statusBadge').textContent,'RECORRIDO VISUALIZADO');

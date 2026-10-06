@@ -63,7 +63,7 @@
  const pops=[...document.querySelectorAll('details.pop')];
  document.addEventListener('click',e=>{for(const d of pops)if(d.open&&!d.contains(e.target))d.open=false;});
  for(const d of pops)d.addEventListener('keydown',e=>{if(e.key==='Escape'&&d.open){d.open=false;d.querySelector('summary').focus();}});
- for(const id of ['demo','strike','reference','codeToggle'])$(id)?.addEventListener('click',()=>{const m=$('moreMenu');if(m)m.open=false;});
+ for(const id of ['demo','reference','codeToggle'])$(id)?.addEventListener('click',()=>{const m=$('moreMenu');if(m)m.open=false;});
 
  /* ── Telemetría: siempre abierta en escritorio y apilado ancho; colapsable en móvil ─ */
  const telemetry=$('telemetry'),wide=matchMedia('(min-width:1024px)');
