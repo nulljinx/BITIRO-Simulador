@@ -1,0 +1,19 @@
+{
+"cases":[
+{"case":"sin claves previas","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keys":[],"src_is_EJ0":true},
+{"case":"v1 válida se carga tal cual","profile":{"version":1,"white":[100,110,120],"black":[900,910,920],"threshold":600,"calibrated":true}},
+{"case":"v1 inválida → defaults: JSON corrupto","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"v1 inválida → defaults: versión 2 en la clave v1","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"v1 inválida → defaults: contraste < 100","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"v1 inválida → defaults: umbral fuera de rango","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"v1 inválida → defaults: valor no numérico","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"v1 inválida → defaults: null","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"keyUntouched":true},
+{"case":"save escribe solo la clave v1","returned":true,"stored":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":640,"calibrated":true},"keys":["bitiro:line-calibration:v1"]},
+{"case":"código por pista: ida y vuelta","keys":["bitiro:standalone:code:s01","bitiro:standalone:code:s02"],"s02":"// pista S02","srcNow":"// pista S02","s01Stored":"// Tres sensores: usa la calibración guardada.\n// 1 = negro; 0 = blanco. Los motores reciben izq., der.\nvoid setup() {\n  inicializarMovimiento();\n  inicializarSensores();\n  botonInicio();\n}\n\nvoid loop() {\n  bool izq = lineaIzquierda();\n  bool centro = lineaCentral();\n  bool der = lineaDerecha();\n\n  if (izq && centro && der) {\n    // Barra o cruce: conserva el rumbo.\n    avanzar(25);\n  }\n  else if (izq && !der) {\n    avanzar(12, 35);  // gira hacia la izquierda\n  }\n  else if (der && !izq) {\n    avanzar(35, 12);  // gira hacia la derecha\n  }\n  else if (centro) {\n    avanzar(35);\n  }\n  else {\n    // Sin línea: detente y revisa tu estrategia.\n    detenerse();\n  }\n}"},
+{"case":"código guardado arbitrario se carga sin validar","src":"\u0000basura<script>x</script>"},
+{"case":"código guardado vacío cae a EJ[0]","src_is_EJ0":true},
+{"case":"storage bloqueado desde el arranque","profile":{"version":1,"white":[155,155,155],"black":[865,865,865],"threshold":500,"calibrated":false},"saveReturned":false,"changeTrackThrew":false,"src_is_EJ0":true,"keys":[]},
+{"case":"storage se bloquea tras cargar: save devuelve false pero el perfil queda en memoria","saveReturned":false,"profileInMemoryCalibrated":true,"keys":[]},
+{"case":"v2 nunca se lee ni se escribe","v2Keys":[],"keys":["bitiro:line-calibration:v1","bitiro:standalone:code:s01"]}
+]
+}
