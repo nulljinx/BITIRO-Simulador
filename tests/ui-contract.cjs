@@ -47,6 +47,24 @@ test('Los cinco nodos legacy están dentro de un contenedor oculto (hidden + ari
  for(const id of ['calibrate','calibrationSummary','lessonTitle','lessonGoal','lessonQuestion'])assert.match(wrapper[1],new RegExp(`id="${id}"`),id);
  assert.match(wrapper[1],/<button id="calibrate" type="button" tabindex="-1">/);
 });
+test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetría compacta y datos avanzados en «Más datos»',()=>{
+ assert.ok(!/workspace-heading/.test(html),'la fila de título redundante debe estar eliminada');
+ assert.match(html,/<h1 class="sr-only">/,'conserva un h1 accesible');
+ const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
+ for(const id of ['codeToggle','speed','quality','showTrail','ir0','ir1','demo','strike','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ const strip=html.match(/<div class="telemetry-strip".*?<details class="more-data pop"/s);assert.ok(strip,'franja de telemetría');
+ for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');
+ for(const id of ['barL','barC','barR','stateL','stateC','stateR'])assert.ok(!strip[0].includes(`id="${id}"`),id+' no debe estar en la vista principal');
+ const more=html.match(/<details class="more-data pop".*?<\/details>/s);assert.ok(more);
+ for(const id of ['stateL','stateC','stateR','position','movedObjects'])assert.match(more[0],new RegExp(`id="${id}"`),id);
+ assert.ok(!/1000 \/ 1000/.test(html),'no debe haber texto «1000 / 1000» estático');
+});
+test('PILOT-2: el editor documenta la salida con teclado y el canvas no depende de una columna lateral',()=>{
+ assert.match(html,/Esc y luego Tab salen del editor/);
+ assert.ok(!/class="telemetry-panel"|simulation-body/.test(html),'sin columna lateral de telemetría');
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+ assert.ok(!/\.simulation-body\{[^}]*grid-template-columns/.test(css));
+});
 test('Fuentes locales referenciadas existen y no hay recursos externos',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
  for(const m of css.matchAll(/url\(([^)]+)\)/g))assert.ok(fs.existsSync(path.join(root,m[1])),m[1]);

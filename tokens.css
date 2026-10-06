@@ -48,5 +48,5 @@
   /* Espaciado y movimiento */
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
   --motion-fast:160ms;--motion-panel:240ms;--ease-out:cubic-bezier(.22,1,.36,1);
-  --header-height:64px;
+  --header-height:56px;
 }

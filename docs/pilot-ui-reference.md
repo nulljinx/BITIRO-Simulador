@@ -133,3 +133,19 @@ Tampoco se copian los nombres ni elementos de **marcas de aliados institucionale
 - La escena 3D (renderer Canvas procedural) recorta parte de la pista en paneles más estrechos que el v4 porque el encuadre no cambió; se resolverá con el renderer de SIM-5.
 - El editor sigue siendo un `<textarea>` (sin resaltado de sintaxis ni autocompletado).
 - La capa de interfaz usa un `requestAnimationFrame` ligero para sincronizar los números de línea, porque el código cambia también por programa (ejemplos, cambio de pista) sin disparar `input`.
+
+## 8. PILOT-2 — pulido previo al despliegue (actualiza la §7)
+
+Cambios respecto a PILOT-1, sin tocar física, runtime, sensores, sonar, pistas, storage, calibración, `simulator.js`, `renderer3d.js` ni goldens:
+
+- **Teclado en el editor (H1):** `Tab` sigue insertando espacios; `Escape` y luego `Tab` salen del editor y el siguiente `Tab` continúa la navegación; `Mayús+Tab` siempre navega hacia atrás. Implementado en `ui-shell.js` con un listener en captura que corta la propagación hacia el manejador de `simulator.js` solo en esos casos.
+- **Ejecutar en vista apilada (H3):** si el programa inicia bien (`.ok` en `#msg`) se desplaza al simulador con `scrollIntoView` (inmediato con `prefers-reduced-motion`), salvo que el canvas ya esté a la vista. Si hay error, nunca se desplaza al simulador: el mensaje queda visible y con foco, y el editor se reabre si estaba oculto. No actúa cuando editor y simulador están visibles a la vez.
+- **Canvas dominante y telemetría compacta (H2/M1/M2):** se eliminó la columna lateral de telemetría. Ahora hay una franja bajo el canvas con Línea (I · C · D, una sola lectura), Sonar, Motores I/D, Servo y LCD; «Más datos» (menú emergente) conserva la lectura normalizada, barras, posición, objetos y la relación lectura → acción. El zoom pasó a un control superpuesto en el canvas.
+- **Cámara:** `getPerspectiveFitFactor(ancho, alto, altoPistaCm)` (función pura, en `window.BITIRO_UI`) devuelve el factor en [1; 1,25] por el que `ui-shell.js` multiplica la distancia **base** del preset de perspectiva. Se recalcula siempre desde esa base (nunca desde el valor ya ajustado) al cambiar de pista, de cámara o de tamaño; no pisa un zoom hecho por el usuario; al terminar llama a la función existente `updateZoom()`. Tabla medida con la proyección del renderer (S01: 1,22 en canvas vertical; S03: 1,12; pistas de 200 cm: 1,10).
+- **Cabecera (M3):** se eliminó la fila «Práctica libre / Simulador libre» (queda un `h1` accesible). «Ocultar/Escribir código» pasó al menú «Más» junto con velocidad, calidad, rastro, IR, demostración, golpe y plotter. Barra superior de 56 px.
+- **Táctil y 320 px (M4/M5):** en ≤ 1023 px todos los controles interactivos miden ≥ 44 px (selector de cámara en una fila de cuatro botones iguales); a 320 px no hay desborde horizontal; el eyebrow, el texto de tamaño de pista y el rótulo «Arduino / IROH» se omiten en pantallas ≤ 400 px.
+- **Otros:** los textos de 9–10 px de la telemetría pasaron a 11 px o más; en vista apilada solo hay un CTA primario «Ejecutar» (el del editor pasa a estilo secundario).
+
+Tests: `tests/ui-shell.cjs` (función pura, sin acumulación, Escape+Tab, scroll solo apilado, errores) y ampliación de `tests/ui-contract.cjs`.
+
+**Limitaciones conocidas tras PILOT-2:** a 1024×768 la franja de telemetría ocupa dos filas (103 px); el 3D sigue siendo el renderer Canvas procedural (los rótulos «Base izquierda/derecha» del plotter se solapan con las líneas en algunas pistas); el editor es un `<textarea>` sin resaltado de sintaxis; en móvil horizontal (844×390) el robot mide ≈ 44 px.
