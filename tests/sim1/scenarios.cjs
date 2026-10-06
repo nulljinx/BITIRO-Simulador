@@ -36,10 +36,12 @@ S.s02_three_sensors=o=>{const h=load(o);h.js("changeTrack('s02')");
  const sweep=[];
  for(let i=-12;i<=12;i++){h.js(`R.x=49.23+${i*.5};R.y=140;R.th=0`);sweep.push({dx:i*.5,sensors:[0,1,2].map(k=>h.js(`readLine(${k})`))});}
  h.js("changeTrack('s02')");
+ h.js('setButton(1)');   // EJ[0] llama a botonInicio(): el escenario aporta el Pulsador presionado ANTES de ejecutar
  h.program(h.js('EJ[0]'));
  return {meta:{track:'s02',note:'sweep: R.y=140,th=0; samples: EJ[0] (tres sensores)',ticks:600,stride:12},sweep,samples:run(h,600,12)};};
 
 S.oval_continuous=o=>{const h=load(o);h.js("changeTrack('oval')");
+ h.js('setButton(1)');   // EJ[0] llama a botonInicio(): el escenario aporta el Pulsador presionado ANTES de ejecutar
  h.program(h.js('EJ[0]'));
  return {meta:{track:'oval',program:'EJ[0]',ticks:2400,stride:24},samples:run(h,2400,24)};};
 

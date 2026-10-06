@@ -80,7 +80,7 @@ test('Ejemplos legacy congelados (SHA-256) y los ejemplos de práctica libre sig
  assert.deepEqual(S.legacyExamples.map(sha),['a80e20bf2b72cc8e','be9318c04b2c88ba','e37478a28796d735','32290bd6dc7ffcd3','3d0ea10305a5031e']);
  const h=load();assert.deepEqual(Array.from(h.js('EJ.slice()'),String),[...S.legacyExamples],'EJ (práctica libre) no cambió');
  assert.ok(Object.isFrozen(S.legacyExamples));
- for(const id of ['oval','ocho']){const g=load();g.js(`changeTrack('${id}')`);g.program(g.js('EJ[0]'));g.tick(120);assert.equal(g.js('running'),1);assert.doesNotMatch(g.el('msg').innerHTML,/class=err/);}
+ for(const id of ['oval','ocho']){const g=load();g.js(`changeTrack('${id}')`);g.js('setButton(1)');g.program(g.js('EJ[0]'));g.tick(120);assert.equal(g.js('running'),1);assert.doesNotMatch(g.el('msg').innerHTML,/class=err/);}
 });
 test('isModified: distingue starter intacto de código distinto (para pedir confirmación)',()=>{
  for(const id of TRACKS){assert.equal(S.isModified(id,S.starter(id)),false);assert.equal(S.isModified(id,S.starter(id)+' '),true);assert.equal(S.isModified(id,''),true);}
@@ -136,11 +136,9 @@ test('Cambiar de pista también libera las entradas; «Demostración» las conse
  const h=load();h.el('pulsador').events.click();h.el('ir0').events.click();h.js("changeTrack('s02')");assert.deepEqual([h.js('btn'),h.js('ir[0]')],[0,0]);
  h.el('pulsador').events.click();h.el('ir1').events.click();h.el('demo').events.click();assert.deepEqual([h.js('btn'),h.js('ir[0]'),h.js('ir[1]')],[1,0,1]);
 });
-test('botonInicio() NO cambia en este piloto (no espera): documenta la divergencia con el Lab, que sí espera al Pulsador',()=>{
- // El ejemplo legacy (EJ[0]) y las baselines (goldens) llaman a botonInicio() en setup(); hacerlo esperar exige actualizar la baseline.
- const h=load();h.program('int c=0;void setup(){botonInicio();c=1;}void loop(){pausa(10);}');h.tick(5);assert.equal(h.js('scopes[0].c'),1);
- // Alternativa equivalente a esperar el Pulsador con las herramientas actuales: un while sobre leerBoton().
- const g=load();g.program('int c=0;void setup(){while(leerBoton()==0){pausa(5);}c=1;}void loop(){pausa(10);}');g.tick(30);assert.equal(g.js('scopes[0].c'),0);
- g.el('pulsador').events.click();g.tick(10);assert.equal(g.js('scopes[0].c'),1);
+test('botonInicio() espera de verdad al Pulsador (los ejemplos con botonInicio ya no arrancan solos); ver tests/runtime-start.cjs',()=>{
+ const h=load();h.js("changeTrack('oval')");h.program(h.js('EJ[0]'));h.tick(120);
+ assert.equal(h.js('waitingButton'),1);assert.equal(h.js('R.L')+h.js('R.R'),0,'EJ[0] espera el Pulsador antes de mover el robot');
+ h.el('pulsador').events.click();h.tick(60);assert.ok(h.js('runDistance')>0.5,'al presionar el Pulsador comienza el recorrido');
 });
 console.log(`\n${checks} comprobaciones PILOT-5 (starters, migración y entradas) superadas.`);

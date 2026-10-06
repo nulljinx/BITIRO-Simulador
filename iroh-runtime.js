@@ -5,7 +5,7 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const R={x:0,y:0,th:0,L:0,R:0};
 const ir=[0,0];
 let btn=0; // pulsador: como en el Lab, alterna (Libre ↔ Presionado) y leerBoton() devuelve 1/0
-let running=0,halt=0,wait=0,it=null,prog,strict,ini={},warns=new Set(),lcd=['',''],scopes=[Object.create(null)],variableTypes=new WeakMap();
+let running=0,halt=0,wait=0,waitingButton=0,it=null,prog,strict,ini={},warns=new Set(),lcd=['',''],scopes=[Object.create(null)],variableTypes=new WeakMap();
 function reset(){ if(typeof window.resetRobot==='function')window.resetRobot(); }
 function lect(k){return typeof window.readLine==='function'?window.readLine(k):28;}
 function setIR(k,v){ir[k]=v?1:0;const b=$('ir'+k);b.setAttribute('aria-pressed',String(!!ir[k]));b.querySelector('strong').textContent=ir[k]?'Activo':'Libre';}
@@ -322,7 +322,10 @@ function* run(list){
     switch(s.k){
       case'dec':for(const d of s.ds)declare(scopes[scopes.length-1],d);break;
       case'as':{const sc=find(s.n,s.ln),v=ev(s.e);sc[s.n]=coerce(s.op==='='?v:s.op==='+'?sc[s.n]+v:sc[s.n]-v,variableTypes.get(sc)?.[s.n],s.ln);break}
-      case'ex':if(s.e.n==='pausa'){const ms=ev(s.e.a[0]);if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:s.ln};yield ms;}else ev(s.e);break;
+      case'ex':if(s.e.n==='pausa'){const ms=ev(s.e.a[0]);if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:s.ln};yield ms;}
+        // botonInicio(): barrera cooperativa de NIVEL (como la librería real: espera hasta leerBoton()==1). No consume ni libera el Pulsador.
+        else if(s.e.n==='botonInicio'){ev(s.e);while(!btn){waitingButton=1;yield 0;}waitingButton=0;}
+        else ev(s.e);break;
       case'if':if(ev(s.c))yield*run(s.b);else if(s.e)yield*run(s.e);break;
       case'while':while(!halt&&ev(s.c)){yield*run(s.b);if(!halt)yield 8}break;
       case'blk':yield*run(s.b);break;
@@ -336,7 +339,7 @@ function* main(){
   if(prog.fn.setup)yield*run(prog.fn.setup);
   while(!halt){yield*run(prog.fn.loop);yield 0}
 }
-function fail(e){running=0;R.L=R.R=0;if(window.onCodeStopped)window.onCodeStopped();$('msg').innerHTML+='\n<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>'}
+function fail(e){running=0;waitingButton=0;R.L=R.R=0;if(window.onCodeStopped)window.onCodeStopped();$('msg').innerHTML+='\n<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>'}
 function start(){
   let P;
   try{P=parse(lex($('src').value))}

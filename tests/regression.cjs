@@ -108,6 +108,7 @@ test('Todos los ejemplos validan y comienzan sin errores',()=>{
 test('Los circuitos cerrados comienzan alineados con sensores sobre línea',()=>{
  for(const id of ['s03','oval','ocho']){
   js(`changeTrack('${id}')`);assert.ok(js('[0,1,2].some(k=>LINE_SENSOR.detected(readLine(k),k))'),id);
+  js('setButton(1)');   // EJ[0] espera el Pulsador (botonInicio): se aporta presionado antes de ejecutar
   program(js('EJ[0]'));tick(.5);assert.ok(js('runDistance')>1,id+' avanza con su código');
  }
 });

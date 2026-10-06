@@ -26,11 +26,20 @@ function changeTrack(name){
  camera={azimuth:.10,elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
  ui.feedback.textContent=track.note;ui.track.value=name;updateLesson();updateZoom();draw();
 }
+let shownWaiting=false;
+// Espera de botonInicio(): el estado visible distingue «esperando el Pulsador» de «ejecutando» (la pausa tiene prioridad).
+const isWaitingButton=()=>mode==='code'&&running&&!halt&&!!waitingButton&&!btn;
+const runLabel=()=>isWaitingButton()?'ESPERANDO PULSADOR':'EJECUTANDO';
+function syncWaiting(){
+ const w=isWaitingButton();if(w===shownWaiting)return;shownWaiting=w;
+ if(paused||!(w||(mode==='code'&&running&&!halt)))return;
+ setState(runLabel());ui.feedback.textContent=w?'El programa está esperando el Pulsador.':'Ejecutando el programa didáctico del editor.';
+}
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
  // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
  activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
- mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
+ mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
  R.th=track.start.heading+Math.PI/2;previousPose={x:R.x,y:R.y,th:R.th,angle:0};
@@ -263,7 +272,7 @@ function updateTelemetry(){
 }
 function frame(now){
  const speed=Number($app('speed').value)||1,delta=Math.max(0,Math.min(.1,(now-last)/1000));last=now;
- if(!document.hidden&&!paused){acc=Math.min(.5,acc+delta*speed);while(acc>=FIXED_DT){update(FIXED_DT);acc-=FIXED_DT;}}
+ if(!document.hidden&&!paused){acc=Math.min(.5,acc+delta*speed);while(acc>=FIXED_DT){update(FIXED_DT);acc-=FIXED_DT;}syncWaiting();}
  else acc=0;
  if((frameCounter++%4)===0)updateTelemetry();render();requestAnimationFrame(frame);
 }
@@ -281,7 +290,7 @@ document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>came
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
 $app('demo').addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
-$app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':'EJECUTANDO');$app('step').disabled=!paused;acc=0;});
+$app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':runLabel());$app('step').disabled=!paused;acc=0;});
 $app('step').addEventListener('click',()=>{if(!paused||mode==='idle')return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
 $app('reset').addEventListener('click',()=>{window.resetRobot();$app('msg').textContent='Simulación reiniciada; tu código se conserva.';});
 $app('strike').addEventListener('click',()=>{
