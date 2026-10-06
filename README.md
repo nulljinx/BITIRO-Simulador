@@ -51,7 +51,7 @@ void loop() {
 }
 ```
 
-El simulador no evalúa si esa es la solución correcta de una sesión.
+El simulador no evalúa si esa es la solución correcta de una actividad.
 
 Ejecuta lo que está programado y permite observar el resultado.
 
@@ -464,24 +464,42 @@ y evita mezclar modificaciones que deberían validarse por separado.
 
 ---
 
+## Créditos y referencias educativas
+
+**BITIRO Simulador** es un desarrollo independiente que forma parte del ecosistema BITIRO.
+
+Para la representación de las experiencias ROB-002, sus pistas y parte del contexto pedagógico, el proyecto utiliza como referencia materiales del **Programa de Robótica Educativa de la Fundación Gabriel & Mary Mustakis**.
+
+Los materiales ROB-002 utilizados como referencia indican que fueron elaborados de manera colaborativa entre equipos de las **Universidades Socias del Programa de Robótica Educativa de la Fundación Gabriel & Mary Mustakis**.
+
+BITIRO Simulador no pretende reemplazar esos materiales ni atribuirse su autoría. Los contenidos educativos, plotters, marcas, logotipos y demás recursos de terceros conservan sus respectivas autorías, licencias y condiciones de uso.
+
+Cuando un material original indique una licencia específica —por ejemplo una licencia Creative Commons— prevalecen siempre los términos señalados en ese material.
+
+El desarrollo de BITIRO Simulador busca complementar la experiencia educativa ofreciendo un espacio libre para:
+
+> **programar, observar, experimentar, ajustar y volver a probar**
+
+---
+
 ## Licencia y materiales
 
 El repositorio es público para facilitar **revisión, prueba y colaboración**.
 
-Actualmente el repositorio **no declara una licencia de software**.
+Actualmente el repositorio **no declara una licencia de software propia**.
 
 Que el código sea visible públicamente no implica por sí solo permiso para copiarlo, redistribuirlo o reutilizarlo fuera de lo permitido por la legislación aplicable.
 
-Los materiales educativos, plotters, marcas, logotipos y otros recursos de terceros conservan sus respectivas autorías y condiciones de uso.
+Los materiales educativos ROB-002 utilizados como referencia, así como marcas, logotipos y otros recursos pertenecientes a la Fundación Gabriel & Mary Mustakis o a terceros, conservan sus respectivas autorías, licencias y condiciones de uso.
 
 Antes de reutilizar o redistribuir partes del proyecto, revisa las licencias y derechos aplicables.
 
 ---
 
-## Créditos
+## Sobre BITIRO
 
-BITIRO Simulador forma parte del proyecto **BITIRO** y toma como referencia el robot educativo **IROH** y los materiales utilizados en las experiencias ROB-002.
+BITIRO busca ofrecer un entorno donde estudiantes puedan aprender programación y robótica mediante exploración y experimentación directa.
 
-El objetivo es ofrecer un espacio donde aprender programación y robótica mediante experimentación:
+La filosofía del proyecto puede resumirse en:
 
 > **programar, observar, ajustar y volver a probar**
