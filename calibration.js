@@ -2,7 +2,8 @@
 'use strict';
 window.BITIRO_STORAGE = {
  get(key){try{return localStorage.getItem(key);}catch{return null;}},
- set(key,value){try{localStorage.setItem(key,value);return true;}catch{return false;}}
+ set(key,value){try{localStorage.setItem(key,value);return true;}catch{return false;}},
+ remove(key){try{localStorage.removeItem(key);return true;}catch{return false;}}
 };
 window.LINE_SENSOR = (()=>{
  const geometry=Object.freeze({front:6,spread:2.8});

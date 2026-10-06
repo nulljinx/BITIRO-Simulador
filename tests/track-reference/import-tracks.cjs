@@ -56,10 +56,11 @@ const ctx={window:{}};require('vm').runInNewContext(tracksSrc,ctx);const all=JSO
 const next={s01:trackOf('s01'),s02:trackOf('s02'),oval:all.oval,ocho:all.ocho};
 const props={s01:[{id:'practice-box',x:46,y:94,width:8,height:8,movable:true,official:false}]};
 const tracksOut=`/* Geometrías autocontenidas. S01 y S02: plotters oficiales reconstruidos desde los PDF vectoriales (TRACK-DIGITIZE-1, tests/track-reference/).
-   TRACK = geometría impresa · SCENARIO PROP = objeto colocado en el mundo (BITIRO_SCENARIO_PROPS) · DEFAULT START = pose al cargar. */
+   TRACK = geometría impresa · DEFAULT SCENARIO = objetos sugeridos (BITIRO_SCENARIO_PROPS) · DEFAULT START = pose al cargar. */
 window.BITIRO_TRACKS=${js(next)};
-/* Props de escenario: NO forman parte de la pista impresa ni son datos oficiales. La caja de práctica de S01 conserva su pose histórica
-   (46, 94) solo para no alterar la física del golpe; está pendiente de migrar a un sistema de props configurables. */
+/* DEFAULT SCENARIO: objetos sugeridos al abrir cada pista (no son parte de la pista impresa ni datos oficiales). El usuario puede
+   añadir, mover, eliminar o vaciar cajas por pista (scenario-props.js); la configuración guardada vence a este valor. S02–S08, Óvalo
+   y Ocho no llevan objetos. La caja de práctica de S01 conserva su pose histórica (46, 94). */
 window.BITIRO_SCENARIO_PROPS=${js(props)};
 `;
 /* ---- extra-tracks.js ---- */

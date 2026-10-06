@@ -27,6 +27,7 @@
               <div class="menu-row"><label for="quality">Calidad 3D</label><select id="quality"><option value="standard">Estándar</option><option value="high">Alta</option></select></div>
               <label class="menu-check"><input id="showTrail" type="checkbox" checked> Rastro del recorrido</label>
               <div class="menu-divider"></div>
+              <button id="editScenario" class="button menu-item" type="button" aria-haspopup="dialog">Editar escenario</button>
               <button id="demo" class="button menu-item" type="button">Demostración guiada</button>
               <button id="strike" class="button menu-item" type="button" title="Accionar el palo de golpe del IROH">Golpe manual</button>
               <button type="button" id="reference" class="button menu-item">Ver plotter original</button>
@@ -85,6 +86,24 @@
     <!-- Nodos de compatibilidad: los scripts v4 (simulator.js) todavía los leen o escriben. Ocultos; se retirarán al extraer el core (SIM-3) y la calibración v1 se reemplaza en SIM-7. -->
     <div hidden aria-hidden="true"><button id="calibrate" type="button" tabindex="-1">Calibrar sensores</button><span id="calibrationSummary"></span><span id="lessonTitle"></span><p id="lessonGoal"></p><span id="lessonQuestion"></span></div>
     <dialog id="calibrationDialog" class="calibration-dialog" aria-labelledby="calibrationTitle"><form id="calibrationForm"><div class="reference-title"><div><span class="eyebrow">PREPARAR EL EXPERIMENTO</span><h2 id="calibrationTitle">Calibrar sensores de línea</h2></div><button id="calibrationClose" type="button" aria-label="Cerrar calibración">✕</button></div><p class="cal-intro">En este banco virtual, blanco es 0 y negro es 1000 después de normalizar. Mide ambas referencias o introduce sus valores brutos por sensor. La simulación se pausa mientras calibras.</p><div class="cal-samples"><button type="button" id="sampleWhite"><span class="swatch white"></span><b>1. Medir blanco virtual</b><small>Superficie clara de referencia</small></button><button type="button" id="sampleBlack"><span class="swatch black"></span><b>2. Medir negro virtual</b><small>Línea oscura de referencia</small></button></div><table class="cal-table"><thead><tr><th>Sensor</th><th>Blanco · 0–1023</th><th>Negro · 0–1023</th></tr></thead><tbody><tr><th>Izquierdo</th><td><input id="white0" type="number" min="0" max="1023" step="1" required aria-label="Blanco Izquierdo"></td><td><input id="black0" type="number" min="0" max="1023" step="1" required aria-label="Negro Izquierdo"></td></tr><tr><th>Central</th><td><input id="white1" type="number" min="0" max="1023" step="1" required aria-label="Blanco Central"></td><td><input id="black1" type="number" min="0" max="1023" step="1" required aria-label="Negro Central"></td></tr><tr><th>Derecho</th><td><input id="white2" type="number" min="0" max="1023" step="1" required aria-label="Blanco Derecho"></td><td><input id="black2" type="number" min="0" max="1023" step="1" required aria-label="Negro Derecho"></td></tr></tbody></table><label class="threshold-control" for="threshold">3. Umbral de detección <output id="thresholdValue">500 / 1000</output></label><input id="threshold" type="range" min="100" max="900" step="10" value="500"><div class="threshold-scale"><span>Más sensible al negro</span><span>Más exigente</span></div><p class="cal-explain">Una lectura normalizada igual o superior al umbral detecta línea. Las funciones de lectura bruta conservan sus valores; tus programas anteriores no cambian automáticamente.</p><p id="calibrationMessage" class="cal-message" role="status"></p><div class="cal-actions"><button id="calibrationDefaults" class="btn ghost" type="button">Restablecer referencias</button><button class="btn primary" type="submit">Guardar calibración</button></div><small class="cal-footnote">Banco simulado, sin conexión con el IROH físico. Los valores son ilustrativos; no constituyen una calibración del robot real.</small></form></dialog>
+    <dialog id="scenarioDialog" class="scenario-dialog" aria-labelledby="scenarioTitle" aria-describedby="scenarioIntro">
+      <div class="reference-title"><h2 id="scenarioTitle">Escenario</h2><button type="button" id="scenarioClose" aria-label="Cancelar y cerrar">✕</button></div>
+      <p id="scenarioIntro" class="scenario-intro">Añade y mueve cajas para experimentar con el robot.</p>
+      <div class="scenario-layout">
+        <div class="scenario-map-wrap"><svg id="scenarioMap" class="scenario-map" role="img" aria-label="Vista superior de la pista con sus cajas. Los controles junto al plano permiten editarlas con teclado."></svg></div>
+        <div class="scenario-side">
+          <div class="scenario-actions"><button type="button" id="scenarioAdd" class="button" aria-pressed="false">Añadir caja</button><button type="button" id="scenarioRemove" class="button" disabled>Eliminar caja</button></div>
+          <ul id="scenarioList" class="scenario-list" aria-label="Cajas del escenario"></ul>
+          <fieldset id="scenarioFields" class="scenario-fields" disabled><legend id="scenarioSelName">Sin caja seleccionada</legend>
+            <label class="scenario-field"><span>X</span><input id="scenarioX" type="number" step="0.5" inputmode="decimal" aria-describedby="scenarioPosHint"><span class="unit">cm</span></label>
+            <label class="scenario-field"><span>Y</span><input id="scenarioY" type="number" step="0.5" inputmode="decimal" aria-describedby="scenarioPosHint"><span class="unit">cm</span></label>
+            <p id="scenarioPosHint" class="scenario-hint">Esquina superior izquierda de la caja de 8 × 8 cm.</p>
+          </fieldset>
+          <p id="scenarioNote" class="scenario-note" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="confirm-actions scenario-footer"><button type="button" id="scenarioClear" class="button">Vaciar</button><button type="button" id="scenarioDefault" class="button">Restaurar predeterminado</button><span class="scenario-spacer"></span><button type="button" id="scenarioCancel" class="button">Cancelar</button><button type="button" id="scenarioApply" class="button primary">Aplicar</button></div>
+    </dialog>
     <dialog id="restoreDialog" class="confirm-dialog" aria-labelledby="restoreTitle" aria-describedby="restoreText">
       <h2 id="restoreTitle">¿Restaurar el código inicial?</h2>
       <p id="restoreText">Tu código actual de esta pista se reemplazará por el código inicial. Esta acción no se puede deshacer.</p>
@@ -92,6 +111,6 @@
     </dialog>
     <dialog id="referenceDialog" class="reference-dialog" aria-labelledby="referenceHeading"><div class="reference-title"><h2 id="referenceHeading">Plotter de referencia</h2><button type="button" id="referenceClose" aria-label="Cerrar plotter">✕</button></div><p>Compara la pista 3D virtual con la imagen de referencia. S01–S06 y S08 usan geometrías reconstruidas desde los PDF vectoriales oficiales; S07 es un repaso sin plotter propio.</p><img id="referenceImg" alt="Imagen original del plotter seleccionado"></dialog>
   </main>
-  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script>
+  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="scenario-editor.js"></script>
 </body>
 </html>

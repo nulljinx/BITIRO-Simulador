@@ -6,7 +6,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..','..');
-const FILES=['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','simulator.js'];
+const FILES=['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','simulator.js'];
 const FIXED_DT=1/120;
 
 function load({patches=[],storage={},blocked=false}={}){
@@ -25,7 +25,8 @@ function load({patches=[],storage={},blocked=false}={}){
  const document={addEventListener(){},getElementById:el,querySelectorAll(q){return q==='.cam'?['perspective','top','follow','robot'].map(v=>({...el('cam_'+v),dataset:{view:v}})):[];}};
  const localStorage={
   getItem:k=>{if(behavior.blocked)throw Error('bloqueado');return saved.has(k)?saved.get(k):null;},
-  setItem:(k,v)=>{if(behavior.blocked)throw Error('bloqueado');saved.set(k,String(v));}
+  setItem:(k,v)=>{if(behavior.blocked)throw Error('bloqueado');saved.set(k,String(v));},
+  removeItem:k=>{if(behavior.blocked)throw Error('bloqueado');saved.delete(k);}
  };
  // `clamp` global: simulator.js lo usa sin definirlo (lo aporta el entorno del navegador/pruebas v4).
  const ctx={document,window:null,console,performance:{now:()=>0},Math,Number,Date,localStorage,

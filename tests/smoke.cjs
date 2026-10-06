@@ -17,11 +17,11 @@ function el(id){
 }
 const document={addEventListener(){},getElementById:el,querySelectorAll(q){return q==='.cam'?['perspective','top','follow','robot'].map(v=>({...el('cam_'+v),dataset:{view:v}})):[];}};
 const ctx={document,window:null,console,performance:{now:()=>0},Math,Number,Date,
- localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v)},
+ localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)},
  devicePixelRatio:1,clamp:(n,a,b)=>Math.max(a,Math.min(n,b)),
  requestAnimationFrame(){},renderScene3D(){}};
 ctx.window=ctx;vm.createContext(ctx);
-for(const file of ['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','simulator.js']){
+for(const file of ['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','simulator.js']){
  vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
 }
 const js=src=>vm.runInContext(src,ctx);

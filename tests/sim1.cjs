@@ -98,7 +98,7 @@ test('Renderer: cadena constante→dibujo; centros de rueda efectivos 18,2 unida
  console.log('   renderer effective wheelbase (world units = track cm, verificado en código y en píxeles): 18.2 | fidelidad al IROH real: TO BE VERIFIED');
 });
 test('Sin reloj de pared ni aleatoriedad en producto ni en SIM-1 (escaneo de fuentes)',()=>{
- const files=['calibration.js','extra-tracks.js','iroh-runtime.js','renderer3d.js','simulator.js','strike-physics.js','tracks.js','tests/sim1/harness.cjs','tests/sim1/scenarios.cjs','tests/sim1/characterization.cjs','tests/sim1/trace-cli.cjs'];
+ const files=['calibration.js','scenario-props.js','scenario-editor.js','extra-tracks.js','iroh-runtime.js','renderer3d.js','simulator.js','strike-physics.js','tracks.js','tests/sim1/harness.cjs','tests/sim1/scenarios.cjs','tests/sim1/characterization.cjs','tests/sim1/trace-cli.cjs'];
  const bad=/Math\s*\.\s*random|Date\s*\.\s*now|new\s+Date/;
  for(const f of files)assert.ok(!bad.test(fs.readFileSync(path.join(root,f),'utf8')),f);
 });
@@ -134,7 +134,7 @@ test('Storage: v1 legacy, código por pista, bloqueado, inválido; sin migració
 });
 
 // ───────── 5. Controles negativos (parches en memoria; el producto NO se modifica) ─────────
-const productHash=()=>['simulator.js','calibration.js','strike-physics.js','renderer3d.js','iroh-runtime.js','tracks.js','extra-tracks.js','index.html','styles.css'].map(f=>sha(fs.readFileSync(path.join(root,f),'utf8'))).join('');
+const productHash=()=>['simulator.js','calibration.js','scenario-props.js','strike-physics.js','renderer3d.js','iroh-runtime.js','tracks.js','extra-tracks.js','index.html','styles.css'].map(f=>sha(fs.readFileSync(path.join(root,f),'utf8'))).join('');
 const before=productHash();
 const controls=[
  {id:'wheelbase 12 → 18.2',patch:{file:'simulator.js',from:'base=12;',to:'base=18.2;'},mustBreak:['s01_turn'],mustHold:['s01_straight','servo_sweep','sonar_range']},

@@ -14,12 +14,12 @@ window.BITIRO_RENDER_QUALITY='standard';
 const worldCv=$app('scene');
 const ui={track:$app('track'),name:$app('trackName'),size:$app('trackSize'),badge:$app('statusBadge'),stage:$app('stageLabel'),origin:$app('sceneSource'), feedback:$app('feedback')};
 const shorten=(str,n=35)=>str.length>n?str.slice(0,n-1)+'…':str;
-// SCENARIO PROP: cajas/obstáculos del mundo; no pertenecen a la geometría impresa de la pista.
-const propsFor=t=>[...(t.obstacles||[]),...((window.BITIRO_SCENARIO_PROPS||{})[t.id]||[])];
-function toScene(t){return {id:t.id,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,obstacles:propsFor(t),start:t.start};}
+// sceneTrack = solo geometría del suelo. Los objetos físicos viven en el escenario (scenario-props.js) y en activeObstacles (mundo activo).
+let scenarioList=[];
+function toScene(t){return {id:t.id,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,start:t.start};}
 function changeTrack(name){
  if(track&&$app('src'))BITIRO_STORAGE.set('bitiro:standalone:code:'+chosen,$app('src').value);
- chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);
+ chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);scenarioList=BITIRO_SCENARIO.load(chosen,track).list;
  if($app('src'))$app('src').value=BITIRO_STORAGE.get('bitiro:standalone:code:'+chosen)||EJ[0];ui.name.textContent=track.id.toUpperCase()+' / '+shorten(track.name.replace(/^S\d+ · /,''),32);ui.size.textContent=track.w+' × '+track.h+' cm';ui.stage.textContent=track.id.toUpperCase();
  ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
  $app('reference').hidden=!sourceImageForTrack(name);
@@ -28,7 +28,8 @@ function changeTrack(name){
 }
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
- activeObstacles=propsFor(track).map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
+ // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
+ activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
@@ -361,6 +362,21 @@ function updateLearningTelemetry(){
  $app('strike').disabled=mode==='code';
  $app('step').disabled=!paused||mode==='idle';
 }
+// API mínima para scenario-editor.js (el editor no toca el estado interno del simulador).
+window.BITIRO_WORLD={
+ track:()=>track,
+ scenario:()=>BITIRO_SCENARIO.clone(scenarioList),
+ // Consistencia física: no se edita el mundo a mitad de un tick. Si hay una ejecución, se pausa (no se reanuda sola al cancelar).
+ beginEdit(){if(mode!=='idle'&&!paused){paused=true;setState('EN PAUSA');$app('pause').textContent='Continuar';$app('step').disabled=false;acc=0;}},
+ // useDefault=true elimina el override guardado (vuelve al escenario predeterminado); si no, guarda `list` (incluso vacía) para esta pista.
+ apply(list,{useDefault=false}={}){
+  let saved=true;
+  if(useDefault){BITIRO_SCENARIO.reset(chosen);scenarioList=BITIRO_SCENARIO.load(chosen,track).list;}
+  else{scenarioList=BITIRO_SCENARIO.usable(list,track);saved=BITIRO_SCENARIO.save(chosen,scenarioList);}
+  window.resetRobot();draw();return saved;
+ },
+ defaults:()=>BITIRO_SCENARIO.defaults(track.id)
+};
 function initializeCalibration(){
  const dialog=$app('calibrationDialog');let draft;
  const showProfile=()=>{
