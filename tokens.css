@@ -35,8 +35,17 @@
   /* Lecturas */
   --readout-surface:#ECE9E3;--readout-border:#DAD5CC;--lcd-bg:#CAD3C2;--lcd-border:#BFC6B8;--lcd-text:#243127;
 
+  /* Estructura del simulador (medidas observadas en la interfaz actual de BITIRO Lab) */
+  --surface-toolbar:#F7F6F2;--surface-segment:#EEF2F3;--border-segment:#D7DDE0;--border-sim-panel:#314652;--action-navy:#09085F;
+  --editor-chrome:#0B1B32;--editor-panel:#071426;--editor-border:#3A4148;--editor-secondary-bg:#262B31;--editor-secondary-text:#AEB4BA;
+
+  /* Sintaxis: tema «bitiro-night» del editor del Lab */
+  --syn-text:#E8E4DB;--syn-keyword:#82B6D9;--syn-string:#9FD4AF;--syn-comment:#A3AAB2;--syn-number:#F4C07A;--syn-operator:#DCDCDC;
+  --syn-api:#FF9A62;--syn-bracket-1:#FFD700;--syn-bracket-2:#DA70D6;--syn-bracket-3:#179FFF;--syn-bracket-error:#FF1212;
+  --editor-selection:#63432E;--editor-cursor:#FFAF75;--editor-line-highlight:rgba(160,180,210,.07);--editor-gutter-active:#C6C6C6;
+
   /* Radios */
-  --radius-panel:4px;--radius-control:6px;--radius-floating:10px;--radius-pill:999px;
+  --radius-panel:8px;--radius-control:6px;--radius-floating:10px;--radius-pill:999px;
 
   /* Sombras: solo elementos flotantes y de acción */
   --shadow-action:0 4px 10px rgba(14,13,159,.12);--shadow-floating:0 16px 44px rgba(11,13,16,.16);

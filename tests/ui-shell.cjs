@@ -9,19 +9,20 @@ const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 let checks=0;const test=(n,f)=>{f();checks++;console.log('OK · '+n);};
 
-function makeEnv({stacked=false,reduced=false,wide=!stacked}={}){
+function makeEnv({stacked=false,reduced=false,wide=!stacked,editor=false}={}){
  const timers=[],rafs=[],calls=[];
  const mqs={'(max-width:1023px)':{matches:stacked},'(prefers-reduced-motion: reduce)':{matches:reduced},'(min-width:1024px)':{matches:wide}};
  const mq=q=>({...(mqs[q]||{matches:false}),get matches(){return (mqs[q]||{matches:false}).matches;},addEventListener(){}});
  function el(id,extra={}){
   const listeners={};
-  return Object.assign({id,dataset:{},listeners,open:false,hidden:false,
+  const classes=new Set();
+  return Object.assign({id,dataset:{},listeners,open:false,hidden:false,style:{},innerHTML:'',classList:{add:c=>classes.add(c),contains:c=>classes.has(c),remove:c=>classes.delete(c)},
    addEventListener(t,fn,cap){(listeners[t]=listeners[t]||[]).push({fn,cap:cap===true||(cap&&cap.capture)});},
    focus(o){calls.push(['focus',id,o]);},scrollIntoView(o){calls.push(['scrollIntoView',id,o]);},click(){calls.push(['click',id]);
     for(const l of listeners.click||[])l.fn({target:this});},
    getBoundingClientRect(){return {top:0,bottom:0,width:0,height:0};},querySelector(){return null;},querySelectorAll(){return [];},contains(){return false;}},extra);
  }
- const ids=['scene','track','sceneWrap','zoomIn','zoomOut','telemetry','msg','src','runBar','run','codePanel','codeToggle','viewportHost','moreMenu','demo','strike','reference','fileName','gutter'];
+ const ids=['scene','track','sceneWrap','zoomIn','zoomOut','telemetry','msg','src','runBar','run','codePanel','codeToggle','viewportHost','moreMenu','demo','strike','reference','fileName','gutter'].concat(editor?['hl','hlLine']:[]);
  const els=Object.fromEntries(ids.map(i=>[i,el(i)]));
  els.src.value='';els.src.scrollTop=0;els.track.value='s01';
  els.moreMenu.querySelector=()=>el('summary');els.moreMenu.contains=()=>false;
@@ -36,7 +37,8 @@ function makeEnv({stacked=false,reduced=false,wide=!stacked}={}){
  const pop=els.moreMenu;
  const observers={resize:[],mutation:[]};
  const docListeners={};
- const doc={getElementById:i=>els[i]||null,querySelector:s=>s==='.topbar'?topbar:s==='.editor-area'?area:null,
+ const hlClip=editor?el('hl-clip'):null;
+ const doc={getElementById:i=>els[i]||null,querySelector:s=>s==='.topbar'?topbar:s==='.editor-area'?area:s==='.hl-clip'?hlClip:null,
   querySelectorAll:s=>s==='.cam'?camBtns:s==='details.pop'?[pop]:[],addEventListener(t,fn){(docListeners[t]=docListeners[t]||[]).push(fn);}};
  const ctx={document:doc,window:null,console,Math,Number,Array,Object,innerHeight:844,
   matchMedia:mq,
@@ -47,6 +49,7 @@ function makeEnv({stacked=false,reduced=false,wide=!stacked}={}){
   camera:{azimuth:.1,elevation:.94,distance:1.8,follow:false},track:{h:140},
   updateZoom(){calls.push(['updateZoom',ctx.camera.distance]);},start(){calls.push(['start']);}};
  ctx.window=ctx;vm.createContext(ctx);
+ if(editor){ctx.FN={avanzar:1,pausa:1,escribirPantalla:1};vm.runInContext(fs.readFileSync(path.join(root,'syntax-highlight.js'),'utf8'),ctx,{filename:'syntax-highlight.js'});}
  vm.runInContext(fs.readFileSync(path.join(root,'ui-shell.js'),'utf8'),ctx,{filename:'ui-shell.js'});
  const flushRaf=()=>{const q=rafs.splice(0);for(const f of q)f();};
  const flushTimers=()=>{const q=timers.splice(0);for(const t of q)t.fn();};
@@ -58,7 +61,7 @@ function makeEnv({stacked=false,reduced=false,wide=!stacked}={}){
   for(const l of els.src.listeners.keydown||[])if(!e.stopped)l.fn(e);
   return e;
  }
- return {ctx,els,area,calls,mqs,canvasRect,observers,flushRaf,flushTimers,key,msgChildren,camBtns,timers,docListeners,
+ return {hlClip,ctx,els,area,calls,mqs,canvasRect,observers,flushRaf,flushTimers,key,msgChildren,camBtns,timers,docListeners,
   setMsg(...classes){msgChildren.length=0;for(const c of classes)msgChildren.push({cls:c});},
   mutateMsg(){for(const cb of observers.mutation)cb([]);},
   resize(w,h){canvasRect.width=w;canvasRect.height=h;for(const cb of observers.resize)cb();flushRaf();}};
@@ -163,5 +166,32 @@ test('Menús: Escape cierra y el clic fuera cierra; la telemetría está abierta
  E.els.moreMenu.open=true;E.els.moreMenu.contains=()=>true;for(const f of E.docListeners.click)f({target:{}});assert.equal(E.els.moreMenu.open,true); // clic dentro no cierra
  assert.equal(E.els.telemetry.open,true);
  const M=makeEnv({stacked:true,wide:false});assert.equal(M.els.telemetry.open,false);
+});
+
+/* ---------- 5. Editor: capa de resaltado sincronizada con el textarea real ---------- */
+const plain=h=>h.replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+test('Editor: la capa refleja exactamente el texto del textarea y colorea solo la API del runtime',()=>{
+ const E=makeEnv({editor:true});const src=E.els.src;
+ src.value='// avanzar(1)\navanzar(30); x = pausa;\nescribirPantalla(0,0,"pausa(1)"); avansar(2); a < b && c';src.selectionStart=0;src.clientWidth=500;src.clientHeight=400;
+ E.flushRaf();
+ assert.equal(plain(E.els.hl.innerHTML),src.value);                                   // el resaltado no altera el texto
+ assert.deepEqual([...E.els.hl.innerHTML.matchAll(/<span class="t-api">([^<]+)<\/span>/g)].map(m=>m[1]),['avanzar','escribirPantalla']);
+ assert.ok(E.area.classList.contains('has-hl'));                                      // solo entonces el textarea se vuelve transparente
+ assert.equal((E.els.gutter.innerHTML.match(/class="ln/g)||[]).length,3);assert.match(E.els.gutter.innerHTML,/class="ln on">1</);
+ assert.equal(E.hlClip.style.width,'500px');assert.equal(E.hlClip.style.height,'400px');
+ // cambios externos (cambio de pista/ejemplo) sin evento input: la capa se actualiza en el siguiente frame
+ src.value='pausa(5);\n\n\nint x;';E.flushRaf();assert.equal(plain(E.els.hl.innerHTML),src.value);assert.equal((E.els.gutter.innerHTML.match(/class="ln/g)||[]).length,4);
+ // mover el cursor cambia la línea activa
+ src.selectionStart=src.value.indexOf('int');E.flushRaf();assert.match(E.els.gutter.innerHTML,/class="ln on">4</);
+ assert.equal(E.els.hlLine.style.transform,'translateY('+(12+3*24)+'px)');
+});
+test('Editor: el scroll vertical y horizontal del textarea mueve la capa, el gutter y la línea activa',()=>{
+ const E=makeEnv({editor:true});const src=E.els.src;src.value=Array.from({length:60},(_,i)=>'avanzar('+i+');').join('\n');src.selectionStart=src.value.indexOf('avanzar(10)');src.clientWidth=400;src.clientHeight=300;E.flushRaf();
+ src.scrollTop=120;src.scrollLeft=30;for(const l of src.listeners.scroll)l.fn({});
+ assert.equal(E.els.hl.style.transform,'translate(-30px,-120px)');assert.equal(E.els.gutter.scrollTop,120);assert.equal(E.els.hlLine.style.transform,'translateY('+(12+10*24-120)+'px)');
+ src.scrollTop=0;src.scrollLeft=0;E.flushRaf();assert.equal(E.els.hl.style.transform,'translate(0px,0px)');
+});
+test('Editor: sin la capa (sin syntax-highlight.js) el textarea conserva su texto visible',()=>{
+ const E=makeEnv({editor:false});E.els.src.value='avanzar(1);';E.flushRaf();assert.ok(!E.area.classList.contains('has-hl'));
 });
 console.log(`\n${checks} comprobaciones de ui-shell.js superadas.`);

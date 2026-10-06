@@ -1,6 +1,6 @@
 /* BITIRO Simulador · comportamiento de la capa de interfaz (sin física ni runtime).
    Solo cableado de presentación: menús, telemetría colapsable, Ejecutar de la barra, nombre de archivo,
-   números de línea, salida del editor con teclado, scroll al simulador al ejecutar en vista apilada y
+   números de línea y resaltado de sintaxis del editor, salida del editor con teclado, scroll al simulador al ejecutar en vista apilada y
    ajuste de la cámara de perspectiva al tamaño del canvas. No modifica simulator.js ni renderer3d.js:
    solo lee `camera`/`track` y llama a `updateZoom()` (globales de simulator.js). */
 'use strict';
@@ -128,15 +128,41 @@
  const syncName=()=>{if(trackSel&&fileName)fileName.textContent='programa_'+trackSel.value+'.ino';};
  trackSel?.addEventListener('change',syncName);syncName();
 
- /* ── Números de línea: el intérprete informa errores «línea N» ───────────────────── */
- const gutter=$('gutter');
+ /* ── Editor: números de línea, resaltado de sintaxis y línea activa ───────────────────
+    El <textarea> sigue siendo la entrada real (texto, selección, scroll, teclado). La capa .hl (aria-hidden,
+    pointer-events:none) pinta encima el mismo texto coloreado y se desplaza con su scroll. Las funciones IROH
+    resaltadas son exactamente las que reconoce el intérprete (Object.keys(FN) de iroh-runtime.js). */
+ const gutter=$('gutter'),hl=$('hl'),hlLine=$('hlLine'),hlClip=document.querySelector('.hl-clip'),syntax=window.BITIRO_SYNTAX;
  if(src&&gutter){
-  let lastValue=null,lastTop=-1;
+  const LINE_H=24,PAD_TOP=12;
+  let lastValue=null,lastTop=-1,lastLeft=-1,lastSel=-1,lastW=-1,lastH=-1,apiNames=null,activeLine=-1;
+  const lineOf=pos=>{let n=0;const v=src.value;for(let i=0;i<pos&&i<v.length;i++)if(v.charCodeAt(i)===10)n++;return n;};
+  const paintGutter=count=>{let h='';for(let i=0;i<count;i++)h+='<span class="ln'+(i===activeLine?' on':'')+'">'+(i+1)+'</span>'+(i<count-1?'\n':'');gutter.innerHTML=h;};
+  const applyScroll=()=>{
+   const top=src.scrollTop,left=src.scrollLeft;
+   if(top!==lastTop||left!==lastLeft){lastTop=top;lastLeft=left;gutter.scrollTop=top;if(hl)hl.style.transform='translate('+(-left)+'px,'+(-top)+'px)';placeLine();}
+  };
+  const placeLine=()=>{if(hlLine)hlLine.style.transform='translateY('+(PAD_TOP+activeLine*LINE_H-src.scrollTop)+'px)';};
   const sync=()=>{
-   if(src.value!==lastValue){lastValue=src.value;const n=lastValue.split('\n').length;let t='';for(let i=1;i<=n;i++)t+=i+(i<n?'\n':'');gutter.textContent=t;}
-   if(src.scrollTop!==lastTop){lastTop=src.scrollTop;gutter.scrollTop=lastTop;}
+   let valueChanged=false;
+   if(src.value!==lastValue){
+    valueChanged=true;lastValue=src.value;
+    if(hl&&syntax){
+     apiNames=apiNames||new Set(typeof FN!=='undefined'?Object.keys(FN):[]);
+     hl.innerHTML=syntax.highlight(lastValue,apiNames);
+     if(area&&!area.classList.contains('has-hl'))area.classList.add('has-hl');
+    }
+   }
+   const sel=src.selectionStart;
+   if(valueChanged||sel!==lastSel){
+    lastSel=sel;const line=lineOf(sel);
+    if(valueChanged||line!==activeLine){activeLine=line;paintGutter(lastValue.split('\n').length);placeLine();}
+   }
+   applyScroll();
+   if(hlClip&&(src.clientWidth!==lastW||src.clientHeight!==lastH)){lastW=src.clientWidth;lastH=src.clientHeight;hlClip.style.width=lastW+'px';hlClip.style.height=lastH+'px';}
    requestAnimationFrame(sync);
   };
+  src.addEventListener('scroll',applyScroll);
   requestAnimationFrame(sync);
  }
  window.BITIRO_UI=Object.freeze({getPerspectiveFitFactor});

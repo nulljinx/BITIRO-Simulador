@@ -33,7 +33,7 @@ test('Clases que consultan los scripts existen (.cam con data-view, .threshold-m
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
- assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','renderer3d.js','simulator.js','ui-shell.js']);
+ assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','renderer3d.js','simulator.js','syntax-highlight.js','ui-shell.js']);
 });
 test('Controles de la vista normal y ausencia de elementos pedagógicos visibles',()=>{
  for(const id of ['track','run','pause','reset','step','src','lcd','sonar','codeToggle'])assert.ok(ids.includes(id),id);
@@ -64,6 +64,35 @@ test('PILOT-2: el editor documenta la salida con teclado y el canvas no depende 
  assert.ok(!/class="telemetry-panel"|simulation-body/.test(html),'sin columna lateral de telemetría');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
  assert.ok(!/\.simulation-body\{[^}]*grid-template-columns/.test(css));
+});
+test('PILOT-4: el <textarea> sigue siendo la entrada real; la capa de resaltado es decorativa y el editor tiene respaldo sin JS',()=>{
+ const stack=html.match(/<div class="code-stack">(.*?)<\/div><\/div>/s);assert.ok(stack,'pila textarea + capa');
+ assert.match(stack[1],/<textarea id="src"/);assert.match(stack[1],/<div class="hl-clip" aria-hidden="true">/);assert.match(stack[1],/<pre class="hl" id="hl"><\/pre>/);
+ assert.ok(!/<textarea[^>]*\sstyle=/.test(html)&&!/class="hl[^"]*"[^>]*\sstyle=/.test(html),'sin estilos inline (CSP)');
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+ // El texto del textarea solo se hace transparente cuando la capa está activa (.has-hl): sin JS el código se ve.
+ assert.match(css,/\.has-hl #src\{color:transparent/);assert.ok(!/(^|\})#src\{[^}]*color:transparent/m.test(css));
+ assert.match(css,/forced-colors:active/);assert.match(css,/\.hl\{[^}]*pointer-events:none/);assert.match(css,/\.hl-clip\{[^}]*pointer-events:none/);
+ // Métricas idénticas en textarea y capa (alineación): misma fuente, interlineado y relleno.
+ const shared=css.match(/#src,\.hl\{([^}]*)\}/);assert.ok(shared,'reglas compartidas #src,.hl');for(const f of ['font:400 14px/24px','tab-size:2','white-space:pre','padding:12px 14px 12px 12px'])assert.ok(shared[1].includes(f),f);
+});
+test('PILOT-4: tokens de sintaxis = tema «bitiro-night» del Lab y LCD con bisel',()=>{
+ const tokens=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
+ for(const [name,hex] of [['syn-api','#FF9A62'],['syn-keyword','#82B6D9'],['syn-string','#9FD4AF'],['syn-comment','#A3AAB2'],['syn-number','#F4C07A'],['syn-operator','#DCDCDC'],['syn-text','#E8E4DB'],['editor-selection','#63432E'],['editor-cursor','#FFAF75'],['syn-bracket-1','#FFD700'],['syn-bracket-2','#DA70D6'],['syn-bracket-3','#179FFF']])
+  assert.match(tokens,new RegExp('--'+name+':'+hex+'(?![0-9A-Fa-f])','i'),name);
+ assert.match(html,/<div class="lcd-bezel"><pre id="lcd"/);
+ assert.ok(fs.existsSync(path.join(root,'syntax-highlight.js')));
+});
+test('Micro-pulido: cabecera sin «Local · Sin conexión» (pasa a «Más»), selector de pista de ancho fijo y deshabilitados claros',()=>{
+ const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
+ assert.ok(!/Sin conexión|top-note/.test(header),'la cabecera solo lleva la marca');
+ const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s)[1];assert.match(menu,/<p class="menu-note">Local · Sin conexión<\/p>/);
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+ // El selector no puede crecer con nombres largos: ancho y máximo fijos (184 px; 150 px entre 1024 y 1279) y la <select> al 100 %.
+ assert.match(css,/\.track-field\{[^}]*flex:0 1 184px;width:184px;max-width:184px\}/);assert.match(css,/\.track-field\{flex-basis:150px;width:150px;max-width:150px\}/);
+ assert.match(css,/\.track-field select\{width:100%;text-overflow:ellipsis/);
+ // Pausar / Paso / Reiniciar: misma altura que la toolbar (28 px) y deshabilitado visible sin depender de la opacidad.
+ assert.match(css,/\.runtime-actions button\{min-height:28px;padding:4px 12px;font-weight:600\}/);assert.match(css,/\.runtime-actions button:disabled\{opacity:1;background:var\(--surface-panel-soft\)/);
 });
 test('Fuentes locales referenciadas existen y no hay recursos externos',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');

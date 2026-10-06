@@ -149,3 +149,51 @@ Cambios respecto a PILOT-1, sin tocar física, runtime, sensores, sonar, pistas,
 Tests: `tests/ui-shell.cjs` (función pura, sin acumulación, Escape+Tab, scroll solo apilado, errores) y ampliación de `tests/ui-contract.cjs`.
 
 **Limitaciones conocidas tras PILOT-2:** a 1024×768 la franja de telemetría ocupa dos filas (103 px); el 3D sigue siendo el renderer Canvas procedural (los rótulos «Base izquierda/derecha» del plotter se solapan con las líneas en algunas pistas); el editor es un `<textarea>` sin resaltado de sintaxis; en móvil horizontal (844×390) el robot mide ≈ 44 px.
+
+## 9. PILOT-4 — paridad visual con BITIRO Lab
+
+**Referencia.** La ruta del simulador del Lab en producción exige sesión (`/intermedio/s01` redirige a `/login`), así que se midió el build `dist-e2e` del propio Lab (v8.00.0, la misma versión que producción), servido sin modificar con su `tools/serve.mjs`, y se contrastó con la fuente (`CodeEditor.tsx`, `laboratory.css`, `tokens.css`, `type-floor.css`). Mediciones con Playwright en 1440, 1280, 1024, 768 y 390 px.
+
+**Medidas del Lab trasladadas** (1440 px): toolbar 40 px (`#F7F6F2`), segmentado de cámara con iconos (`#EEF2F3`, borde `#D7DDE0`, botones de 25 px, activo blanco con texto `#09085F`), radio de panel 8 px, panel del simulador con borde `#314652`, proporción simulador/editor 58/42, barra de ejecución ≈ 31 px, editor `#071426` con barra de archivo de 34 px (`#0B1B32`), pie de 46 px con botón secundario (`#262B31`) a la izquierda y «Ejecutar» ocupando el resto, y Monaco a 14 px / 24 px con gutter de 66 px. El Lab aplica un mínimo de 12 px a los controles (`type-floor.css`), igual que el Simulador.
+
+**Diferencias deliberadas.** Sin fila de título ni pestañas curriculares; la telemetría es una franja bajo el canvas (el Lab usa una columna de 238 px, que aquí quitaba ancho al simulador); el zoom queda sobre el canvas (en la toolbar no cabe a 1024 px); y a 1024 px el Simulador mantiene dos columnas (60/40), mientras el Lab apila.
+
+### Editor: técnica
+`<textarea>` real (entrada, selección, scroll, teclado, `Escape + Tab`, `Ctrl + Enter`) con el texto transparente **solo** cuando la capa está activa (`.has-hl`; sin JS se ve normal) y, encima, una capa `<pre aria-hidden>` con `pointer-events:none` que pinta el mismo texto coloreado. La selección y el cursor son los nativos del `<textarea>` (la capa queda por encima, así el texto seleccionado conserva su color). La capa se desplaza con `transform` según `scrollTop`/`scrollLeft` y se recorta al área visible; textarea y capa comparten fuente, interlineado, relleno y `tab-size` (14 px / 24 px). El gutter (54 px + 12 px de relleno = 66 px como el Lab) resalta la línea activa y hay un resaltado tenue de línea. Sin dependencias, sin CDN, sin estilos inline (la CSP no cambia).
+
+**Por qué no Monaco.** La paridad visual se consigue sin él: mismos colores, tipografía, interlineado, números de línea, selección y cursor, y alineación comprobada por píxeles (IoU 0,95 con desplazamiento 0,0). Monaco añadiría ≈ 2,3 MB de JS, workers y `style-src 'unsafe-inline'`. Lo que **no** se replica: autocompletado, hover, marcadores de error en línea y guías de sangría (ver limitaciones).
+
+### Colores (tema «bitiro-night» del Lab, medidos en su Monaco)
+| Token | Color | Ejemplos |
+|---|---|---|
+| Función IROH | `#FF9A62` (peso 500) | `avanzar`, `inicializarSensores`, `pausa` |
+| Palabra reservada / tipo / `#include` | `#82B6D9` | `void`, `int`, `if`, `true` |
+| Cadena y ruta de `#include` | `#9FD4AF` | `"hola"`, `KnightRoboticsLibs_Iroh.h` |
+| Comentario | `#A3AAB2` | `// …`, `/* … */` |
+| Número | `#F4C07A` | `500`, `3.5` |
+| Operador y delimitador | `#DCDCDC` | `= ; , >= && !` |
+| Paréntesis, corchetes y llaves | `#FFD700` → `#DA70D6` → `#179FFF` por profundidad; cierre sin abrir `#FF1212` | |
+| Texto / variables | `#E8E4DB` | |
+| Selección / cursor / línea activa | `#63432E` / `#FFAF75` / `rgba(160,180,210,.07)` | |
+| Números de línea | `#8994A2` (activa `#C6C6C6`) | |
+
+**Funciones IROH resaltadas** = exactamente las 33 que reconoce el intérprete (`Object.keys(FN)` de `iroh-runtime.js`, única fuente de verdad): `avanzar`, `retroceder`, `girarDerecha`, `girarIzquierda`, `detenerse`, `pausa`, `finPrograma`, `botonInicio`, `leerSensorLineaIzquierdo`, `leerSensorLineaCentral`, `leerSensorLineaDerecho`, `leerBoton`, `leerDistanciaSonar`, `leerLineaNormalizada`, `leerUmbralLinea`, `lineaIzquierda`, `lineaCentral`, `lineaDerecha`, `leerSensorObstaculoIzquierdo`, `leerSensorObstaculoDerecho`, `escribirPantalla`, `borrarPantalla`, `apagarPantalla`, `prenderPantalla`, `inicializarMovimiento`, `inicializarSensores`, `inicializarCabeza`, `inicializarGolpe`, `inicializarPantalla`, `apagarCabeza`, `moverServoYaw`, `moverServoPitch`, `moverServoGolpe`.
+
+Reglas: solo se colorea una **llamada** (`nombre(`, con espacios opcionales); un nombre sin paréntesis, desconocido o mal escrito (`avansar`, `miFuncion`) conserva el color normal, como en el Lab. **Diferencia con el Lab:** allí una función dentro de un comentario o de una cadena también sale naranja; aquí no. `millis` está en la API del Lab pero no en este intérprete, y `leerLinea`, `leerSonar` y `stroke` no existen en ninguno de los dos: ninguno se colorea.
+
+### LCD
+Bisel oscuro (`#2D353C`) con pantalla `#CAD3C2`, retícula tenue de caracteres (16 × 2), texto `IBM Plex Mono` de 12 px y `#243127`. Contenido y semántica 16 × 2 intactos (`<pre id="lcd">` sigue recibiendo exactamente lo que escribe el runtime).
+
+### Resultados medidos (1440 / 1280 / 1024)
+| Métrica | Lab | Antes | Después |
+|---|---|---|---|
+| Alto de toolbar | 40 / 40 / 65 | 45 | 40 |
+| Ancho del selector de pista | chip 29 px | 260 / 260 / 220 | 184 / 184 / 150 |
+| Proporción simulador/editor | 58/42 · 58/42 · apilado | 62/38 · 60/40 · 60/40 | 58/42 · 58/42 · 60/40 |
+| Canvas | 573×602 · 480×424 · 696×457 | 866×636 · 743×456 · 593×470 | 811×636 · 720×456 · 594×483 |
+| Telemetría | columna 238 px | 69 · 69 · 103 px | 80 · 80 · 101 px |
+| Barra de ejecución | 31 | 43 | 33 |
+| Pie del editor | 46 | 51 | 45 |
+| Editor (fuente/interlínea) | 14/24 | 13/21,45 | 14/24 |
+
+**Limitaciones.** Sin autocompletado, hover ni marcadores de error en línea (los errores salen en el panel de mensajes); sin guías de sangría ni plegado de código; el cursor es el nativo del navegador (1 px, no 2 px como Monaco); el texto del editor es 14 px y las líneas largas hacen scroll horizontal (como en el Lab); `syntax-highlight.js` es un archivo nuevo que **debe añadirse a la lista de archivos de runtime** en el próximo despliegue.

@@ -1,5 +1,5 @@
-/* BITIRO Simulador · estilos. Patrones tomados de BITIRO Lab (ver docs/pilot-ui-reference.md).
-   Todo el color sale de tokens.css. */
+/* BITIRO Simulador · estilos. Medidas y patrones tomados de la interfaz actual de BITIRO Lab
+   (ver docs/pilot-ui-reference.md). Todo el color sale de tokens.css. */
 *{box-sizing:border-box}
 html{min-width:320px}
 [hidden]{display:none!important}
@@ -19,24 +19,23 @@ code,pre{font-family:var(--font-mono)}
 .brand strong{display:block;font-size:19px;line-height:1.15;letter-spacing:-.6px;font-weight:600;white-space:nowrap}
 .brand strong span{font-weight:400;color:var(--text-secondary)}
 .brand small{display:block;font-size:11px;color:var(--text-secondary);margin-top:1px;white-space:nowrap}
-.top-note{margin-left:auto;font-size:var(--text-label);color:var(--text-secondary)}
 
-/* Workspace: sin fila de título; el simulador ocupa todo lo posible */
-.workspace{display:flex;flex-direction:column;padding:8px clamp(8px,1.2vw,16px) 10px;scroll-margin-top:var(--header-height)}
+/* Workspace: simulador y editor lado a lado (≈58/42 como el Lab); el canvas ocupa todo el ancho de su panel */
+.workspace{display:flex;flex-direction:column;padding:10px clamp(8px,1vw,14px) 12px;scroll-margin-top:var(--header-height)}
 .workspace:focus{outline:0}
-.workspace-grid{display:grid;gap:var(--space-2);grid-template-columns:minmax(0,60fr) minmax(0,40fr);flex:1;min-height:0}
+.workspace-grid{display:grid;gap:10px;grid-template-columns:minmax(0,60fr) minmax(0,40fr);flex:1;min-height:0}
 .workspace:not(.editor-open) .workspace-grid{grid-template-columns:minmax(0,1fr)}
 .workspace:not(.editor-open) .code-panel{display:none}
 @media(min-width:1024px){.workspace{height:calc(100dvh - var(--header-height));min-height:520px}}
-@media(min-width:1440px){.workspace-grid{grid-template-columns:minmax(0,62fr) minmax(0,38fr)}}
+@media(min-width:1280px){.workspace-grid{grid-template-columns:minmax(0,58fr) minmax(0,42fr)}}
 
 /* Botones */
-.button,.runtime-actions button,.simulator-toolbar>button,.camera-mode-switch button,.zoom-controls button,.editor-bottom-bar button,.menu-item,.toggle-ir{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:6px 12px;border:1px solid var(--border-default);border-radius:var(--radius-control);background:var(--surface-panel);font-size:var(--text-label);font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background var(--motion-fast) var(--ease-out),border-color var(--motion-fast) var(--ease-out)}
-.button:hover,.runtime-actions button:hover:not(:disabled),.menu-item:hover,.toggle-ir:hover{background:var(--surface-panel-muted);border-color:var(--border-strong)}
+.button,.runtime-actions button,.simulator-toolbar>button,.camera-mode-switch button,.zoom-controls button,.menu>summary,.menu-item,.toggle-ir{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:28px;padding:4px 10px;border:1px solid var(--border-default);border-radius:var(--radius-control);background:var(--surface-panel);font-size:var(--text-label);font-weight:500;line-height:1.35;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background var(--motion-fast) var(--ease-out),border-color var(--motion-fast) var(--ease-out)}
+.button:hover,.runtime-actions button:hover:not(:disabled),.menu>summary:hover,.menu-item:hover,.toggle-ir:hover{background:var(--surface-panel-muted);border-color:var(--border-strong)}
 button:disabled{cursor:not-allowed;opacity:.55}
 .primary,.runtime-actions .primary,.editor-bottom-bar .primary{background:var(--action-primary);border-color:var(--action-primary);color:var(--text-on-action);font-weight:600}
 .primary:hover:not(:disabled),.runtime-actions .primary:hover:not(:disabled),.editor-bottom-bar .primary:hover:not(:disabled){background:var(--action-primary-hover);border-color:var(--action-primary-hover);box-shadow:var(--shadow-action)}
-select{min-height:34px;padding:5px 28px 5px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-control);background:var(--surface-panel-raised);font-size:var(--text-label);max-width:100%;min-width:0}
+select{min-height:28px;padding:3px 26px 3px 8px;border:1px solid var(--border-default);border-radius:var(--radius-control);background-color:var(--surface-panel-raised);font-size:var(--text-label);font-weight:500;max-width:100%;min-width:0}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);flex-shrink:0}
 
 /* Menús emergentes (<details class="pop">) */
@@ -44,14 +43,14 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .pop>summary{list-style:none;cursor:pointer}
 .pop>summary::-webkit-details-marker{display:none}
 .menu[open]>summary{background:var(--surface-panel-muted);border-color:var(--border-strong)}
-.menu>summary{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .menu-panel{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:268px;display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);background:var(--surface-panel-raised);border:1px solid var(--border-default);border-radius:var(--radius-floating);box-shadow:var(--shadow-floating)}
 .menu-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--text-label)}
 .menu-check{display:flex;align-items:center;gap:8px;font-size:var(--text-label)}
 .menu-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
 .menu-divider{height:1px;background:var(--border-subtle);margin:2px 0}
+.menu-note{margin:0;font-size:var(--text-micro);color:var(--text-secondary)}
 .menu-pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.menu-item{justify-content:flex-start;width:100%}
+.menu-item{justify-content:flex-start;width:100%;min-height:32px}
 .toggle-ir{flex-direction:column;align-items:flex-start;gap:0;padding:6px 10px}
 .toggle-ir span{font-size:11px;color:var(--text-secondary);font-weight:500}
 .toggle-ir strong{font-size:var(--text-label)}
@@ -59,44 +58,50 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .toggle-ir[aria-pressed=true] span{color:inherit}
 
 /* Panel del simulador */
-.simulation-panel{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--surface-panel);border:1px solid var(--border-default);border-radius:var(--radius-panel);scroll-margin-top:calc(var(--header-height) + 8px)}
-.simulator-toolbar{display:flex;align-items:center;gap:var(--space-2);min-height:42px;padding:5px 8px;border-bottom:1px solid var(--border-subtle)}
-.track-field{display:block;min-width:0;flex:1 1 150px;max-width:260px}
-.track-field select{width:100%;font-weight:500;text-overflow:ellipsis}
-.camera-mode-switch{display:inline-flex;gap:2px;padding:2px;background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:var(--radius-control);min-width:0}
-.camera-mode-switch button{min-height:28px;padding:3px 10px;border:0;background:transparent;border-radius:4px;color:var(--text-secondary)}
-.camera-mode-switch button:hover{background:var(--surface-panel-muted)}
-.camera-mode-switch button.active,.camera-mode-switch button[aria-pressed=true]{background:var(--surface-panel-raised);color:var(--action-primary);box-shadow:0 0 0 1px var(--border-default);font-weight:600}
+.simulation-panel{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--surface-panel-raised);border:1px solid var(--border-sim-panel);border-radius:var(--radius-panel);scroll-margin-top:calc(var(--header-height) + 8px)}
+.simulator-toolbar{display:flex;align-items:center;gap:8px;min-height:40px;padding:4px 6px;background:var(--surface-toolbar);border-bottom:1px solid var(--border-subtle);border-radius:calc(var(--radius-panel) - 1px) calc(var(--radius-panel) - 1px) 0 0}
+.track-field{display:block;min-width:0;flex:0 1 184px;width:184px;max-width:184px}
+.track-field select{width:100%;text-overflow:ellipsis;background-color:var(--surface-panel)}
+.camera-mode-switch{display:inline-flex;gap:2px;padding:2px;background:var(--surface-segment);border:1px solid var(--border-segment);border-radius:var(--radius-panel);min-width:0}
+.camera-mode-switch button{min-height:25px;padding:3px 8px;border:0;background:transparent;border-radius:var(--radius-control);color:var(--text-secondary);gap:5px}
+.camera-mode-switch button svg{flex-shrink:0}
+.camera-mode-switch button:hover{background:rgba(255,255,255,.6)}
+.camera-mode-switch button.active,.camera-mode-switch button[aria-pressed=true]{background:#fff;color:var(--action-navy);font-weight:600;box-shadow:0 1px 2px rgba(11,13,16,.08)}
 .menu{margin-left:auto}
 .scene-wrap{position:relative;flex:1;min-height:240px;background:var(--stage-bg);overflow:hidden}
 #scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #scene:active{cursor:grabbing}
 .scene-top-label,.scene-source,.live-badge,.zoom-controls{position:absolute;z-index:2;font:500 var(--text-micro)/1.3 var(--font-mono);color:var(--stage-ink)}
 .scene-top-label,.scene-source,.live-badge{pointer-events:none}
-.scene-top-label{top:10px;left:10px;display:grid;gap:2px;max-width:60%;padding:6px 9px;background:rgba(7,12,18,.72);border-radius:var(--radius-panel)}
+.scene-top-label{top:10px;left:10px;display:grid;gap:2px;max-width:60%;padding:6px 9px;background:rgba(7,12,18,.72);border-radius:var(--radius-control)}
 .scene-top-label small{font-size:var(--text-micro);color:var(--stage-ink-soft)}
 .scene-top-label #trackName{display:none}
 .live-badge{top:10px;right:10px;padding:5px 9px;background:rgba(7,12,18,.72);border:1px solid rgba(255,255,255,.14);border-radius:var(--radius-pill);letter-spacing:.06em}
 .scene-source{left:10px;bottom:10px;max-width:calc(100% - 190px);color:var(--stage-ink-soft);font-size:var(--text-micro);text-shadow:0 0 4px rgba(7,12,18,.9)}
 .zoom-controls{right:10px;bottom:10px;display:inline-flex;align-items:center;gap:2px;padding:2px;background:rgba(7,12,18,.72);border:1px solid rgba(255,255,255,.14);border-radius:var(--radius-control)}
-.zoom-controls button{min-width:32px;min-height:32px;padding:2px 8px;border:0;background:transparent;color:var(--stage-ink);font-size:16px}
+.zoom-controls button{min-width:28px;min-height:28px;padding:2px 7px;border:0;background:transparent;color:var(--stage-ink);font-size:16px}
 .zoom-controls button:hover{background:rgba(255,255,255,.14)}
 .zoom-controls output{min-width:42px;text-align:center;font:600 var(--text-micro) var(--font-mono)}
 .zoom-controls button:focus-visible{outline-color:#fff}
 
-/* Telemetría compacta: franja bajo el canvas, no columna lateral */
+/* Telemetría: una fila de instrumentos del robot bajo el canvas (sin columna lateral) */
 .telemetry>summary{display:none}
-.telemetry-strip{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:7px 12px;background:var(--surface-panel-raised);border-top:1px solid var(--border-subtle)}
-.tcell{display:grid;gap:1px;min-width:0}
-.tlabel{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text-secondary);white-space:nowrap}
+.telemetry-strip{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;background:var(--surface-panel-soft);border-top:1px solid var(--border-default)}
+.tcell{display:grid;align-content:center;gap:1px;min-width:0;padding:2px 8px;background:rgba(255,255,255,.7);border:1px solid var(--border-subtle);border-radius:var(--radius-control)}
+.tlabel{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);white-space:nowrap;line-height:1.3}
 .readout{font:500 14px/1.25 var(--font-mono);white-space:nowrap}
 .sensor-row{display:flex;gap:10px}
-.sensor{display:inline-flex;align-items:baseline;gap:4px}
+.sensor{display:inline-flex;align-items:baseline;gap:5px}
 .sensor b{font:600 11px var(--font-mono);color:var(--text-secondary)}
 .sensor strong{font:500 14px/1.25 var(--font-mono)}
-#lcd{margin:0;padding:3px 7px;background:var(--lcd-bg);border:1px solid var(--lcd-border);border-radius:var(--radius-control);color:var(--lcd-text);font:500 11px/1.3 var(--font-mono);white-space:pre;overflow:hidden;min-height:2.9em;min-width:14ch}
-.more-data{margin-left:auto}
-.more-data>summary{display:inline-flex;align-items:center;min-height:30px;padding:0 8px;border:1px solid var(--border-default);border-radius:var(--radius-control);font-size:var(--text-label);font-weight:500;color:var(--text-secondary);background:var(--surface-panel)}
+.lcd-cell{padding:0;background:transparent;border:0;gap:3px;align-content:center}
+.lcd-cell .tlabel{padding-left:2px}
+/* LCD 16×2 como componente del robot: bisel, pantalla con retícula de caracteres y texto monoespaciado. */
+.lcd-bezel{padding:3px;background:#2D353C;border:1px solid #3F4850;border-radius:var(--radius-control);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 1px 3px rgba(11,13,16,.2)}
+#lcd{margin:0;box-sizing:content-box;width:16ch;height:36px;padding:3px 7px;border-radius:3px;background-color:var(--lcd-bg);background-image:linear-gradient(90deg,rgba(36,49,39,.13) 1px,transparent 1px),linear-gradient(0deg,rgba(36,49,39,.13) 1px,transparent 1px);background-size:1ch 18px;background-position:7px 3px;box-shadow:inset 0 1px 3px rgba(20,32,23,.42),inset 0 0 0 1px var(--lcd-border);color:var(--lcd-text);font:500 12px/18px var(--font-mono);letter-spacing:0;white-space:pre;overflow:hidden}
+.more-data{margin-left:auto;align-self:center}
+.more-data>summary{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border:1px solid var(--border-default);border-radius:var(--radius-control);font-size:var(--text-label);font-weight:500;color:var(--text-secondary);background:var(--surface-panel)}
+.more-data>summary:hover{background:var(--surface-panel-muted);border-color:var(--border-strong)}
 .more-data[open]>summary{background:var(--surface-panel-muted)}
 .pop-panel{position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;width:290px;display:grid;gap:8px;padding:var(--space-3);background:var(--surface-panel-raised);border:1px solid var(--border-default);border-radius:var(--radius-floating);box-shadow:var(--shadow-floating);font-size:var(--text-label)}
 .sensor-detail{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:2px 8px}
@@ -112,42 +117,59 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .pop-panel p{margin:0}
 .pop-panel small{color:var(--text-secondary);font-size:11px;line-height:1.4}
 
-/* Barra de ejecución */
-.runtime-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:6px 8px;border-top:1px solid var(--border-subtle);background:var(--surface-panel-raised);flex-wrap:wrap}
-.runtime-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.runtime-actions button{min-height:30px;padding:4px 10px}
+/* Barra de ejecución (≈31 px en el Lab) */
+.runtime-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:3px 6px;border-top:1px solid var(--border-default);background:var(--surface-panel-raised);flex-wrap:wrap}
+.runtime-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.runtime-actions button{min-height:28px;padding:4px 12px;font-weight:600}
+.runtime-actions button:disabled{opacity:1;background:var(--surface-panel-soft);border-color:var(--border-subtle);color:#868D94;font-weight:500}
 .run-proxy{display:none!important}
 .workspace:not(.editor-open) .run-proxy{display:inline-flex!important}
 .runtime-clock{display:flex;align-items:baseline;gap:8px;font-size:var(--text-label);color:var(--text-secondary)}
 .runtime-clock strong{font:500 13px var(--font-mono);color:var(--text-primary)}
 .runtime-clock small{font-size:var(--text-micro)}
-.status-strip{padding:6px 10px;border-top:1px solid var(--border-subtle);border-radius:0 0 var(--radius-panel) var(--radius-panel);background:var(--surface-panel-soft);font-size:var(--text-label);color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.status-strip{padding:6px 10px;border-top:1px solid var(--border-subtle);border-radius:0 0 calc(var(--radius-panel) - 1px) calc(var(--radius-panel) - 1px);background:var(--surface-panel-soft);font-size:var(--text-label);color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
 
-/* Editor */
-.code-panel{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--editor-bg);color:var(--instrument-text);border:1px solid var(--instrument-line-strong);border-radius:var(--radius-panel);overflow:hidden}
-.file-bar{display:flex;align-items:center;gap:var(--space-3);min-height:38px;padding:0 6px 0 12px;background:var(--brand-ink-2);border-bottom:1px solid var(--instrument-line-strong)}
+/* Editor: panel navy, barra de archivo de 34 px, Monaco-like 14/24 px y pie con secundario + Ejecutar */
+.code-panel{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--editor-panel);color:var(--editor-secondary-text);border:1px solid var(--editor-border);border-radius:var(--radius-panel);overflow:hidden}
+.file-bar{display:flex;align-items:center;gap:var(--space-3);min-height:34px;padding:0 6px 0 10px;background:var(--editor-chrome);border-bottom:1px solid var(--editor-border)}
 .file-name{display:inline-flex;align-items:center;gap:8px;font:400 var(--text-label) var(--font-mono);color:var(--instrument-text)}
 .file-state{margin-left:auto;font-size:var(--text-micro);color:var(--instrument-text-soft)}
 #codeClose{width:30px;height:30px;border:0;background:transparent;color:var(--instrument-text-muted);border-radius:var(--radius-control);cursor:pointer}
 #codeClose:hover{background:var(--instrument-line)}
+.editor-meta{display:flex;justify-content:space-between;gap:var(--space-3);padding:5px 10px;border-bottom:1px solid var(--instrument-line);font-size:var(--text-micro);color:var(--instrument-text-soft)}
 .editor-meta span{white-space:nowrap}
-.editor-meta{display:flex;justify-content:space-between;gap:var(--space-3);padding:5px 12px;border-bottom:1px solid var(--instrument-line);font-size:var(--text-micro);color:var(--instrument-text-soft)}
 .editor-area{position:relative;display:flex;flex:1;min-height:180px;background:var(--editor-bg)}
-.gutter{margin:0;padding:12px 8px 12px 10px;min-width:42px;text-align:right;color:var(--editor-gutter);font:400 var(--text-code)/1.65 var(--font-mono);overflow:hidden;user-select:none;border-right:1px solid var(--editor-line);background:var(--editor-bg)}
-#src{flex:1;min-width:0;resize:none;border:0;outline:0;padding:12px 12px;background:transparent;color:var(--editor-text);caret-color:#FFAF75;font:400 var(--text-code)/1.65 var(--font-mono);white-space:pre;overflow:auto;tab-size:2}
+.gutter{margin:0;flex:none;width:54px;padding:12px 12px 12px 0;text-align:right;color:var(--editor-gutter);font:400 14px/24px var(--font-mono);overflow:hidden;user-select:none;background:var(--editor-bg)}
+.gutter .ln{display:inline}
+.gutter .ln.on{color:var(--editor-gutter-active)}
+.code-stack{position:relative;flex:1;min-width:0}
+/* La entrada real es el <textarea>; la capa .hl (aria-hidden) solo pinta el texto coloreado encima, sin capturar el ratón. */
+#src,.hl{margin:0;box-sizing:border-box;padding:12px 14px 12px 12px;font:400 14px/24px var(--font-mono);letter-spacing:0;tab-size:2;white-space:pre;font-variant-ligatures:none;font-kerning:none;text-rendering:auto}
+#src{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--syn-text);caret-color:var(--editor-cursor);overflow:auto;scrollbar-color:var(--editor-border) var(--editor-bg)}
+.has-hl #src{color:transparent;-webkit-text-fill-color:transparent}
+#src::selection{background:var(--editor-selection);color:transparent;-webkit-text-fill-color:transparent}
+.hl-clip{position:absolute;left:0;top:0;overflow:hidden;pointer-events:none;width:100%;height:100%}
+.hl{position:absolute;left:0;top:0;min-width:100%;color:var(--syn-text);background:none;pointer-events:none;will-change:transform}
+.hl-line{position:absolute;left:0;right:0;top:0;height:24px;background:var(--editor-line-highlight);will-change:transform}
+.t-kw{color:var(--syn-keyword)}.t-str{color:var(--syn-string)}.t-com{color:var(--syn-comment)}.t-num{color:var(--syn-number)}.t-op{color:var(--syn-operator)}
+.t-api{color:var(--syn-api);font-weight:500}
+.t-b1{color:var(--syn-bracket-1)}.t-b2{color:var(--syn-bracket-2)}.t-b3{color:var(--syn-bracket-3)}.t-bx{color:var(--syn-bracket-error)}
 .editor-area:focus-within{box-shadow:inset 0 0 0 2px var(--focus-ring)}
 #src:focus-visible{outline:0}
+@media(forced-colors:active){.has-hl #src{color:CanvasText;-webkit-text-fill-color:CanvasText}.hl-clip{display:none}}
 .compiler{padding:8px 12px;border-top:1px solid var(--instrument-line);background:var(--instrument-panel-deep);font:400 var(--text-label)/1.5 var(--font-mono);color:var(--instrument-text-muted);white-space:pre-wrap;max-height:120px;overflow:auto}
 .compiler:focus-visible{outline-offset:-3px}
 .compiler .ok{color:#7FD9A6}.compiler .warn{color:#F4C07A}.compiler .err{color:#FF9AA6}
 .code-panel details{border-top:1px solid var(--instrument-line);padding:6px 12px;font-size:var(--text-label);color:var(--instrument-text-muted);max-height:34%;overflow:auto}
 .code-panel summary{cursor:pointer;font-weight:500}
 .code-panel details p{margin:8px 0 4px;line-height:1.6}
-.code-panel details code{color:#9FD4AF}
-.editor-bottom-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:7px 9px;background:var(--instrument-panel-deep);border-top:1px solid var(--instrument-line)}
-.example-field{display:flex;align-items:center;gap:8px;font-size:var(--text-label);color:var(--instrument-text-muted);min-width:0}
-.example-field select{background:var(--instrument-panel);border-color:var(--instrument-line-strong);color:var(--instrument-text);min-width:0}
-.execute-button{min-height:36px!important;padding:6px 20px!important;flex:1;max-width:240px}
+.code-panel details code{color:var(--syn-string)}
+.editor-bottom-bar{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--editor-chrome);border-top:1px solid var(--editor-border)}
+.editor-bottom-bar button,.editor-bottom-bar select{min-height:32px;border-radius:var(--radius-control);font-size:var(--text-label)}
+.example-field{display:flex;min-width:0}
+.example-field select{height:32px;min-width:0;max-width:150px;padding:5px 26px 5px 10px;background-color:var(--editor-secondary-bg);border:1px solid var(--editor-border);color:var(--editor-secondary-text);font-weight:500}
+.example-field select:hover{border-color:var(--instrument-text-soft)}
+.execute-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:1;height:32px;padding:5px 8px;border:1px solid;cursor:pointer;font-weight:600}
 .execute-button:disabled{background:var(--instrument-line);border-color:var(--instrument-line)}
 
 /* Diálogos */
@@ -159,25 +181,34 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .reference-dialog img{max-height:70vh;width:auto;margin:var(--space-3) auto 0;display:block}
 .reference-dialog p{font-size:var(--text-label);color:var(--text-secondary)}
 
-/* Ajuste 1024–1279: el simulador manda; la telemetría va en dos filas compactas */
+/* 1024–1279: dos columnas con el canvas dominante; la telemetría puede ocupar dos filas */
 @media(min-width:1024px) and (max-width:1279px){
- .telemetry-strip{gap:4px 10px}
- .readout,.sensor strong{font-size:13px}
- #lcd{min-width:13ch}
+ /* Telemetría en rejilla 2×2 con el LCD a la derecha: una sola banda de ~100 px en vez de dos filas sueltas */
+ .telemetry-strip{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px;align-items:stretch}
+ .telemetry-strip>.tcell:nth-child(1){grid-column:1;grid-row:1}
+ .telemetry-strip>.tcell:nth-child(2){grid-column:2;grid-row:1}
+ .telemetry-strip>.tcell:nth-child(3){grid-column:1;grid-row:2}
+ .telemetry-strip>.tcell:nth-child(4){grid-column:2;grid-row:2}
+ .telemetry-strip>.lcd-cell{grid-column:3;grid-row:1/3;justify-self:start;align-self:center;margin-left:4px}
+ .telemetry-strip>.more-data{grid-column:4;grid-row:1;justify-self:end;align-self:start;margin-left:0}
  .scene-source{max-width:calc(100% - 175px)}
+ .camera-mode-switch button{padding:3px 6px}
+ .track-field{flex-basis:150px;width:150px;max-width:150px}
+ /* «Más datos» pasa a «⋯» (nombre accesible por aria-label) para que la telemetría quepa en una fila */
+ .more-data>summary{font-size:0;min-width:34px;justify-content:center}
+ .more-data>summary::before{content:'⋯';font-size:18px;line-height:1;color:var(--text-secondary)}
 }
 
 /* Apilado (≤1023): simulador, controles, editor; objetivos táctiles de ~44 px */
 @media(max-width:1023px){
  .workspace{height:auto;min-height:calc(100dvh - var(--header-height));gap:var(--space-2)}
  .workspace-grid{grid-template-columns:minmax(0,1fr)!important;gap:10px}
- .simulation-panel{display:flex}
  .scene-wrap{flex:none;height:clamp(240px,46dvh,440px);min-height:0}
  .code-panel{min-height:440px}
  .run-proxy{display:inline-flex!important}
- .editor-bottom-bar .primary{background:transparent;border-color:var(--instrument-line-strong);color:var(--instrument-text);font-weight:500}
+ .editor-bottom-bar .primary{background:transparent;border-color:var(--editor-border);color:var(--instrument-text);font-weight:500}
  .editor-bottom-bar .primary:hover:not(:disabled){background:var(--instrument-line);box-shadow:none;border-color:var(--instrument-text-soft)}
- .button,.runtime-actions button,.camera-mode-switch button,.zoom-controls button,.editor-bottom-bar button,.menu-item,.toggle-ir,select,.more-data>summary,#codeClose,.telemetry>summary{min-height:44px}
+ .button,.runtime-actions button,.camera-mode-switch button,.zoom-controls button,.editor-bottom-bar button,.menu>summary,.menu-item,.toggle-ir,select,.more-data>summary,#codeClose,.telemetry>summary,.example-field select,.execute-button{min-height:44px}
  .zoom-controls button{min-width:44px}
  .simulator-toolbar{flex-wrap:wrap;row-gap:var(--space-2);padding:8px}
  .track-field{flex:1 1 0;max-width:none}
@@ -188,13 +219,13 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
  .menu-check{min-height:44px}
  .menu-check input{width:20px;height:20px}
  #codeClose{width:44px}
- .execute-button{min-height:44px!important}
  .code-panel summary{display:flex;align-items:center;min-height:44px}
  .telemetry>summary{display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer;font-weight:500;list-style:none;border-top:1px solid var(--border-subtle)}
  .telemetry>summary::-webkit-details-marker{display:none}
  .telemetry>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:rotate(45deg);transition:transform var(--motion-fast)}
  .telemetry[open]>summary::after{transform:rotate(-135deg)}
- .telemetry-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+ .telemetry-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .telemetry-strip .tcell:first-child{grid-column:1/-1}
  .telemetry-strip .lcd-cell{grid-column:1/-1}
  .more-data{grid-column:1/-1;margin-left:0}
  .pop-panel{left:0;right:0;width:auto}
@@ -212,22 +243,26 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 }
 @media(max-width:767px){
  .topbar{padding:0 12px;gap:10px}
- .brand small,.top-note{display:none}
+ .brand small{display:none}
  .workspace{padding:8px 8px 16px}
  .file-state{display:none}
- .editor-bottom-bar{flex-wrap:wrap}
- .execute-button{max-width:none;flex:1 1 100%}
  .menu-panel{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:calc(100dvh - 24px);overflow:auto}
  #codeClose{display:none}
  .scene-source{max-width:calc(100% - 172px);bottom:10px;line-height:1.35}
  .scene-top-label{max-width:56%}
  .zoom-controls output{display:none}
+ .example-field select{max-width:none}
+ .execute-button{flex:1 1 100%}
+ .editor-bottom-bar{flex-wrap:wrap}
+ .example-field{flex:1 1 100%}
+ .example-field select{width:100%}
 }
 @media(max-width:400px){
  .brand strong{font-size:17px}
  .scene-top-label small #trackSize,.scene-top-label small .sep{display:none}
+ .camera-mode-switch button{font-size:12px;padding:3px 2px;gap:3px}
+ .camera-mode-switch button svg{display:none}
  .editor-meta span:first-child{display:none}
- .camera-mode-switch button{font-size:12px;padding:3px 2px}
 }
 /* Móvil horizontal: más canvas, menos cromo */
 @media(max-height:480px) and (max-width:1023px){
