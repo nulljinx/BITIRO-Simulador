@@ -49,30 +49,47 @@ void setup() {
 void loop() {
     avanzar(30);
 }
+```
 
 El simulador no evalúa si esa es la solución correcta de una sesión.
+
 Ejecuta lo que está programado y permite observar el resultado.
-Principio de producto
+
+---
+
+## Principio de producto
+
 Una regla guía el desarrollo:
-Las sesiones pueden configurar el mundo, pero nunca gobernar al robot.
+
+> **Las sesiones pueden configurar el mundo, pero nunca gobernar al robot.**
 
 El comportamiento de IROH debe depender únicamente de:
+
+```text
 programa
 + física
 + sensores
 + actuadores
 + estado del entorno
 + entradas manuales
+```
 
 El simulador no debe decidir automáticamente:
+
 - qué ruta es correcta;
 - a qué base debe llegar el robot;
 - cuándo una actividad está completada;
 - qué movimiento debería realizar;
 - qué código debe escribir el estudiante.
-Ese acompañamiento pedagógico pertenece a BITIRO Lab.
-Qué incluye actualmente
+
+Ese acompañamiento pedagógico pertenece a **BITIRO Lab**.
+
+---
+
+## Qué incluye actualmente
+
 Entre las capacidades disponibles se encuentran:
+
 - movimiento diferencial del robot;
 - tres sensores de línea;
 - sensor de distancia / sonar;
@@ -88,9 +105,16 @@ Entre las capacidades disponibles se encuentran:
 - circuitos de práctica libre:
   - Óvalo;
   - Ocho.
+
 El proyecto está en desarrollo activo y algunas capacidades del robot físico todavía están siendo modeladas o validadas.
-Pistas y escenarios
+
+---
+
+## Pistas y escenarios
+
 BITIRO separa distintos conceptos para evitar mezclar la geometría oficial con los elementos de una actividad.
+
+```text
 TRACK
 Geometría física de la pista.
 
@@ -102,8 +126,10 @@ Pose inicial práctica del robot al cargar una pista.
 
 CURRICULUM
 Objetivo, desafío y acompañamiento pedagógico.
+```
 
 La geometría de los plotters oficiales se valida directamente contra sus fuentes vectoriales para respetar:
+
 - dimensiones físicas;
 - anchos de línea;
 - curvas;
@@ -111,102 +137,189 @@ La geometría de los plotters oficiales se valida directamente contra sus fuente
 - gaps;
 - zonas;
 - posición relativa de los elementos.
-La sesión S07 es una sesión de repaso y no posee un plotter oficial propio.
-Los circuitos Óvalo y Ocho son espacios de práctica libre y no representan pistas oficiales de una sesión.
-Simulación libre
+
+La sesión **S07 es una sesión de repaso y no posee un plotter oficial propio**.
+
+Los circuitos **Óvalo** y **Ocho** son espacios de práctica libre y no representan pistas oficiales de una sesión.
+
+---
+
+## Simulación libre
+
 Elegir una pista de una sesión no obliga al robot a resolver esa sesión.
+
 Por ejemplo:
+
+```cpp
 avanzar(30);
+```
 
 hará que el robot intente avanzar aunque:
+
 - se salga de la línea;
 - vaya en una dirección incorrecta;
 - choque;
 - no cumpla el objetivo pedagógico;
 - llegue a otra zona de la pista.
-Eso es intencional.
-BITIRO Simulador está pensado como un espacio de experimentación.
-BITIRO Simulador y BITIRO Lab
-Los dos proyectos cumplen funciones diferentes.
-BITIRO Simulador	BITIRO Lab
-Experimentación libre	Experiencia pedagógica estructurada
-Programa y observa	Sesiones, actividades y acompañamiento
-No entrega la solución	Puede presentar objetivos y evidencias
-No evalúa automáticamente una misión	Puede contextualizar el aprendizaje
-No requiere cuenta	Plataforma educativa
-Motor de simulación	Contexto curricular
 
+Eso es intencional.
+
+BITIRO Simulador está pensado como un espacio de experimentación.
+
+---
+
+## BITIRO Simulador y BITIRO Lab
+
+Los dos proyectos cumplen funciones diferentes.
+
+| BITIRO Simulador | BITIRO Lab |
+|---|---|
+| Experimentación libre | Experiencia pedagógica estructurada |
+| Programa y observa | Sesiones, actividades y acompañamiento |
+| No entrega la solución | Puede presentar objetivos y evidencias |
+| No evalúa automáticamente una misión | Puede contextualizar el aprendizaje |
+| No requiere cuenta | Plataforma educativa |
+| Motor de simulación | Contexto curricular |
 
 BITIRO Simulador puede utilizarse de forma independiente.
-Entradas del robot
+
+---
+
+## Entradas del robot
+
 El simulador permite modificar entradas manuales del robot mientras se experimenta con el programa.
+
 Actualmente incluye:
+
 - pulsador;
 - IR izquierdo;
 - IR derecho.
+
 Estas entradas forman parte del estado del robot y pueden ser consultadas desde el programa.
+
 Ejemplo:
+
+```cpp
 if (leerSensorObstaculoIzquierdo() == 1) {
     detenerse();
 }
+```
 
 o:
+
+```cpp
 if (leerBoton() == 1) {
     avanzar(30);
 }
+```
 
 La intención es que el estudiante pueda provocar distintas condiciones y observar cómo responde su programa.
-Sensores de línea
+
+---
+
+## Sensores de línea
+
 IROH dispone de tres sensores de línea:
+
+```cpp
 leerSensorLineaIzquierdo();
 leerSensorLineaCentral();
 leerSensorLineaDerecho();
+```
 
 También existen funciones normalizadas utilizadas por el simulador para trabajar con calibración y detección.
+
 Los sensores responden a la geometría real de la pista simulada.
+
 Si existe un gap, el sensor debe leer el fondo y no una línea invisible.
-Sonar
+
+---
+
+## Sonar
+
 El sensor de distancia permite detectar objetos ubicados delante del robot.
+
+```cpp
 leerDistanciaSonar();
+```
 
 La simulación actual utiliza un modelo geométrico determinista.
+
 No pretende reproducir todos los fenómenos acústicos de un sensor ultrasónico real, pero sí permitir experimentar con distancia, detección y comportamiento del programa.
-Servo de golpe
+
+---
+
+## Servo de golpe
+
 El simulador incluye física de contacto para el mecanismo de golpe del IROH.
+
 El golpe puede interactuar con objetos del escenario cuando existe contacto físico.
+
 No existen fuerzas a distancia: si el brazo no toca el objeto, el objeto no debe moverse.
+
 Esta parte del simulador continúa siendo validada contra el comportamiento y la API del robot físico.
-Editor
+
+---
+
+## Editor
+
 El editor permite escribir programas usando un subconjunto de Arduino/C++ y las funciones del IROH.
+
 Incluye:
+
 - resaltado de sintaxis;
 - números de línea;
-- ejecución con Ctrl + Enter;
+- ejecución con `Ctrl + Enter`;
 - navegación de teclado;
 - almacenamiento local del código por pista.
+
 No es un compilador Arduino completo.
+
 El intérprete implementa únicamente las construcciones necesarias para el entorno actual.
-Ejecutar localmente
+
+---
+
+## Ejecutar localmente
+
 Clona el repositorio:
+
+```bash
 git clone https://github.com/nulljinx/BITIRO-Simulador.git
 cd BITIRO-Simulador
+```
 
 El proyecto actual es una aplicación web estática.
+
 Puedes servirla con cualquier servidor HTTP local.
+
 Por ejemplo:
+
+```bash
 python3 -m http.server 8080
+```
 
 y abrir:
+
+```text
 http://localhost:8080
+```
 
 No requiere:
+
 - base de datos;
 - backend;
 - credenciales;
 - servicios externos para ejecutar la simulación.
-Arquitectura actual
+
+---
+
+## Arquitectura actual
+
 La versión actual está construida con HTML, CSS y JavaScript sin dependencias externas en tiempo de ejecución.
+
 Archivos principales:
+
+```text
 index.html           interfaz principal
 iroh-runtime.js      intérprete y API del IROH
 simulator.js         ciclo y estado de simulación
@@ -217,28 +330,47 @@ extra-tracks.js      pistas adicionales
 ui-shell.js          comportamiento de interfaz
 syntax-highlight.js  resaltado del editor
 tests/               pruebas deterministas y regresiones
+```
 
-La representación visual actual utiliza una proyección propia sobre Canvas.
+La representación visual actual utiliza una proyección propia sobre **Canvas**.
+
 No pretende ser todavía un modelo CAD exacto del robot físico.
-Modelo de simulación
+
+---
+
+## Modelo de simulación
+
 La simulación utiliza un paso temporal fijo y comportamiento determinista.
+
 Esto permite que una misma ejecución, con:
+
+```text
 mismo programa
 + mismo estado inicial
 + mismas entradas
+```
 
 produzca el mismo resultado.
+
 Este comportamiento es importante tanto para pruebas como para comparar cambios del motor.
-Pruebas
+
+---
+
+## Pruebas
+
 Con Node.js instalado puedes ejecutar las suites principales:
+
+```bash
 node tests/smoke.cjs
 node tests/regression.cjs
 node tests/sim1.cjs
 node tests/ui-contract.cjs
 node tests/ui-shell.cjs
 node tests/syntax.cjs
+```
 
 El proyecto también contiene pruebas específicas para:
+
 - geometría de pistas;
 - física;
 - sensores;
@@ -246,10 +378,17 @@ El proyecto también contiene pruebas específicas para:
 - interfaz;
 - comportamiento determinista;
 - regresiones.
+
 Los goldens de simulación no deben regenerarse automáticamente salvo cuando un cambio de comportamiento haya sido revisado y aprobado.
-Estado del proyecto
-BITIRO Simulador está en desarrollo activo.
+
+---
+
+## Estado del proyecto
+
+BITIRO Simulador está en **desarrollo activo**.
+
 Entre los trabajos en curso se encuentran:
+
 - validación métrica de plotters oficiales;
 - mayor fidelidad de sensores y actuadores;
 - escenarios físicos configurables;
@@ -258,11 +397,19 @@ Entre los trabajos en curso se encuentran:
 - mejora progresiva del entorno visual 3D;
 - separación entre simulación física y lógica curricular;
 - mejora de la fidelidad entre el simulador y el robot físico.
+
 Por esta razón pueden existir diferencias entre el simulador y el IROH real.
+
 Si encuentras una, documentarla ayuda a mejorar el modelo.
-Reportar problemas
-Puedes abrir un Issue en este repositorio.
+
+---
+
+## Reportar problemas
+
+Puedes abrir un **Issue** en este repositorio.
+
 Idealmente incluye:
+
 - pista utilizada;
 - código ejecutado;
 - pasos para reproducir;
@@ -271,37 +418,70 @@ Idealmente incluye:
 - navegador utilizado;
 - captura o video si ayuda;
 - comparación con el robot físico, si existe.
+
 Las diferencias reproducibles entre el simulador y el IROH real son especialmente valiosas.
-Documentación adicional
+
+---
+
+## Documentación adicional
+
 El repositorio contiene documentación técnica en:
+
+```text
 LEEME.md
 docs/
+```
 
 Parte de esa documentación describe etapas anteriores del simulador y puede quedar desactualizada durante el desarrollo.
-Para la presentación general del proyecto, este README.md es la referencia principal.
-Contribuciones
+
+Para la presentación general del proyecto, este `README.md` es la referencia principal.
+
+---
+
+## Contribuciones
+
 El repositorio es público para facilitar:
+
 - revisión;
 - pruebas;
 - colaboración;
 - detección de errores;
 - comparación con el robot físico.
-Si quieres proponer un cambio, abre primero un Issue explicando el problema o la mejora.
+
+Si quieres proponer un cambio, abre primero un **Issue** explicando el problema o la mejora.
+
 Esto ayuda a distinguir:
+
+```text
 cambio de interfaz
 cambio pedagógico
 cambio de física
 cambio de geometría
 cambio de API
+```
 
 y evita mezclar modificaciones que deberían validarse por separado.
-Licencia y materiales
-El repositorio es público para facilitar revisión, prueba y colaboración.
-Actualmente el repositorio no declara una licencia de software.
+
+---
+
+## Licencia y materiales
+
+El repositorio es público para facilitar **revisión, prueba y colaboración**.
+
+Actualmente el repositorio **no declara una licencia de software**.
+
 Que el código sea visible públicamente no implica por sí solo permiso para copiarlo, redistribuirlo o reutilizarlo fuera de lo permitido por la legislación aplicable.
+
 Los materiales educativos, plotters, marcas, logotipos y otros recursos de terceros conservan sus respectivas autorías y condiciones de uso.
+
 Antes de reutilizar o redistribuir partes del proyecto, revisa las licencias y derechos aplicables.
-Créditos
-BITIRO Simulador forma parte del proyecto BITIRO y toma como referencia el robot educativo IROH y los materiales utilizados en las experiencias ROB-002.
+
+---
+
+## Créditos
+
+BITIRO Simulador forma parte del proyecto **BITIRO** y toma como referencia el robot educativo **IROH** y los materiales utilizados en las experiencias ROB-002.
+
 El objetivo es ofrecer un espacio donde aprender programación y robótica mediante experimentación:
-programar, observar, ajustar y volver a probar
+
+> **programar, observar, ajustar y volver a probar**
