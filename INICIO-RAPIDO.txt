@@ -1,0 +1,14 @@
+BITIRO LAB v4 — INICIO RÁPIDO
+
+1. Extrae todo el ZIP y abre index.html con Chrome o Edge.
+2. Pulsa Calibrar sensores. Mide blanco, mide negro y guarda.
+3. Elige un ejemplo y pulsa Ejecutar código.
+4. Usa Pausar y Paso +0,1 s para observar sensores y movimiento.
+5. Usa Superior para ver las huellas de los tres sensores.
+
+La calibración corresponde al banco virtual; no calibra hardware real.
+Demostración sigue una ruta predefinida. Ejecutar código prueba tu algoritmo.
+El código se guarda por pista en este navegador, si permite almacenamiento.
+No necesitas internet ni instalar programas para usar el simulador.
+
+Lee LEEME.md para consultar funciones, lógica pedagógica y límites.
