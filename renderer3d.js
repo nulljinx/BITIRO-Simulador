@@ -19,13 +19,8 @@ function box(list,x,y,z,w,h,d,c,layer=3){
 }
 function floor(list,x,z,w,d,y,color,layer=1){face(list,[V(x,y,z),V(x+w,y,z),V(x+w,y,z+d),V(x,y,z+d)],color,layer)}
 function band(a,b,w,color,layer=2){let dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz)||1,ox=dz/len*w/2,oz=-dx/len*w/2;return {points:[V(a.x+ox,a.y,a.z+oz),V(b.x+ox,b.y,b.z+oz),V(b.x-ox,b.y,b.z-oz),V(a.x-ox,a.y,a.z-oz)],fill:color,layer,alpha:1}}
-function renderScene3D(canvas,track,robot,obstacles,camera){
- const c=canvas.getContext('2d');if(!c)return;
- const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(w<20||h<20)return;
- const dpr=Math.min(devicePixelRatio||1,window.BITIRO_RENDER_QUALITY==='high'?2.3:1.6),cw=Math.round(w*dpr),ch=Math.round(h*dpr);
- if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch}
- c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
- const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#233440');sky.addColorStop(1,'#101b26');c.fillStyle=sky;c.fillRect(0,0,w,h);
+// Cámara de la escena: UNA sola matemática para dibujar y para convertir píxeles ↔ plano del plotter (modo calibración).
+function cameraRig(track,robot,camera,w,h){
  const X=x=>x-track.physicalWidthCm/2,Z=z=>z-track.physicalHeightCm/2;
  const target=camera.follow?V(X(robot.x),0,Z(robot.y)):V(0,0,track.physicalHeightCm*.065);
  const reach=Math.max(track.physicalWidthCm,track.physicalHeightCm),dist=clamp(camera.distance,.24,3.8)*reach;
@@ -33,6 +28,36 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  const forward=norm(sub(target,position)),right=norm(cross(forward,V(0,1,0))),up=norm(cross(right,forward));
  const focal=Math.min(w,h)*1.68;
  const project=v=>{const rel=sub(v,position),depth=dot(rel,forward);if(depth<.2)return null;return{x:w/2+dot(rel,right)*focal/depth,y:h*.46-dot(rel,up)*focal/depth,depth}};
+ return {X,Z,position,forward,right,up,focal,project};
+}
+// Conversión entre píxeles del canvas y coordenadas del plotter (cm) sobre el plano del suelo. Solo la usa la interfaz de calibración.
+const GROUND_Y=-.8;
+window.BITIRO_SCENE_VIEW=Object.freeze({
+ /* Punto (x,y) del plotter en cm bajo el píxel (px,py), relativos al canvas; null si el rayo no toca el suelo. */
+ pickGround(canvas,track,camera,robot,px,py){
+  const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(w<20||h<20)return null;
+  const {position,forward,right,up,focal}=cameraRig(track,robot,camera,w,h);
+  const u=(px-w/2)/focal,v=(h*.46-py)/focal;
+  const d=V(forward.x+right.x*u+up.x*v,forward.y+right.y*u+up.y*v,forward.z+right.z*u+up.z*v);
+  if(Math.abs(d.y)<1e-9)return null;
+  const t=(GROUND_Y-position.y)/d.y;if(!(t>0))return null;
+  return {x:position.x+t*d.x+track.physicalWidthCm/2,y:position.z+t*d.z+track.physicalHeightCm/2};
+ },
+ /* Píxel del canvas (relativo) de un punto del plotter (x,y en cm) a la altura z sobre el suelo; null si queda detrás de la cámara. */
+ projectGround(canvas,track,camera,robot,x,y,z=0){
+  const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(w<20||h<20)return null;
+  const {X,Z,project}=cameraRig(track,robot,camera,w,h);
+  const p=project(V(X(x),GROUND_Y+z,Z(y)));return p?{x:p.x,y:p.y}:null;
+ }
+});
+function renderScene3D(canvas,track,robot,obstacles,camera){
+ const c=canvas.getContext('2d');if(!c)return;
+ const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(w<20||h<20)return;
+ const dpr=Math.min(devicePixelRatio||1,window.BITIRO_RENDER_QUALITY==='high'?2.3:1.6),cw=Math.round(w*dpr),ch=Math.round(h*dpr);
+ if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch}
+ c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+ const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#233440');sky.addColorStop(1,'#101b26');c.fillStyle=sky;c.fillRect(0,0,w,h);
+ const {X,Z,position,forward,right,up,focal,project}=cameraRig(track,robot,camera,w,h);
  const faces=[],labels=[];
  const cached=staticScenes.get(track);
  if(cached){faces.push(...cached.faces);labels.push(...cached.labels);}else{

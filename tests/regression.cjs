@@ -42,7 +42,7 @@ test('API calibrada respeta inicialización y conserva lectura bruta',()=>{
  assert.match(el('msg').innerHTML,/inicializarSensores/);
  program('void setup(){inicializarSensores();} void loop(){int a=leerLineaNormalizada(3);}');tick(.02);
  assert.match(el('msg').innerHTML,/sensor debe ser/);
- js('window.resetRobot()');assert.equal(js('readLine(1)'),865);
+ js('window.resetRobot()');{const v=js('readLine(1)');assert.ok(v>=800&&v<=930,'lectura bruta de negro sobre la línea (modelo simulado, SIM-CALIBRATION-1)');}
 });
 test('finPrograma interrumpe setup, loop y bucles anidados',()=>{
  program('void setup(){inicializarMovimiento();finPrograma();avanzar(100);} void loop(){avanzar(100);}');tick(.1);

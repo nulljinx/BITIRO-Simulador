@@ -67,7 +67,7 @@ test('Goldens: ciclo del servo, caja desplazada una vez y rayos de sonar',()=>{
  assert.equal(sonar['frente d=18'],18);assert.equal(sonar['sin cajas'],200);assert.equal(sonar['lejos 300'],200);
  assert.equal(sonar['altura 15,1 (límite)']!==200,true);assert.equal(sonar['altura 15,0 (por debajo)'],200);
  for(const s of ['+','-']){assert.equal(sonar[`rayo ${s}6° caja lateral 4..5`],200);assert.equal(sonar[`rayo ${s}6° caja lateral 5..6`],50);assert.equal(sonar[`rayo ${s}6° caja lateral 6..7`],200);}
- const st=traces.s01_straight.samples;assert.equal(st.at(-1).theta,0);assert.deepEqual(st.at(-1).sensors,[155,865,155]);
+ const st=traces.s01_straight.samples;assert.equal(st.at(-1).theta,0);{const q=st.at(-1).sensors;assert.deepEqual(q.map(v=>v>=510),[false,true,false]);assert.ok(q[0]<200&&q[2]<200&&q[1]>780,'centro sobre la línea, laterales sobre blanco (modelo simulado SIM-CALIBRATION-1: ya no son 155/865 exactos)');}
 });
 
 // ───────── 3. Geometría congelada, cinemática y wheelbase ─────────
@@ -98,7 +98,7 @@ test('Renderer: cadena constante→dibujo; centros de rueda efectivos 18,2 unida
  console.log('   renderer effective wheelbase (world units = track cm, verificado en código y en píxeles): 18.2 | fidelidad al IROH real: TO BE VERIFIED');
 });
 test('Sin reloj de pared ni aleatoriedad en producto ni en SIM-1 (escaneo de fuentes)',()=>{
- const files=['calibration.js','scenario-props.js','scenario-editor.js','extra-tracks.js','iroh-runtime.js','renderer3d.js','simulator.js','strike-physics.js','tracks.js','tests/sim1/harness.cjs','tests/sim1/scenarios.cjs','tests/sim1/characterization.cjs','tests/sim1/trace-cli.cjs'];
+ const files=['calibration.js','calibration-mode.js','scenario-props.js','scenario-editor.js','extra-tracks.js','iroh-runtime.js','renderer3d.js','simulator.js','strike-physics.js','tracks.js','tests/sim1/harness.cjs','tests/sim1/scenarios.cjs','tests/sim1/characterization.cjs','tests/sim1/trace-cli.cjs'];
  const bad=/Math\s*\.\s*random|Date\s*\.\s*now|new\s+Date/;
  for(const f of files)assert.ok(!bad.test(fs.readFileSync(path.join(root,f),'utf8')),f);
 });
@@ -115,7 +115,7 @@ test('Runtime: mensajes amigables y estados clave sin cambiar gramática',()=>{
  const g=Object.fromEntries(readGolden('runtime').cases.map(c=>[c.label,c]));
  assert.match(g['inicialización válida'].msg,/✔ Sintaxis validada/);
  assert.deepEqual(g['avanzar(30) tras 1 s'].motors,[30,30]);assert.deepEqual(g['girarDerecha(20) tras 2 s'].motors,[20,-20]);
- assert.deepEqual(g['lectura de línea (S01 inicio)'].vars,{a:1000,b:865,c:1,u:500});
+ {const v=g['lectura de línea (S01 inicio)'].vars;assert.ok(v.b>=800&&v.b<=930,'negro sobre la línea (modelo simulado)');assert.equal(v.a,Math.round(Math.min(1000,Math.max(0,(v.b-155)*1000/710))),'normalizada coherente con la lectura');assert.equal(v.c,1);assert.equal(v.u,500);}
  assert.equal(g['sonar con caja de práctica'].vars.d,18);
  assert.deepEqual(g['LCD escribirPantalla(col,fila,valor)'].lcd,['123             ','    45          ']);
  assert.equal(g['golpe moverServoGolpe(1) a 0,5 s'].striker,75);   // +1 llega a +75° (derecha del robot) en 0,39 s a 190°/sassert.equal(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].striker,0);assert.match(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].msg,/admite -1, 0 o 1/);assert.equal(g['while con acumulador'].vars.n,3);
@@ -136,9 +136,12 @@ test('Storage: v1 legacy, código por pista, bloqueado, inválido; sin migració
 // ───────── 5. Controles negativos (parches en memoria; el producto NO se modifica) ─────────
 const productHash=()=>['simulator.js','calibration.js','scenario-props.js','strike-physics.js','renderer3d.js','iroh-runtime.js','tracks.js','extra-tracks.js','index.html','styles.css'].map(f=>sha(fs.readFileSync(path.join(root,f),'utf8'))).join('');
 const before=productHash();
+const noSensors=o=>JSON.parse(JSON.stringify(o,(k,v)=>k==='sensors'?undefined:v));
 const controls=[
  {id:'wheelbase 12 → 18.2',patch:{file:'simulator.js',from:'base=12;',to:'base=18.2;'},mustBreak:['s01_turn'],mustHold:['s01_straight','servo_sweep','sonar_range']},
- {id:'sensor front 6 → 7',patch:{file:'calibration.js',from:'front:6,spread:2.8',to:'front:7,spread:2.8'},mustBreak:['s02_three_sensors','oval_continuous'],mustHold:['servo_sweep']},
+ {id:'sensor front 6 → 7',patch:{file:'calibration.js',from:'front:6,spread:2.8',to:'front:7,spread:2.8'},mustBreak:['s02_three_sensors','oval_continuous'],mustHold:['servo_sweep'],
+  // SIM-CALIBRATION-1: las lecturas `sensors` dependen de la posición real del sensor (light field), así que cambian al mover el sensor; el movimiento del servo no.
+  holdIgnoresSensors:true},
  {id:'strike length 13.2 → 14.2',patch:{file:'strike-physics.js',from:'length: 13.2,',to:'length: 14.2,'},mustBreak:['s01_demo_strike'],mustHold:['s01_straight','oval_continuous']},
 ];
 for(const ctl of controls){
@@ -147,6 +150,7 @@ for(const ctl of controls){
   for(const name of Object.keys(S)){
    const t=JSON.parse(JSON.stringify(S[name]({patches:[ctl.patch]})));
    res[name]=!sameWithinTol(compare(t,readGolden(name)));
+   if(ctl.holdIgnoresSensors&&ctl.mustHold.includes(name))res[name]=!sameWithinTol(compare(noSensors(t),noSensors(readGolden(name))));
   }
   console.log('   rompe: '+Object.keys(res).filter(k=>res[k]).join(', ')+' | intactos: '+Object.keys(res).filter(k=>!res[k]).join(', '));
   for(const n of ctl.mustBreak)assert.equal(res[n],true,`${ctl.id} debía romper ${n}`);

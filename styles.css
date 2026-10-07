@@ -334,3 +334,43 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .claw-row .menu-item{justify-content:center;padding:4px 6px}
 .claw-row .menu-item[aria-pressed=true]{background:var(--action-primary-soft);border-color:var(--action-primary);font-weight:600}
 .claw-row .menu-item:disabled{opacity:.55;cursor:not-allowed}
+
+/* ── Modo calibración (SIM-CALIBRATION-1) ───────────────────────────────────────────────────────────────────────
+   Cambio de interfaz, no de runtime: oculta editor y controles de programación, amplía el plotter y deja solo la LCD.
+   Ningún valor de sensor se muestra fuera de la LCD que el programa del alumno escribe. */
+.calibration-layer{position:absolute;inset:0;z-index:3;pointer-events:none}
+.calibration-layer[hidden]{display:none}
+.calibration-grab{position:absolute;left:0;top:0;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;border:2px dashed rgba(255,255,255,.8);background:rgba(14,13,159,.14);pointer-events:auto;touch-action:none;cursor:grab;will-change:transform}
+.calibration-grab:active{cursor:grabbing}
+.calibration-grab:focus-visible,.calibration-rotate:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.calibration-rotate{position:absolute;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;padding:0;display:grid;place-items:center;border-radius:50%;border:2px solid #fff;background:var(--action-primary);color:#fff;pointer-events:auto;touch-action:none;cursor:grab;will-change:transform;box-shadow:0 2px 6px rgba(7,12,18,.45)}
+.calibration-rotate:active{cursor:grabbing}
+.calibration-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);margin:0;max-width:min(70%,440px);padding:5px 10px;background:rgba(7,12,18,.72);border-radius:var(--radius-control);font:500 var(--text-micro)/1.35 var(--font-mono);color:var(--stage-ink);text-align:center;pointer-events:none}
+.workspace.calibration-mode .workspace-grid{grid-template-columns:minmax(0,1fr)!important}
+.workspace.calibration-mode .code-panel,
+.workspace.calibration-mode .simulator-toolbar,
+.workspace.calibration-mode .inputs-strip,
+.workspace.calibration-mode .telemetry-strip>.tcell:not(.lcd-cell),
+.workspace.calibration-mode .telemetry-strip>.more-data,
+.workspace.calibration-mode .telemetry>summary,
+.workspace.calibration-mode .scene-source,
+.workspace.calibration-mode #step,
+.workspace.calibration-mode #runBar{display:none!important}
+.workspace.calibration-mode .telemetry-strip{display:flex;justify-content:center}
+.workspace.calibration-mode .scene-wrap{border-top:0}
+@media(min-width:1024px){
+ .workspace.calibration-mode .simulation-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,300px);grid-template-rows:auto auto 1fr}
+ .workspace.calibration-mode .scene-wrap{grid-column:1;grid-row:1/4;min-height:0}
+ .workspace.calibration-mode .telemetry{grid-column:2;grid-row:1}
+ .workspace.calibration-mode .runtime-bar{grid-column:2;grid-row:2}
+ .workspace.calibration-mode .status-strip{grid-column:2;grid-row:3;align-self:start}
+}
+@media(max-width:1023px){
+ .workspace.calibration-mode .scene-wrap{height:clamp(300px,62dvh,640px)}
+}
+@media(max-width:1023px){
+ .workspace.calibration-mode .simulation-panel .telemetry{order:2}
+ .workspace.calibration-mode .simulation-panel .runtime-bar{order:3}
+ .workspace.calibration-mode .simulation-panel .status-strip{order:4}
+ .calibration-hint{left:10px;transform:none;max-width:calc(100% - 170px);text-align:left}
+}

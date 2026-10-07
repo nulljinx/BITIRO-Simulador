@@ -1,0 +1,12 @@
+{
+ "note": "sha256[0:16] de JSON.stringify de las trazas SIM-1 ANTERIORES a SIM-CALIBRATION-1 (git HEAD cca2cf4). Con el modelo de sensor NEUTRO el producto debe reproducirlas exactamente.",
+ "hashes": {
+  "s01_straight": "154807614acdc6c7",
+  "s01_turn": "9a3959b773883532",
+  "s02_three_sensors": "c4204b98a9bf30de",
+  "oval_continuous": "753ad9605b24dd19",
+  "s01_demo_strike": "5761e8bfdb8cfe4b",
+  "sonar_range": "a17ada4f1edbd2e6",
+  "servo_sweep": "755cee37a2fea5b6"
+ }
+}

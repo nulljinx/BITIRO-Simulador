@@ -42,6 +42,11 @@
           <span class="live-badge" id="statusBadge" role="status">EN ESPERA</span>
           <div class="scene-source" id="sceneSource">S01 · Geometría del proyecto BITIRO</div>
           <div class="zoom-controls"><button id="zoomOut" type="button" aria-label="Alejar cámara">−</button><output id="zoomText" aria-live="off">100%</output><button id="zoomIn" type="button" aria-label="Acercar cámara">+</button><button id="full" type="button" aria-label="Pantalla completa"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 1.5H1.5V5M9 1.5h3.5V5M5 12.5H1.5V9M9 12.5h3.5V9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+          <div class="calibration-layer" id="calibrationLayer" hidden>
+            <div class="calibration-grab" id="calibrationGrab" tabindex="0" role="application" aria-roledescription="robot arrastrable" aria-label="IROH. Arrástralo por el plotter o usa las flechas del teclado."></div>
+            <button class="calibration-rotate" id="calibrationRotate" type="button" aria-label="Girar el IROH. Arrastra el asa o usa las flechas izquierda y derecha."><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-2-4.5M16 3v3.5h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <p class="calibration-hint" id="calibrationHint">Mueve el IROH por el plotter y gíralo con el asa. Observa la LCD.</p>
+          </div>
         </div>
         <details class="telemetry" id="telemetry" open>
           <summary><span>Sensores y telemetría</span></summary>
@@ -69,6 +74,7 @@
             <button id="pause" type="button" disabled>Pausar</button>
             <button id="step" type="button" disabled title="Avanza 100 ms de simulación en pausa">Paso +0,1 s</button>
             <button id="reset" type="button"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3M2.5 2v2.8h2.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Reiniciar</span></button>
+            <button id="calibrationMode" type="button" aria-pressed="false" aria-controls="calibrationLayer">Calibración</button>
           </div>
           <div class="runtime-clock"><span class="clock-label">Tiempo</span><strong id="time">0.0 <small>s</small></strong></div>
         </div>
@@ -111,6 +117,6 @@
     </dialog>
     <dialog id="referenceDialog" class="reference-dialog" aria-labelledby="referenceHeading"><div class="reference-title"><h2 id="referenceHeading">Plotter de referencia</h2><button type="button" id="referenceClose" aria-label="Cerrar plotter">✕</button></div><p>Compara la pista 3D virtual con la imagen de referencia. S01–S06 y S08 usan geometrías reconstruidas desde los PDF vectoriales oficiales; S07 es un repaso sin plotter propio.</p><img id="referenceImg" alt="Imagen original del plotter seleccionado"></dialog>
   </main>
-  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="scenario-editor.js"></script>
+  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="calibration-mode.js"></script><script src="scenario-editor.js"></script>
 </body>
 </html>

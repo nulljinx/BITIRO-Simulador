@@ -58,7 +58,7 @@ lineaCentral();
 lineaDerecha();
 ```
 
-Modelo base: blanco ≈155, negro ≈865, umbral normalizado 500. La calibración interna se conserva por compatibilidad aunque el flujo público actual no expone todo el panel de calibración como parte central de la experiencia.
+Modelo base: blanco ≈155, negro ≈865, umbral normalizado 500, con pequeñas diferencias **simuladas y deterministas** por sensor, posición e iluminación ambiental (`docs/calibration-mode.md`). No es una calibración física del IROH real. El botón «Calibración» abre el modo calibración (mover y girar el robot mientras el programa corre; solo la LCD del programa muestra lecturas). El diálogo de calibración v1 sigue oculto por compatibilidad.
 
 ## Sonar
 
@@ -151,7 +151,7 @@ Las zonas pintadas no evalúan misiones y los gaps son ausencia real de línea.
 
 ## Verificación
 
-La baseline actual mantiene 13 suites:
+La baseline actual mantiene 14 suites (más `tests/calibration-ui.mjs`, interfaz en navegador real; se omite sin Chrome):
 
 ```text
 track-digitize
@@ -167,6 +167,7 @@ scenario-props
 runtime-start
 runtime-servo
 runtime-functions
+calibration
 ```
 
 `tests/runtime-functions.cjs` cubre funciones propias, parámetros, `return`, scopes, recursión, orden de evaluación y propagación cooperativa de `pausa()`/`botonInicio()`.
@@ -179,7 +180,8 @@ Los goldens se comparan de forma determinista y no deben regenerarse sin revisi�
 - `simulator.js`: estado del robot, reloj, movimiento, sonar y coordinación del mundo.
 - `strike-physics.js`: contacto de garra, cuerpo y cajas.
 - `renderer3d.js`: escena procedural en Canvas.
-- `calibration.js`: sensores de línea y persistencia de calibración.
+- `calibration.js`: modelo simulado de sensores de línea, light field y persistencia de la calibración v1 (legacy).
+- `calibration-mode.js`: interfaz del modo calibración.
 - `tracks.js` / `extra-tracks.js`: geometrías.
 - `scenario-props.js`: modelo y persistencia de cajas.
 - `scenario-editor.js`: UI de edición del escenario.

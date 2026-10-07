@@ -72,7 +72,8 @@ window.readLine=function(k){
  // Escala didáctica de sensor reflectivo: negro alto (~850), blanco bajo (~155).
  // Coherente con el umbral 500 de los programas incluidos en el editor.
  const blend=Math.max(0,Math.min(1,(1.05-near.dist)/1.7));
- return LINE_SENSOR.raw(blend);
+ // Modelo simulado y determinista: superficie × luz ambiental × perfil del sensor + variación local (calibration.js).
+ return LINE_SENSOR.read(k,blend,x,y);
 };
 // Cinemática centralizada en strike-physics.js, compartida con el modelo 3D.
 const MECH=window.IROH_MECHANICS, HIT=MECH.spec;
@@ -110,6 +111,32 @@ window.readSonarDistance=function(){
 const rodSegment=(angle,pose=R)=>MECH.segment(pose,angle);
 const rodTouchesBox=(angle,ob,pose=R)=>MECH.barOverlapsBox(pose,angle,ob);
 const bodyTouchesBox=(x,y,ob)=>MECH.bodyOverlapsBox({...R,x,y},ob);
+/* SIM-CALIBRATION-1 · pose manual del robot. Solo la interfaz del modo calibración la usa.
+   Prioridad: mientras `dragging` es true, update() omite SOLO la integración cinemática (0 subpasos); el intérprete, simTime, los motores
+   (R.L/R.R, wheel) y el programa siguen corriendo, y al soltar el robot continúa desde la nueva pose. El robot queda dentro del área útil
+   (centro a ≥ bodyRadius de cada borde) y no se coloca encima de una caja: si la pose pedida solapa, se desliza por un eje o se queda. */
+window.BITIRO_MANUAL=(()=>{
+ const state={calibration:false,dragging:false};
+ const wrapAngle=th=>th-Math.PI*2*Math.round(th/(Math.PI*2));
+ const bounds=()=>{const m=HIT.bodyRadius;return {minX:m,maxX:track.w-m,minY:m,maxY:track.h-m};};
+ const free=(x,y)=>!activeObstacles.some(ob=>MECH.bodyOverlapsBox({x,y,th:R.th},ob));
+ function place(x,y,th){
+  if(![x,y,th].every(Number.isFinite))return false;
+  const b=bounds(),cx=clamp(x,b.minX,b.maxX),cy=clamp(y,b.minY,b.maxY);
+  let nx=R.x,ny=R.y;
+  if(free(cx,cy)){nx=cx;ny=cy;}else if(free(cx,R.y)){nx=cx;}else if(free(R.x,cy)){ny=cy;}
+  R.x=nx;R.y=ny;R.th=wrapAngle(th);
+  previousPose={x:R.x,y:R.y,th:R.th,angle:striker.angle};
+  return true;
+ }
+ const end=()=>{if(state.dragging){state.dragging=false;trail=[];}};   // el rastro se corta para no dibujar una recta entre poses
+ return Object.freeze({
+  get calibration(){return state.calibration;},
+  set calibration(on){state.calibration=!!on;if(!on)end();},
+  get dragging(){return state.dragging;},
+  begin(){state.dragging=true;},end,place,bounds
+ });
+})();
 function moveRodTowards(desired,dt){
  // `desired` y striker.angle están en GRADOS físicos (−75…+75, 0 = centro).
  if(Math.abs(desired-striker.angle)<1e-6)return;
@@ -235,7 +262,7 @@ function update(dt){
  const v=(vL+vR)/2,omega=(vL-vR)/base;
  // Subpasos de traslación/rotación: no permitir atravesar por tunnelling en
  // una sola actualización a altas velocidades o tras un giro brusco.
- const substeps=Math.max(1,Math.ceil(Math.abs(v*dt)/.30+Math.abs(omega*dt)/.025));
+ const substeps=window.BITIRO_MANUAL.dragging?0:Math.max(1,Math.ceil(Math.abs(v*dt)/.30+Math.abs(omega*dt)/.025));   // 0 = pose manual con prioridad (ver BITIRO_MANUAL)
  let blocked=false,blockMessage='';
  for(let k=0;k<substeps;k++){
   const pose={x:R.x,y:R.y,th:R.th+omega*dt/substeps};
@@ -264,7 +291,8 @@ function update(dt){
 function render(){
  // A 3D scene rendered by a local software rasterizer, not WebGL/Three.js.
  const a=paused||mode==='idle'?1:Math.min(1,acc/FIXED_DT),p=previousPose||{...R,angle:striker.angle};
- const robot={x:p.x+(R.x-p.x)*a,y:p.y+(R.y-p.y)*a,heading:p.th+(R.th-p.th)*a-Math.PI/2,lineCenter:readLine(1),lineActive:[0,1,2].map(k=>LINE_SENSOR.detected(readLine(k),k)),strikerAngle:p.angle+(striker.angle-p.angle)*a,trail:$app('showTrail').checked?trail:[]};
+ const robot={x:p.x+(R.x-p.x)*a,y:p.y+(R.y-p.y)*a,heading:p.th+(R.th-p.th)*a-Math.PI/2,lineCenter:readLine(1),lineActive:window.BITIRO_MANUAL.calibration?[false,false,false]:[0,1,2].map(k=>LINE_SENSOR.detected(readLine(k),k)),   // en calibración el LED de detección no revela lecturas
+  strikerAngle:p.angle+(striker.angle-p.angle)*a,trail:$app('showTrail').checked?trail:[]};
  renderScene3D(worldCv,sceneTrack,robot,activeObstacles,camera);
 }
 function draw(){if(sceneTrack)render();}

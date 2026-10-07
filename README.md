@@ -163,12 +163,13 @@ La versión actual es una aplicación web estática en HTML, CSS y JavaScript, s
 ```text
 index.html            interfaz
 ui-shell.js           interacción de UI
+calibration-mode.js   modo calibración (solo interfaz: mover/girar el IROH)
 syntax-highlight.js   resaltado del editor
 iroh-runtime.js       parser, intérprete y API educativa
 simulator.js          estado, reloj y ciclo de simulación
 strike-physics.js     contacto de garra/cajas
 renderer3d.js         renderer procedural sobre Canvas
-calibration.js        modelo/calibración de línea
+calibration.js        modelo simulado de sensores de línea + light field
 tracks.js             pistas base
 extra-tracks.js       pistas adicionales
 scenario-props.js     modelo y persistencia de cajas
@@ -195,7 +196,7 @@ No requiere base de datos, cuenta, credenciales ni servicios externos para ejecu
 
 ## Pruebas
 
-La baseline actual tiene 13 suites principales:
+La baseline actual tiene 14 suites principales (más la de interfaz en navegador):
 
 ```bash
 node tests/track-digitize.cjs
@@ -211,7 +212,11 @@ node tests/scenario-props.cjs
 node tests/runtime-start.cjs
 node tests/runtime-servo.cjs
 node tests/runtime-functions.cjs
+node tests/calibration.cjs
+node tests/calibration-ui.mjs   # navegador real (Chrome por CDP); se omite sin Chrome
 ```
+
+Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs/calibration-mode.md).
 
 `SIM-1` usa trazas deterministas y goldens. Los goldens **no deben regenerarse automáticamente**: una modificación exige revisar y aprobar el cambio de comportamiento.
 
