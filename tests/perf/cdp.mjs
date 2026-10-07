@@ -1,4 +1,6 @@
 // Cliente mínimo de Chrome DevTools Protocol (sin dependencias): lanza Chrome, abre una sesión de página y expone send/on.
+// Ciclo de vida: cada launch() es dueño SOLO del ChildProcess que creó (nunca busca procesos por nombre). close() es idempotente.
+// Limitación conocida: no instala manejadores de SIGINT/SIGTERM del proceso padre; un Ctrl-C sobre Node no emite 'exit' y puede dejar Chrome vivo.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -22,13 +24,39 @@ export async function launch({ headed = false, port = 9340, extraArgs = [] } = {
     '--disable-extensions', '--disable-sync', '--metrics-recording-only', '--window-size=1366,768',
     ...(headed ? [] : ['--headless=new']), ...extraArgs, 'about:blank'];
   const proc = spawn(findChrome(), args, { stdio: ['ignore', 'ignore', 'ignore'] });
+  // Si el script padre termina (p. ej. por una excepción) sin haber llamado a close(), no deja este Chrome huérfano. close() lo quita.
+  const onParentExit = () => { try { proc.kill('SIGKILL'); } catch {} };
+  process.once('exit', onParentExit);
+  const hasExited = () => proc.exitCode !== null || proc.signalCode !== null;
+  // true si el proceso termina dentro de `ms`; false si sigue vivo.
+  const waitExit = (ms) => new Promise((resolve) => {
+    if (hasExited()) return resolve(true);
+    let t; const onExit = () => { clearTimeout(t); resolve(true); };
+    t = setTimeout(() => { proc.removeListener('exit', onExit); resolve(false); }, ms);
+    proc.once('exit', onExit);
+  });
+  // Terminación escalonada de ESTE ChildProcess: SIGTERM, espera breve y, si sigue vivo, SIGKILL y espera.
+  const terminate = async () => {
+    if (hasExited()) return true;
+    try { proc.kill('SIGTERM'); } catch {}
+    if (await waitExit(2000)) return true;
+    try { proc.kill('SIGKILL'); } catch {}
+    return waitExit(2000);
+  };
+  // Termina si hace falta, borra el perfil temporal (con reintentos) y, si el proceso ya no existe, quita el listener de salida del padre.
+  const finish = async () => {
+    if (!hasExited()) await terminate();
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {}
+    if (hasExited()) process.removeListener('exit', onParentExit);
+  };
   let version;
   for (let i = 0; i < 50 && !version; i++) {
     try { version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json(); } catch { await new Promise((r) => setTimeout(r, 200)); }
   }
-  if (!version) { proc.kill(); throw new Error('Chrome no respondió en el puerto de depuración.'); }
+  if (!version) { await finish(); throw new Error('Chrome no respondió en el puerto de depuración.'); }
   const ws = new WebSocket(version.webSocketDebuggerUrl);
-  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('fallo al abrir el WebSocket CDP')); });
+  try { await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('fallo al abrir el WebSocket CDP')); }); }
+  catch (e) { await finish(); throw e; }
   let id = 0; const pending = new Map(); const listeners = new Set();
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
@@ -40,7 +68,16 @@ export async function launch({ headed = false, port = 9340, extraArgs = [] } = {
   });
   // Registra un listener de eventos CDP (de cualquier sesión) y devuelve la función que lo desregistra.
   const on = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
-  const close = async () => { try { await send('Browser.close'); } catch {} try { ws.close(); } catch {} proc.kill(); fs.rmSync(dir, { recursive: true, force: true }); };
+  // Cierre ordenado e idempotente: 1) Browser.close, 2) cerrar el WebSocket, 3) esperar la salida (3 s), 4–7) si sigue vivo SIGTERM → espera → SIGKILL → espera,
+  // 8) borrar el perfil temporal (si no se espera la salida, Chrome aún escribe y rmSync falla con ENOTEMPTY), 9) quitar el listener de salida del padre.
+  let closing = null;
+  const close = () => (closing ??= (async () => {
+    let t; const timeout = new Promise((r) => { t = setTimeout(r, 2000); });
+    await Promise.race([send('Browser.close').catch(() => {}), timeout]); clearTimeout(t);
+    try { ws.close(); } catch {}
+    await waitExit(3000);
+    await finish();
+  })());
   return { send, on, close, version, pid: proc.pid };
 }
 
