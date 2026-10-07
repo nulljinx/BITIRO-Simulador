@@ -102,6 +102,16 @@ El simulador no debe inventar una regla para resolver estas ambigüedades.
 
 No hay ruido ni aleatoriedad por defecto. Esto permite pruebas exactas, pero significa que tiempos calibrados pueden repetirse de manera más perfecta que en hardware real.
 
+## Calibración simulada y modo calibración
+
+- The simulated sensor model is not physical IROH calibration. Las ganancias, desplazamientos, el campo de luz y la variación local son números simulados, no medidos; ver [`calibration-mode.md`](calibration-mode.md).
+- Todavía no hay validación en hardware escolar real. Synthetic CPU throttling is not a substitute for validation on actual school hardware.
+- El modo calibración tiene un costo de render mayor que la vista normal (smoke de 20 s: P1 ≈ 49,7 FPS normal frente a ≈ 40,4 FPS en calibración); la causa no está demostrada.
+- La guarda de colocación manual protege el cuerpo del robot, no la huella de la garra: tras colocarlo, la garra puede quedar solapada con una caja.
+- La calibración v1 (legacy) sigue oculta e inalcanzable desde la interfaz del estudiante; solo es invocable programáticamente (consola del navegador).
+- `leerUmbralLinea()` y el marcador de umbral de «Más datos» en la vista normal son preexistentes y requieren una decisión pedagógica antes del piloto; no se muestran dentro del modo calibración.
+- No se ha probado en un dispositivo táctil físico: la verificación de Pointer Events es sintética (CDP).
+
 ## Renderer
 
 La escena es procedural sobre Canvas. No representa aún un modelo CAD medido ni una simulación rígida 3D completa.
