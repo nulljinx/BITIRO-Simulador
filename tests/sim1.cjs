@@ -78,8 +78,8 @@ test('Goldens: ciclo del servo, caja desplazada una vez y rayos de sonar',()=>{
 
 // ───────── 3. Geometría congelada, cinemática y wheelbase ─────────
 const geo=C.geometry();
-test('Geometría física medida (PHYSICAL-GEOMETRY-2): sensor front=8 (PHYSICALLY_MEASURED) y spread=1,9 (DERIVED_FROM_PHYSICAL_PCB_GEOMETRY); sonar a 4,0 cm (PHYSICALLY_MEASURED)',()=>{
- assert.deepEqual(geo.lineSensor.geometry,{front:8,spread:1.9});assert.equal(geo.sonar.originForwardCm,4);
+test('Geometría física medida (PHYSICAL-GEOMETRY-2): sensor front=8 (PHYSICALLY_MEASURED) y spread=1,9 (DERIVED_FROM_PHYSICAL_PCB_GEOMETRY); sonar a 7,40 cm (DERIVED_FROM_PHYSICAL_MEASUREMENTS: 6,50 + 0,90)',()=>{
+ assert.deepEqual(geo.lineSensor.geometry,{front:8,spread:1.9});assert.equal(geo.sonar.originForwardCm,6.50+0.90);
  assert.equal(geo.lineSensor.rawWhite,155);assert.equal(geo.lineSensor.rawBlack,865);
  assert.deepEqual(geo.sonar.rayOffsetsDeg,[-6,0,6]);assert.equal(geo.sonar.rayOffsetSource,'-Math.PI/30,0,Math.PI/30');
  assert.equal(geo.fixedDtIs1over120,true);assert.equal(geo.mechanics.length,13.2);assert.equal(geo.mechanics.pivotForward,8.6);
@@ -122,7 +122,7 @@ test('Runtime: mensajes amigables y estados clave sin cambiar gramática',()=>{
  assert.match(g['inicialización válida'].msg,/✔ Sintaxis validada/);
  assert.deepEqual(g['avanzar(30) tras 1 s'].motors,[30,30]);assert.deepEqual(g['girarDerecha(20) tras 2 s'].motors,[20,-20]);
  {const v=g['lectura de línea (S01 inicio)'].vars;assert.ok(v.b>=800&&v.b<=930,'negro sobre la línea (modelo simulado)');assert.equal(v.a,Math.round(Math.min(1000,Math.max(0,(v.b-155)*1000/710))),'normalizada coherente con la lectura');assert.equal(v.c,1);assert.equal(v.u,500);}
- assert.equal(g['sonar con caja de práctica'].vars.d,24);   // 18 + 5,83 (origen 4,0 cm en vez de 9,83)
+ assert.equal(g['sonar con caja de práctica'].vars.d,Math.round(28-7.40));   // cara de la caja a 28 cm de R (antes: 24 con origen 4,0); origen 7,40 → 20,6 → 21
  assert.deepEqual(g['LCD escribirPantalla(col,fila,valor)'].lcd,['123             ','    45          ']);
  assert.equal(g['golpe moverServoGolpe(1) a 0,5 s'].striker,75);   // +1 llega a +75° (derecha del robot) en 0,39 s a 190°/sassert.equal(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].striker,0);assert.match(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].msg,/admite -1, 0 o 1/);assert.equal(g['while con acumulador'].vars.n,3);
  assert.match(g['error: función desconocida con sugerencia'].msg,/¿Quisiste escribir «avanzar\(\)»\?/);

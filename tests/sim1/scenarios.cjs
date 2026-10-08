@@ -1,7 +1,7 @@
 /* SIM-1 · Escenarios golden. Cada uno devuelve {meta, samples}. Todo a FIXED_DT=1/120,
    sin reloj de pared ni aleatoriedad. Los números se guardan tal cual (JSON round-trip exacto). */
 'use strict';
-const SONAR_FWD_DEFAULT=4.0;   // PHYSICAL-GEOMETRY-2: eje de ruedas → cara de los transductores, 4,0 cm (antes 9,83)
+const SONAR_FWD_DEFAULT=6.50+0.90;   // SONAR-PHYSICAL-ORIGIN-1B: DERIVED_FROM_PHYSICAL_MEASUREMENTS, borde de placa 6,50 + TX/RX 0,90 = 7,40 cm (antes 4,0; históricamente 9,83)
 const {load}=require('./harness.cjs');
 
 function snap(h,tick,{sonar=false,obstacles=false}={}){
@@ -63,7 +63,7 @@ S.sonar_range=o=>{const h=load(o);h.js("changeTrack('s01')");
  const cases=[];
  const put=(label,pose,boxes)=>{h.js(`R.x=${pose.x};R.y=${pose.y};R.th=${pose.th};activeObstacles=${JSON.stringify(boxes)}`);cases.push({label,pose,boxes,sonar:h.js('readSonarDistance()')});};
  const box=(x,y,w=8,hh=8,v=15.6)=>({id:'b',x,y,width:w,height:hh,visualHeightCm:v});
- // Robot en (50,130) mirando a -Y; el transductor (cara frontal) está 4,0 cm por delante de R (PHYSICALLY_MEASURED, PHYSICAL-GEOMETRY-2).
+ // Robot en (50,130) mirando a -Y; el transductor (cara frontal) está 7,40 cm por delante de R (DERIVED_FROM_PHYSICAL_MEASUREMENTS, SONAR-PHYSICAL-ORIGIN-1B).
  for(const d of [5,10,18,50,100,150,180,190,195]) put('frente d='+d,{x:50,y:130,th:0},[box(46,130-SONAR_FWD-d-8)]);
  put('justo fuera de 200 (≈200,5)',{x:50,y:130,th:0},[box(46,130-SONAR_FWD-200.5-8)]);
  put('lejos 300',{x:50,y:130,th:0},[box(46,-300)]);

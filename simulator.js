@@ -93,8 +93,12 @@ function nearbyObstacle(reach=200){
 }
 // Sonar didáctico: haz central y dos rayos ±6°, desde la cara del transductor.
 window.readSonarDistance=function(){
- // Origen = cara frontal de los transductores: 4,0 cm delante de R (PHYSICALLY_MEASURED, eje de ruedas → cara; PHYSICAL-GEOMETRY-2).
- const origin=MECH.worldPoint(R,4.0,0);let nearest=200;
+ // SONAR_FACE_FORWARD = DERIVED_FROM_PHYSICAL_MEASUREMENTS
+ //   R -> front lower plate = 6.50 cm (PHYSICALLY_MEASURED)
+ //   front plate -> TX/RX face = 0.90 cm (PHYSICALLY_MEASURED)
+ //   therefore R -> TX/RX face = 7.40 cm
+ const SONAR_FACE_FORWARD=7.40;
+ const origin=MECH.worldPoint(R,SONAR_FACE_FORWARD,0);let nearest=200;
  for(const offset of [-Math.PI/30,0,Math.PI/30]){
   const direction={x:Math.sin(R.th+offset),y:-Math.cos(R.th+offset)};
   for(const ob of activeObstacles){

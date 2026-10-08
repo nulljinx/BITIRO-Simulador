@@ -71,7 +71,7 @@ Pose del robot `R = {x, y, th, L, R}`. Vector adelante = `(sin th, −cos th)`; 
 
 ## 5. Sonar (`readSonarDistance`)
 
-- Origen: `pose + 9,83 cm` hacia adelante en este baseline v4 **histórico**; desde PHYSICAL-GEOMETRY-2 es `pose + 4,0 cm` (PHYSICALLY_MEASURED).
+- Origen: `pose + 9,83 cm` hacia adelante en este baseline v4 **histórico**; desde SONAR-PHYSICAL-ORIGIN-1B es `pose + 7,40 cm` (`SONAR_FACE_FORWARD`, DERIVED_FROM_PHYSICAL_MEASUREMENTS: 6,50 + 0,90; entre medias fue 4,0).
 - **Tres rayos a −6°, 0° y +6°** (`±Math.PI/30`).
 - Cada rayo se intersecta con las cajas (AABB); solo cuentan cajas con `visualHeightCm ≥ 15,1`.
 - Alcance máximo y valor «sin objeto»: **200**; resultado `round(mínimo)`. Una caja a más de 200 cm devuelve 200 igual que «sin caja».

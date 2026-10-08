@@ -5,8 +5,9 @@
      PHYSICALLY_MEASURED (medido por el usuario)
        wheelbase (centro-centro de ruedas)                  = 10,0 cm
        eje de ruedas → punto óptico del sensor central       =  8,0 cm  (LINE_SENSOR.geometry.front)
-       eje de ruedas → cara frontal de los transductores     =  4,0 cm  (origen del sonar, simulator.js)
-       PCB sensor de línea 1,4 × 3,1 cm; gap entre bordes 0,5 cm; placa 17,6 × 11,0 × 0,3; rueda Ø6,5 × 2,5; ancho exterior 12,5
+              PCB sensor de línea 1,4 × 3,1 cm; gap entre bordes 0,5 cm; placa 17,6 × 11,0 × 0,3; rueda Ø6,5 × 2,5; ancho exterior 12,5
+     DERIVED_FROM_PHYSICAL_MEASUREMENTS
+       eje de ruedas → borde frontal de la placa 6,50 + cara de TX/RX 0,90 por delante de la placa = 7,40 cm (SONAR_FACE_FORWARD, origen del sonar, simulator.js)
      DERIVED_FROM_PHYSICAL_PCB_GEOMETRY
        sensor spread = 1,4 + 0,5 = 1,9 cm centro-centro (supone el punto óptico centrado lateralmente en cada PCB;
        la separación óptica NO fue medida directamente)
@@ -22,15 +23,17 @@ const path=require('node:path');
 const {load,FIXED_DT,root}=require('./sim1/harness.cjs');
 const {runBangBang}=require('./sim1/motor-probe.cjs');
 let n=0;const test=(name,fn)=>{fn();n++;console.log('OK · '+name);};
+const SONAR=6.50+0.90;   // SONAR_FACE_FORWARD: borde de placa + TX/RX sobresale 0,90
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const plain=o=>JSON.parse(JSON.stringify(o));
 const near=(a,b,t,msg)=>assert.ok(Math.abs(a-b)<=t,`${msg||''} ${a} ≉ ${b} (±${t})`);
 
 // ── 1. Valores congelados ──
-test('PHYSICALLY_MEASURED: wheelbase=10,0; sensor front=8,0; cara del sonar a 4,0 cm de R',()=>{
+test('PHYSICALLY_MEASURED: wheelbase=10,0; sensor front=8,0; borde de placa 6,50 + 0,90 = 7,40 cm (SONAR_FACE_FORWARD)',()=>{
  assert.ok(read('simulator.js').includes('vR=wheel.right/100*max,base=10;'));
  assert.deepEqual(plain(load().js('LINE_SENSOR.geometry')).front,8);
- assert.ok(read('simulator.js').includes('MECH.worldPoint(R,4.0,0)'));
+ assert.ok(read('simulator.js').includes('const SONAR_FACE_FORWARD=7.40;')&&read('simulator.js').includes('MECH.worldPoint(R,SONAR_FACE_FORWARD,0)'));
+ assert.ok(Math.abs(6.50+0.90-7.40)<1e-12);
  assert.ok(!/9\.83|base=12;|front:6/.test(read('simulator.js')+read('calibration.js')),'no quedan valores funcionales históricos');
 });
 test('DERIVED_FROM_PHYSICAL_PCB_GEOMETRY: spread = 1,4 + 0,5 = 1,9 cm',()=>{
@@ -161,15 +164,15 @@ test('Bang-bang 1 sensor, óvalo, umbral 500, polaridades A/B, V=25/50: sigue el
 });
 
 // ── 5. Sonar ──
-test('Sonar: origen funcional = cara de los transductores a 4,0 cm de R; la lectura es la distancia desde ese origen',()=>{
+test('Sonar: origen funcional = cara de los transductores a 7,40 cm de R (6,50 + 0,90); la lectura es la distancia desde ese origen',()=>{
  const h=load();h.js("changeTrack('s01')");
  for(const d of [5,10,18,24,50,100,150,195]){
-  h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:46,y:${130-4-d-8},width:8,height:8,visualHeightCm:15.6}]`);
+  h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:46,y:${130-SONAR-d-8},width:8,height:8,visualHeightCm:15.6}]`);
   assert.equal(h.js('readSonarDistance()'),d,'d='+d);
  }
- // caja a la distancia histórica 9,83 ⇒ ahora se mide d + 5,83 (la diferencia es exactamente el cambio de origen)
+ // caja a la distancia histórica 9,83 de R ⇒ ahora se mide 9,83 − 7,40 = 2,43 cm menos que la lectura de la caja a 18 + 9,83
  h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:46,y:${130-9.83-18-8},width:8,height:8,visualHeightCm:15.6}]`);
- assert.equal(h.js('readSonarDistance()'),24);   // 18 + 5,83 = 23,83 → 24
+ assert.equal(h.js('readSonarDistance()'),Math.round(9.83+18-SONAR));   // 20,43 → 20
 });
 test('Sonar: altura 15,1, rayos ±6°, alcance 200 y raycast sin cambios',()=>{
  const src=read('simulator.js');assert.ok(src.includes('for(const offset of [-Math.PI/30,0,Math.PI/30])'));
@@ -178,27 +181,28 @@ test('Sonar: altura 15,1, rayos ±6°, alcance 200 y raycast sin cambios',()=>{
  put(15.1);assert.ok(h.js('readSonarDistance()')<200);put(15.0);assert.equal(h.js('readSonarDistance()'),200);
  h.js('activeObstacles=[]');assert.equal(h.js('readSonarDistance()'),200);
  // rayo lateral +6°: caja fina a 50 cm del origen; cruza a 50·tan6° ≈ 5,25 cm
- const lat=L=>{h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:${50+L},y:${130-4-50-1},width:1,height:1,visualHeightCm:15.6}]`);return h.js('readSonarDistance()');};
+ const lat=L=>{h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:${50+L},y:${130-SONAR-50-1},width:1,height:1,visualHeightCm:15.6}]`);return h.js('readSonarDistance()');};
  assert.equal(lat(4),200);assert.equal(lat(5),50);assert.equal(lat(6),200);   // mismo resultado que el golden histórico: solo la caja 5..6 cae en el rayo
 });
 
 
 // ── 5b. PHYSICAL-GEOMETRY-2A: ecuación old→new del sonar (sin redondeo), contacto de la barra y pose inicial de S01 ──
 const RAW={file:'simulator.js',from:'return Math.round(nearest)',to:'return nearest'};      // solo en memoria: expone la distancia sin redondear
-const OLD_ORIGIN={file:'simulator.js',from:'MECH.worldPoint(R,4.0,0)',to:'MECH.worldPoint(R,9.83,0)'};
+const OLD_ORIGIN={file:'simulator.js',from:'const SONAR_FACE_FORWARD=7.40;',to:'const SONAR_FACE_FORWARD=9.83;'};
+const D_ORIGIN=9.83-SONAR;   // 2,43 cm
 const front=(h,fwd)=>{h.js(`R.x=50;R.y=130;R.th=0;activeObstacles=[{id:'b',x:46,y:${130-fwd-8},width:8,height:8,visualHeightCm:15.6}]`);return h.js('readSonarDistance()');};
-test('Sonar old→new (fixture frontal, raycast real sin redondeo): lectura_nueva = lectura_antigua + 5,83 (9,83 − 4,0)',()=>{
+test('Sonar old→new (fixture frontal, raycast real sin redondeo): lectura_nueva = lectura_antigua + 2,43 (9,83 − 7,40)',()=>{
  const o=load({patches:[RAW,OLD_ORIGIN]}),w=load({patches:[RAW]});for(const h of [o,w])h.js("changeTrack('s01')");
- for(const [oldRead,newRead] of [[5,10.83],[12,17.83],[18,23.83]]){
+ for(const [oldRead,newRead] of [5,12,18].map(r=>[r,r+D_ORIGIN])){
   const fwd=oldRead+9.83;   // obstacle_forward: distancia R → cara de la caja
-  near(front(o,fwd),oldRead,1e-9,'old');near(front(w,fwd),newRead,1e-9,'new');near(front(w,fwd)-front(o,fwd),5.83,1e-9,'Δ');
+  near(front(o,fwd),oldRead,1e-9,'old');near(front(w,fwd),newRead,1e-9,'new');near(front(w,fwd)-front(o,fwd),D_ORIGIN,1e-9,'Δ');
  }
 });
-test('Contacto de la barra centrada con una caja: lectura ≈ 12,5 (origen antiguo) vs ≈ 18,3 (nuevo); misma posición física, Δ = 5,83',()=>{
+test('Contacto de la barra centrada con una caja: lectura ≈ 12,5 (origen 9,83) vs ≈ 14,9 (origen 7,40); misma posición física, Δ = 2,43',()=>{
  const hit=h=>{h.js("changeTrack('s01')");h.js("R.x=50;R.th=0;activeObstacles=[{id:'b',x:46,y:60,width:8,height:8,visualHeightCm:15.6}]");
   for(let y=130;y>60;y=+(y-.01).toFixed(2)){h.js(`R.y=${y}`);if(h.js('IROH_MECHANICS.barOverlapsBox(R,0,activeObstacles[0])'))return {y,read:h.js('readSonarDistance()')};}};
  const o=hit(load({patches:[RAW,OLD_ORIGIN]})),w=hit(load({patches:[RAW]}));
- assert.equal(o.y,w.y,'misma pose de contacto');near(w.read-o.read,5.83,1e-9);near(o.read,12.5,.1);near(w.read,18.3,.1);
+ assert.equal(o.y,w.y,'misma pose de contacto');near(w.read-o.read,D_ORIGIN,1e-9);near(o.read,12.5,.1);near(w.read,12.5+D_ORIGIN,.1);
 });
 test('S01 pose inicial (caracterización, sin corregir): central > umbral; laterales entre blanco_ref y umbral; sin solape ni colisión; starters corren sin error',()=>{
  const h=load();h.js("changeTrack('s01')");

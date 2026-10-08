@@ -298,13 +298,13 @@ test('Con el modelo NEUTRO (y la dinámica de motor histórica fijada en memoria
  // Esta prueba aísla el SENSOR: los hashes históricos incluyen la traza completa, que depende también de la rampa de rueda.
  // MOTOR-DYNAMICS-1 cambió la rampa a propósito (frenado simétrico); aquí se restaura EN MEMORIA la rampa anterior para que
  // solo un cambio del modelo de sensor pueda romper la equivalencia histórica. Los hashes NO se regeneran.
- // PHYSICAL-GEOMETRY-2 cambió a propósito la geometría funcional (base 12→10, front 6→8, spread 2,8→1,9, origen del sonar 9,83→4,0);
+ // PHYSICAL-GEOMETRY-2 cambió a propósito la geometría funcional (base 12→10, front 6→8, spread 2,8→1,9, origen del sonar 9,83→4,0→7,40);
  // aquí se restaura EN MEMORIA la geometría histórica por la misma razón: el hash debe romperse por cambios del MODELO DE SENSOR
  // (superficie/luz/ganancia/offset/microvariación/cobertura), no porque la geometría física se haya corregido deliberadamente.
  patches.push({file:'simulator.js',from:'const approach=(value,target)=>value+clamp(target-value,-240*dt,240*dt);',to:'const approach=(value,target)=>target===0?0:value+clamp(target-value,-240*dt,240*dt);'});
  patches.push({file:'simulator.js',from:'vR=wheel.right/100*max,base=10;',to:'vR=wheel.right/100*max,base=12;'});
  patches.push({file:'calibration.js',from:'Object.freeze({front:8,spread:1.9})',to:'Object.freeze({front:6,spread:2.8})'});
- patches.push({file:'simulator.js',from:'MECH.worldPoint(R,4.0,0)',to:'MECH.worldPoint(R,9.83,0)'});
+ patches.push({file:'simulator.js',from:'const SONAR_FACE_FORWARD=7.40;',to:'const SONAR_FACE_FORWARD=9.83;'});
  const sha=o=>crypto.createHash('sha256').update(JSON.stringify(o)).digest('hex').slice(0,16);
  assert.deepEqual(Object.keys(legacy.hashes).sort(),Object.keys(S).sort(),'mismos escenarios');
  for(const name of Object.keys(S))assert.equal(sha(S[name]({patches,sonarForward:9.83})),legacy.hashes[name],'traza neutra '+name+' == golden anterior');

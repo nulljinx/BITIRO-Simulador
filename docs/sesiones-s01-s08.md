@@ -142,25 +142,25 @@ El starter del Lab para S05 (con `void leerSensores()`) ya valida en el simulado
 
 Con funciones propias reales (`int velocidad(int distancia)` con `return`, el `void seguidor(int sensor, int vel, int umbral)` de la clase, `seguir3(int vel)`, `golpear()`, `prepararGarra()`) se confirmó, con la caja como Scenario Prop (el plotter S06 no contiene caja):
 
-- distancia > 18 cm → velocidad normal;
-- 14–18 cm → velocidad reducida;
-- < 14 cm → detener y golpear;
+- distancia > 12 cm → velocidad normal;
+- 8–12 cm → velocidad reducida;
+- < 8 cm → detener y golpear;
 
-> Umbrales actualizados en PHYSICAL-GEOMETRY-2B. El material original usaba 12 / 8 con el origen del sonar a 9,83 cm de R; el origen medido es 4,0 cm, por lo que `lectura_nueva = lectura_antigua + 5,83` (12 → 17,83 ≈ 18; 8 → 13,83 ≈ 14). 14 / 18 son **equivalencias geométricas** del material previo para conservar aproximadamente la misma posición física de reacción; **no** son valores del sonar calibrados contra el IROH físico. Las ejecuciones de validación de más abajo se observaron con la geometría anterior (12 / 8).
+> Umbrales 12 / 8 restaurados en SONAR-PHYSICAL-ORIGIN-1B. Son los valores del material original (así figuraban antes de PHYSICAL-GEOMETRY-2B). 18 / 14 fueron una compensación del simulador cuando el origen del sonar se movió de 9,83 a 4,0 (4,0 resultó ser una interpretación errónea del plano de TX/RX); no eran valores calibrados físicamente y se retiraron. El sonar mide ahora desde la cara física de TX/RX (origen 7,40 cm desde R = 6,50 + 0,90, DERIVED_FROM_PHYSICAL_MEASUREMENTS) y un umbral de 12 significa 12 cm desde el sonar. Las ejecuciones de validación de más abajo se observaron con la geometría anterior (origen 9,83): **no se repitieron** con el origen 7,40 y deben revalidarse.
 - continuación después del golpe hasta la `meta` del trazado disponible;
 - LCD («CERCA», «FIN»);
 - parámetros, `return` y variables locales que no escapan (el parámetro `distancia` no altera el global del mismo nombre).
 
 Con 3 sensores, las ejecuciones a V=20, 30, 40 y 80 completaron el recorrido; a V=60 el robot quedó empujando la caja. Estas ejecuciones son observaciones puntuales de `SESSION-VALIDATION-2` y **no definen un rango operativo ni una relación monótona entre velocidad y éxito**: el resultado de V=60 puede ser una consecuencia emergente de física, temporización y geometría (la caja se ve tarde desde la curva), y no se corrigió ni se oculta. El `seguidor()` literal de la clase sigue una sola línea con un sensor y gira siempre a la derecha cuando ve blanco: es un ejemplo de sintaxis, no un seguidor capaz de recorrer la S-curva.
 
-Errores del alumno ejecutados sin corrección: `velocidad()` que devuelve 40 con < 14 (antes < 8; no se detiene y empuja la caja), golpe hacia el lado en que la garra ya está retraída, garra al centro con umbral de sonar 18 (antes 12) y umbral de línea 100.
+Errores del alumno ejecutados sin corrección: `velocidad()` que devuelve 40 con < 8 (con 18 / 14 entre PHYSICAL-GEOMETRY-2B y SONAR-PHYSICAL-ORIGIN-1B: < 14; no se detiene y empuja la caja), golpe hacia el lado en que la garra ya está retraída, garra al centro con umbral de sonar 12 y umbral de línea 100.
 
 **Qué impide el 100 %** (separado):
 
 - **Limitación principal — TRACK/MATERIAL:** el AE y la clase piden detenerse en una intersección, esperar un IR y girar según el lado, pero el plotter oficial S06 no imprime ninguna intersección (es una curva única). En la pauta AE son 40 de 120 puntos.
 - **Bonus opcional — RUNTIME:** «aumentar velocidad tras 20 s» usa `millis()`, que aún no existe. Es una limitación de compatibilidad, no el bloqueo principal.
 
-Sigue vigente la observación física de que, con garra centrada, el umbral de sonar cercano a 18 cm (12 cm con el origen anterior del sonar) requiere validación frente al hardware real (ver [`known-limitations.md`](known-limitations.md)).
+Sigue vigente la observación física de que, con garra centrada, el umbral de sonar cercano a 12 cm requiere validación frente al hardware real (ver [`known-limitations.md`](known-limitations.md)).
 
 ## S07
 

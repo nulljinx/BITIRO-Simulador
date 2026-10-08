@@ -99,7 +99,7 @@ La orientación coincide con `R.th` porque se usa exactamente el mismo `local()`
 | Eje de ruedas | f = 0 (= R) | R = eje | **alineado** (INT-2) |
 | Centro de placa | −2,3 cm, borde frontal +6,5 | solo documentado | **alineado** (INT-2) |
 | Sensor de línea | PCB centradas en (+8,0 ; 0 / ±1,9) | `LINE_SENSOR.geometry = {8, 1.9}` | **alineado**; el punto óptico centrado en la PCB es SUPUESTO |
-| Cara del sonar | caras TX/RX ≈ +6,64 (PHOTO-CONSTRAINED / PROVISIONAL) | origen del sonar `worldPoint(R,4.0,0)` = +4,0, valor previo mal interpretado, **pendiente de corrección funcional** | **desfase visual↔funcional ≈ 2,64 cm (conocido, congelado)** |
+| Cara del sonar | caras TX/RX ≈ +6,64 (PHOTO-CONSTRAINED / PROVISIONAL) | origen del sonar `SONAR_FACE_FORWARD` = +7,40 (6,50 + 0,90, DERIVED_FROM_PHYSICAL_MEASUREMENTS) | **desacople visual pendiente 7,40 − 6,64 = 0,76 cm (el visual va 0,76 cm por detrás; se corregirá aparte)** |
 | Servo / pivote del palo | `SERVO` centrado en `pivotForward` 8,6 | `IROH_MECHANICS.spec` | **alineado**; el pivote es SUPUESTO de simulación |
 | Radio del cuerpo | −11,1 … +9,5 cm desde R (placa 17,6 × 11,0) | `bodyRadius` 8,3 | **SIN alinear a propósito** (SIMULATION_ASSUMPTION; pendiente de PHYSICAL-COLLISION-1) |
 | Largo de PCB de sensor | 3,0 (Blender) | 3,1 medido | residual 0,1 cm, sin corregir (no afecta a la física) |
@@ -142,7 +142,7 @@ Marco: **R = centro del eje de ruedas**. `tools/build-iroh-render-asset.mjs` tra
 | chasis, placas, electrónica, separadores, caster, sensores de obstáculo | centro de placa = −2,3 (borde frontal +6,5) | DERIVED_FROM_PHYSICAL_MEASUREMENTS | −2,30 |
 | `WHEEL_L/R`, `MOTOR_L/R` | centros de rueda = (0, ±5,0) | PHYSICALLY_MEASURED | −2,00 (el eje del Blender estaba a +2,0: ESTIMADO DE FOTO; lo medido manda) |
 | `LINE_SENSOR_C/L/R` + soporte | punto óptico central = +8,0; laterales ±1,9 | PHYSICALLY_MEASURED / DERIVED_FROM_PHYSICAL_PCB_GEOMETRY | −1,30 |
-| cabeza (`HEAD_*`, `ULTRASONIC_*`) | centro de la base negra = +3,95 (traslación rígida); cara TX/RX ≈ +6,64; el sonar funcional sigue en +4,0 (pendiente) | DERIVED_FROM_PHYSICAL_MEASUREMENTS (base) / PHOTO-CONSTRAINED, PROVISIONAL (TX/RX) | −2,05 (antes −4,69) |
+| cabeza (`HEAD_*`, `ULTRASONIC_*`) | centro de la base negra = +3,95 (traslación rígida); cara TX/RX ≈ +6,64; el sonar funcional está en +7,40 (desacople visual pendiente 0,76) | DERIVED_FROM_PHYSICAL_MEASUREMENTS (base) / PHOTO-CONSTRAINED, PROVISIONAL (TX/RX) | −2,05 (antes −4,69) |
 | `SERVO`, `FRONT_MECHANISM` | centro del servo = `pivotForward` 8,6 | SIMULATION_ASSUMPTION (visual sigue a la física) | −1,00 |
 | `LCD` | posición de placa (la base de la cabeza ya no lo limita) | ESTIMADO DE FOTO | −2,30 (antes −2,79 con holgura +1 mm) |
 

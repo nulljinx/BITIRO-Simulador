@@ -169,9 +169,9 @@ Ejes en cm respecto al punto de referencia R del robot (positivo hacia el frente
 | PCB del sensor de línea | 1.4 × 3.1 | medido |
 | HEAD_BASE | 3.50 × 3.20; centro +3.95; frente +5.70; atrás +2.20 | medido / derivado |
 | TX/RX visual | ≈ +6.64 | provisional (restringido por fotos) |
-| Origen funcional del sonar | +4.0 | valor funcional actual, pendiente de revisión |
+| Origen funcional del sonar | +7.40 | derivado de medidas físicas (6.50 + 0.90) |
 
-> **Importante:** `+4.0` es el origen funcional que usa hoy la simulación del sonar. **No** debe leerse como la cara física medida del sonar, ni `+6.64` como una medición directa.
+> **Importante:** el origen funcional del sonar es `+7.40` cm = 6.50 (R → borde frontal de la placa, medido) + 0.90 (la cara de TX/RX sobresale de la placa, medido): DERIVED_FROM_PHYSICAL_MEASUREMENTS. El `+6.64` visual **no** es una medición directa y todavía no está alineado con el origen funcional (desacople visual pendiente: 7.40 − 6.64 = 0.76 cm).
 
 Más detalles: [`docs/physical-geometry.md`](docs/physical-geometry.md) y [`docs/iroh-3d-integration.md`](docs/iroh-3d-integration.md).
 
@@ -295,10 +295,11 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 
 ## Limitaciones conocidas del sonar
 
-Existe un desacople conocido y deliberado entre la geometría visual y la funcional:
+Existe un desacople visual conocido y pendiente de corrección entre el modelo 3D y la función del sonar:
 
 - TX/RX visual ≈ +6.64 cm (provisional, restringido por fotos);
-- origen funcional del sonar = +4.0 cm.
+- origen funcional del sonar = +7.40 cm (derivado de medidas físicas);
+- desacople visual pendiente: 7.40 − 6.64 = 0.76 cm (el modelo 3D se corregirá aparte, con las medidas del módulo).
 
 Será resuelto en `SONAR-PHYSICAL-ORIGIN-1`. Los umbrales del sonar usados en materiales y ejemplos no se han recalculado todavía.
 

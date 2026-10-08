@@ -169,7 +169,7 @@ test('11. R = centro del eje: ruedas en (0, ±5,0) Ø6,5×2,5; placa 17,6×11,0�
  for(const n of ['CHASSIS_LOWER','CHASSIS_UPPER']){const b=bbox(n);near(b.c[0],-2.3,.011,n+' centro de placa');near(b.size[0],17.6,.011,n+' largo');near(b.size[1],11,.011,n+' ancho');near(b.mx[0],6.5,.011,n+' borde frontal');near(b.size[2],.3,.011,n+' espesor');}
 });
 
-test('12. Sensores de línea (8,0 ; 0 / ±1,9); PCB 1,4; base negra de la cabeza en +3,95 con TX/RX ≈ +6,64 (provisional, rígido); sonar FUNCIONAL aún +4,0; pivote del striker = HIT',()=>{
+test('12. Sensores de línea (8,0 ; 0 / ±1,9); PCB 1,4; base negra de la cabeza en +3,95 con TX/RX ≈ +6,64 (provisional, rígido); sonar FUNCIONAL +7,40 (DERIVED_FROM_PHYSICAL_MEASUREMENTS; desacople visual pendiente 0,76); pivote del striker = HIT',()=>{
  const h=world('?robot=iroh');const g=h.js('LINE_SENSOR.geometry'),spec=h.js('IROH_MECHANICS.spec');
  assert.deepEqual({front:g.front,spread:g.spread},{front:8,spread:1.9});
  for(const [n,side] of [['LINE_SENSOR_L',-1],['LINE_SENSOR_C',0],['LINE_SENSOR_R',1]]){const b=bbox(n);near(b.c[0],g.front,.011,n+' f = LINE_SENSOR.geometry.front');near(b.c[1],side*g.spread,.011,n+' r = ±spread');near(b.size[1],1.4,.011,n+' ancho de PCB (medido)');}
@@ -185,7 +185,8 @@ test('12. Sensores de línea (8,0 ; 0 / ±1,9); PCB 1,4; base negra de la cabeza
  const rel=n=>bbox(n).c[0]-hb.c[0];
  near(bbox('ULTRASONIC_TX').mx[0]-hb.c[0],2.69,.011,'cara TX − centro de base = 2,69 (sin deformar)');near(rel('HEAD_RED_PLATE'),1.20,.011,'placa roja respecto de la base');near(rel('HEAD_SERVO_PAN'),0,.011,'servo pan respecto de la base');near(rel('HEAD_MECHANISM'),0,.011,'mecanismo respecto de la base');
  near(bbox('ULTRASONIC_TX').mx[0],bbox('ULTRASONIC_RX').mx[0],.001,'TX y RX coplanares');
- assert.ok(read('simulator.js').includes('MECH.worldPoint(R,4.0,0)'),'el sonar funcional sigue en +4,0');
+ assert.ok(read('simulator.js').includes('const SONAR_FACE_FORWARD=7.40;')&&read('simulator.js').includes('MECH.worldPoint(R,SONAR_FACE_FORWARD,0)'),'el sonar funcional está en +7,40');
+ near(7.40-bbox('ULTRASONIC_TX').mx[0],0.76,.011,'desacople visual↔funcional pendiente: 7,40 − 6,64 = 0,76 (el visual NO se movió)');
  near(bbox('SERVO').c[0],spec.pivotForward,.011,'SERVO centrado en el pivote que usa el palo (IROH_MECHANICS.spec.pivotForward)');
  near(bbox('SERVO').c[1],spec.pivotRight,.011,'SERVO centrado en pivotRight');
  // el palo y la física no se tocaron: spec idéntico al de PHYSICAL-GEOMETRY-2

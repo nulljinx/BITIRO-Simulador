@@ -59,8 +59,8 @@ const Q = 10000; // m → 0,01 cm
                                                           → toda la cabeza (HEAD_*, ULTRASONIC_*) se traslada RÍGIDAMENTE hasta que el centro de HEAD_BASE cae en 3,95
      HEAD_BASE: footprint visual escalado a 3,50 × 3,20 medido (solo la base; lo montado conserva su posición)
      cara de TX/RX resultante ≈ +6,64                    PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY (no es PHYSICALLY_MEASURED directo).
-                                                          El +4,0 anterior (mal interpretado como plano de TX/RX) sigue siendo el origen FUNCIONAL del sonar,
-                                                          pendiente de corrección funcional; este generador no lo toca ni lo usa.
+                                                          El origen FUNCIONAL del sonar es +7,40 (6,50 + 0,90, DERIVED_FROM_PHYSICAL_MEASUREMENTS);
+                                                          desacople visual pendiente 7,40 − 6,64 = 0,76; este generador no lo toca ni lo usa.
      pivote del servo de golpe = HIT.pivotForward 8,6    SIMULATION_ASSUMPTION        → SERVO y FRONT_MECHANISM se centran en el pivote que ya dibuja el palo
    Solo cambia f. Nada de esto entra a la física: es el modelo VISUAL poniéndose de acuerdo con ella. */
 const PLATE_CENTER_F = -2.3, AXLE_F = 0, SENSOR_F = 8.0, HEAD_BASE_CENTER_F = 3.95, HEAD_BASE_LEN = 3.5, HEAD_BASE_WID = 3.2, STRIKER_PIVOT_F = 8.6;

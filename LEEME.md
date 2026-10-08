@@ -62,7 +62,7 @@ Modelo base: blanco ≈155, negro ≈865, umbral normalizado 500, con pequeñas 
 
 ## Sonar
 
-`leerDistanciaSonar()` usa un modelo geométrico determinista con tres rayos `-6° / 0° / +6°`, origen 4,0 cm delante del centro del eje (cara de los transductores, medido) y valor máximo/sin objeto 200.
+`leerDistanciaSonar()` usa un modelo geométrico determinista con tres rayos `-6° / 0° / +6°`, origen 7,40 cm delante del centro del eje (cara de los transductores: 6,50 hasta el borde de la placa + 0,90 que sobresalen; derivado de medidas físicas) y valor máximo/sin objeto 200.
 
 No es un modelo acústico completo y no reproduce ruido, incidencia, zona muerta o todos los rangos del hardware real.
 

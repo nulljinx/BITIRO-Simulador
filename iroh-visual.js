@@ -2,7 +2,7 @@
    Dibuja el asset derivado del modelo Blender (assets/iroh/iroh-render-v1.js) con el renderer Canvas 2D existente.
    SOLO VISUAL: no lee ni escribe R, HIT, LINE_SENSOR ni el runtime; renderer3d.js lo invoca únicamente con ?robot=iroh. Se carga con <script> estático (sin document.write).
    SIM-3D-INTEGRATION-2: el asset ya viene en el marco R (R = centro del eje de ruedas; placa en −2,3; ruedas a ±5,0; PCB de sensor en +8,0/±1,9;
-   TX/RX visual ≈ +6,64 cm (provisional); sonar FUNCIONAL permanece en +4,0 cm pendiente de corrección). Esa reubicación la hace tools/build-iroh-render-asset.mjs; aquí no se desplaza ni se escala nada.
+   TX/RX visual ≈ +6,64 cm (provisional); sonar FUNCIONAL en +7,40 cm (DERIVED_FROM_PHYSICAL_MEASUREMENTS; desacople visual pendiente 0,76 cm, el visual no se movió)). Esa reubicación la hace tools/build-iroh-render-asset.mjs; aquí no se desplaza ni se escala nada.
 
    Cadena de transformación (ver docs/iroh-3d-integration.md):
      Blender (X izq, −Y delante, Z arriba, 1 BU = 1 m)

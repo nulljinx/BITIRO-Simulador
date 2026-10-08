@@ -72,7 +72,7 @@ function geometryRaw(){
   fixedDt:js('FIXED_DT'),fixedDtIs1over120:js('FIXED_DT')===1/120,
   lineSensor:{geometry:js('LINE_SENSOR.geometry'),rawWhite:js('LINE_SENSOR.raw(0)'),rawBlack:js('LINE_SENSOR.raw(1)'),rawHalf:js('LINE_SENSOR.raw(.5)'),defaults:js('LINE_SENSOR.defaults()')},
   mechanics:js('IROH_MECHANICS.spec'),
-  sonar:{rayOffsetsDeg:[-6,0,6],rayOffsetSource:m('simulator.js',/for\(const offset of \[(-Math\.PI\/30,0,Math\.PI\/30)\]\)/)[1],originForwardCm:+m('simulator.js',/MECH\.worldPoint\(R,(\d+(?:\.\d+)?),0\)/)[1],maxRangeCm:200,minObstacleHeightCm:15.1},
+  sonar:{rayOffsetsDeg:[-6,0,6],rayOffsetSource:m('simulator.js',/for\(const offset of \[(-Math\.PI\/30,0,Math\.PI\/30)\]\)/)[1],originForwardCm:+m('simulator.js',/const SONAR_FACE_FORWARD=(\d+(?:\.\d+)?);/)[1],maxRangeCm:200,minObstacleHeightCm:15.1},
   kinematics:{physicsWheelbaseCm:+m('simulator.js',/base=(\d+(?:\.\d+)?);/)[1],maxSpeedCmPerSecAt100:+m('simulator.js',/const max=(\d+)/)[1],wheelRampPctPerSec:+m('simulator.js',/240\*dt/)[0].match(/\d+/)[0],substepTranslationCm:.30,substepRotationRad:.025},
   rendererVisual:{wheelCenterOffsetCmPerSide:+m('renderer3d.js',/const mid=side\*(\d+(?:\.\d+)?)/)[1],sides:[-1,1]},
  };

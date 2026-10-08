@@ -109,7 +109,7 @@ test('31. pausa() dentro de una función anidada conserva el stack',()=>{
  h.tick(5);assert.equal(G(h,'t'),1);h.tick(15);assert.equal(G(h,'t'),2);h.tick(15);assert.equal(G(h,'t'),3);});
 test('32. función con pausa + return: el valor llega tras la pausa',()=>{
  const h=sim(`int r=0;int medirDespues(){pausa(500);return leerDistanciaSonar();}void setup(){inicializarSensores();}void loop(){r=medirDespues();finPrograma();}`,0);
- h.tick(30);assert.equal(G(h,'r'),0,'todavía no volvió');assert.equal(h.js('running'),1);h.tick(40);h.tick(30);assert.equal(G(h,'r'),24);assert.equal(h.js('running'),0);});
+ h.tick(30);assert.equal(G(h,'r'),0,'todavía no volvió');assert.equal(h.js('running'),1);h.tick(40);h.tick(30);assert.equal(G(h,'r'),Math.round(28-7.40));assert.equal(h.js('running'),0);});
 test('32b. expresión → función → pausa → return (dos llamadas en una misma expresión, izquierda→derecha)',()=>{
  const h=sim(`int r=0;int n=0;int f(){pausa(100);n=n*10+1;return n;}int g(){pausa(100);n=n*10+2;return n;}void setup(){}void loop(){r=f()+g();finPrograma();}`,0);
  h.tick(60);assert.equal(G(h,'n'),12,'f() corrió antes que g()');assert.equal(G(h,'r'),13);});
@@ -195,7 +195,7 @@ test('42. tipado de builtins: las void sirven como sentencia y se rechazan como 
   const args={avanzar:'1',retroceder:'1',girarDerecha:'1',girarIzquierda:'1',pausa:'1',escribirPantalla:'0,0,1',moverServoYaw:'1',moverServoPitch:'1',moverServoGolpe:'1'}[n]||'';
   err(`${W}void loop(){int v=${n}(${args});}`,new RegExp('«'+n+'\\(\\)» es una función void'));}
  const h=sim(`int a=0;int b=0;int c=0;int d=0;int e=0;int f=0;void setup(){inicializarSensores();}void loop(){a=leerBoton();b=leerDistanciaSonar();c=leerSensorLineaCentral();d=leerLineaNormalizada(1);e=leerSensorObstaculoIzquierdo()+leerUmbralLinea();f=lineaCentral()+lineaIzquierda()+lineaDerecha()+leerSensorLineaIzquierdo()+leerSensorLineaDerecho()+leerSensorObstaculoDerecho();finPrograma();}`);
- ok(h);assert.equal(G(h,'a'),0);assert.equal(G(h,'b'),24);assert.equal(G(h,'c'),h.js('readLine(1)'));assert.ok(G(h,'c')>=800&&G(h,'c')<=930,'negro sobre la línea (modelo simulado, SIM-CALIBRATION-1)');assert.equal(G(h,'e'),500);
+ ok(h);assert.equal(G(h,'a'),0);assert.equal(G(h,'b'),Math.round(28-7.40));assert.equal(G(h,'c'),h.js('readLine(1)'));assert.ok(G(h,'c')>=800&&G(h,'c')<=930,'negro sobre la línea (modelo simulado, SIM-CALIBRATION-1)');assert.equal(G(h,'e'),500);
  err(`void seguir(){}${W}void loop(){int x=seguir();}`,/«seguir\(\)» es una función void: no devuelve ningún valor y no puede usarse dentro de una expresión\./);});
 test('42b. pausa() y botonInicio() como sentencias dentro de funciones propias siguen propagando el yield',()=>{
  const h=sim(`int t=0;void p(){t=1;pausa(100);t=2;botonInicio();t=3;}void setup(){p();}void loop(){pausa(10);}`,0);

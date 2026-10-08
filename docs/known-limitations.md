@@ -33,9 +33,9 @@ El Lab histórico usa un modelo distinto (más rayos y cono mayor). No debe alin
 
 ## Garra vs sonar
 
-Con garra centrada, la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 4,0 cm (antes 9,83). En determinadas aproximaciones una caja puede entrar en contacto con la barra antes de que el sonar marque una distancia pequeña.
+Con garra centrada, la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 7,40 cm (cara de TX/RX: 6,50 + 0,90, DERIVED_FROM_PHYSICAL_MEASUREMENTS; antes 4,0 y, históricamente, 9,83). En determinadas aproximaciones una caja puede entrar en contacto con la barra antes de que el sonar marque una distancia pequeña.
 
-Equivalencia de origen (verificada con el raycast real, `tests/physical-geometry.cjs`): para la misma cara de obstáculo, `lectura_nueva = lectura_antigua + 5,83 cm` (origen 4,0 frente a 9,83 cm desde R; el sonar nuevo está más atrás, así que lee MÁS distancia). Con garra centrada, la barra toca la caja a lectura ≈ 12,5 cm con el origen antiguo y ≈ 18,3 cm con el nuevo (misma posición física del robot). Por tanto, un umbral de lectura escrito como «12 cm» ya no correspondería a esa posición física. El material de `sesiones-s01-s08.md` se adaptó (PHYSICAL-GEOMETRY-2B) a 18 / 14 cm (antes 12 / 8) como equivalencia geométrica, no como valor calibrado del sonar. Los starters no se modificaron.
+Equivalencia de origen (verificada con el raycast real, `tests/physical-geometry.cjs`): para la misma cara de obstáculo, `lectura(7,40) = lectura(9,83) + 2,43 cm`. Con garra centrada, la barra toca la caja a lectura ≈ 12,5 cm con el origen histórico 9,83 y ≈ 14,9 cm con 7,40 (misma posición física del robot). Un sonar mide desde su cara: un umbral «12 cm» significa 12 cm desde TX/RX, no un punto fijo respecto de R. Los umbrales S06 vuelven a 12 / 8 (material original); 18 / 14 de PHYSICAL-GEOMETRY-2B fueron una compensación del simulador, no calibrada. Con 12 / 8 la garra centrada alcanza la caja (lectura ≈ 14,9) antes de que la lectura baje de 12, por lo que debe validarse frente al hardware real. Los starters no se modificaron (el de golpe usa `<= 10`, que ahora significa 10 cm desde el sonar).
 
 Este acoplamiento afecta S03/S06 y requiere validación física antes de cambiar geometría o umbrales.
 

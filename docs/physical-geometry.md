@@ -10,7 +10,7 @@ Este documento registra qué parte de la geometría **funcional** del simulador 
 |---|---|---|---|---|
 | wheelbase (centro-centro de ruedas) | 12 | **10,0 cm** | PHYSICALLY_MEASURED | `simulator.js` (`base=10`) |
 | sensor central: eje → punto óptico (`front`) | 6 | **8,0 cm** | PHYSICALLY_MEASURED | `calibration.js` (`LINE_SENSOR.geometry.front`) |
-| cara frontal de los transductores (origen del sonar) | 9,83 | **4,0 cm** | PHYSICALLY_MEASURED | `simulator.js` (`readSonarDistance`) |
+| cara frontal de los transductores (origen del sonar, `SONAR_FACE_FORWARD`) | 9,83 (histórico, sin fuente) → 4,0 (PHYSICAL-GEOMETRY-2, mal interpretado) | **7,40 cm** (SONAR-PHYSICAL-ORIGIN-1B) | DERIVED_FROM_PHYSICAL_MEASUREMENTS (6,50 PHYSICALLY_MEASURED + 0,90 PHYSICALLY_MEASURED) | `simulator.js` (`readSonarDistance`) |
 | separación entre sensores (`spread`) | 2,8 | **1,9 cm** | DERIVED_FROM_PHYSICAL_PCB_GEOMETRY | `calibration.js` (`LINE_SENSOR.geometry.spread`) |
 | centro de la placa respecto de R | — | **−2,3 cm** (2,3 cm detrás de R) | DERIVED_FROM_PHYSICAL_MEASUREMENTS | solo documentado |
 | `max` rueda | 23 cm/s | 23 | SIMULATION_ASSUMPTION | `simulator.js` |
@@ -30,7 +30,7 @@ Otras medidas físicas entregadas (sin uso funcional todavía): placa 17,6 × 11
 
 - `avanzar(50,0)`: rueda al 50 % = 11,5 cm/s; ω estacionaria = 11,5/10 = 1,15 rad/s; `R` describe un círculo de radio 5,0 cm alrededor de la rueda parada.
 - Con `spread = 1,9` y línea de 2,6 cm de ancho, los sensores laterales con el central sobre la línea quedan a 0,6 cm del borde y leen ≈ 320–350 (cobertura parcial, por debajo del umbral 500). No es un cambio del modelo óptico: es consecuencia geométrica.
-- Sonar: `lectura_nueva = lectura_antigua + 5,83 cm` para la misma cara de obstáculo (origen 4,0 vs 9,83 desde R; verificado sin redondeo). Misma posición física ⇒ lectura mayor; un umbral de lectura escrito para el origen antiguo dispara ahora con el obstáculo más cerca de R. Por eso `sesiones-s01-s08.md` pasó de 12 / 8 a 18 / 14 cm (equivalencia geométrica, no calibración del sonar); los starters no se tocaron.
+- Sonar (PHYSICAL-GEOMETRY-2, **histórico**): el origen pasó de 9,83 a 4,0; esa corrección se reemplazó en SONAR-PHYSICAL-ORIGIN-1B (origen 7,40). Referencia: `lectura(7,40) = lectura(9,83) + 2,43` para la misma cara de obstáculo (9,83 − 7,40). Los umbrales 18 / 14 de PHYSICAL-GEOMETRY-2B fueron una compensación del simulador para el origen 4,0 (no calibrados físicamente) y se retiraron: ver `sesiones-s01-s08.md`.
 - El modelo óptico (cobertura, mezcla, superficie, campo de luz, ganancia, offset, microvariación) y MOTOR-DYNAMICS-1 no cambiaron. El hash histórico del sensor neutro se verifica restaurando EN MEMORIA la geometría histórica (12 / 6 / 2,8 / 9,83), junto con la rampa histórica.
 
 ## Desajustes VISUALES: renderer legacy vs. modelo IROH
@@ -48,7 +48,7 @@ Con el selector por defecto (sin `?robot=iroh`) `renderer3d.js` dibuja el robot 
 | diámetro de rueda | 10,4 cm (radio 5,2) | 6,5 cm |
 | ancho de rueda | 2,2 | 2,5 |
 | ancho de placa | ≈ 16,2 | 11,0 |
-| cabeza del sonar | `sonar(9.48, ±2.45, 15.15)` | cara funcional a 4,0 (la cabeza visual no se movió) |
+| cabeza del sonar | `sonar(9.48, ±2.45, 15.15)` | cara funcional a 7,40 (la cabeza visual no se movió; desacople visual pendiente 0,76) |
 | PCB de sensores | consume `LINE_SENSOR.geometry` → se dibujan en 8,0 / ±1,9 automáticamente, pero sobre un soporte (8,0 de ancho) y un cuerpo legacy | PCB 3,1 × 1,4 |
 
 ### IROH renderer alignment (`?robot=iroh`, SIM-3D-INTEGRATION-2/2A; solo apariencia)
@@ -63,7 +63,7 @@ El asset `assets/iroh/iroh-render-v1.js` (derivado de `exports/iroh_lowpoly.glb`
 | servo, centro | = pivote del striker 8,6 | SIMULATION_ASSUMPTION: el visual sigue a la física, no al revés; **no** se reclasifica como PHYSICALLY_MEASURED |
 | LCD | −2,30 (posición de placa). En INTEGRATION-2 llevaba −2,79 por una holgura de +1 mm | **VISUAL_CLEARANCE_ADJUSTMENT** (histórico, hoy inactivo): +1 mm para que el LCD (ESTIMADO DE FOTO) no invadiera la base de la cabeza. **No es una medida física** |
 | base negra de la cabeza; centro +3,95 (+5,70 / +2,20) | traslación rígida de toda la cabeza | DERIVED_FROM_PHYSICAL_MEASUREMENTS |
-| cara TX/RX | ≈ +6,64 | PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY; el sonar funcional sigue en +4,0 (pendiente) |
+| cara TX/RX | ≈ +6,64 | PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY; el sonar funcional está en +7,40 (desacople visual pendiente 0,76 cm) |
 | barra del striker | dibujada por `renderer3d.js` con `IROH_MECHANICS.spec` (pivote 8,6, largo 13,2, semiancho 0,52); el asset no trae ninguna barra | SIMULATION_ASSUMPTION; sin cambios |
 | cámara Robot | encuadre derivado de la esfera envolvente del asset (ver `docs/iroh-3d-integration.md` §7) | solo cámara; no es medida |
 
@@ -73,8 +73,8 @@ Se mantiene `bodyRadius = 8,3` = **SIMULATION_ASSUMPTION** (no es la envolvente 
 
 - `R` = centro del eje; centro de placa a **−2,3 cm** longitudinal; centros de rueda a **±5,0 cm** laterales.
 - Punto funcional del sensor central **+8,0 cm**; sensores a **±1,9 cm** (derivado).
-- Cara funcional del sonar **+4,0 cm**.
-- (Histórico, ya aplicadas en el asset IROH v1 por SIM-3D-INTEGRATION-2) Correcciones esperables al asset: reubicar eje/ruedas a R y reducir separación a 10,0; rueda Ø6,5 × 2,5; placa 17,6 × 11,0 × 0,3 centrada en −2,3; borde frontal de placa a +6,5; mover los transductores a +4,0 y los PCB de sensor a +8,0/±1,9 (PCB 3,1 × 1,4).
+- Cara funcional del sonar **+7,40 cm** (6,50 + 0,90; DERIVED_FROM_PHYSICAL_MEASUREMENTS).
+- (Histórico, ya aplicadas en el asset IROH v1 por SIM-3D-INTEGRATION-2) Correcciones esperables al asset: reubicar eje/ruedas a R y reducir separación a 10,0; rueda Ø6,5 × 2,5; placa 17,6 × 11,0 × 0,3 centrada en −2,3; borde frontal de placa a +6,5; mover los transductores a +4,0 (superado: el origen funcional es ahora +7,40, ver SONAR-PHYSICAL-ORIGIN-1B) y los PCB de sensor a +8,0/±1,9 (PCB 3,1 × 1,4).
 - La geometría visual debe seguir separada de la física del simulador.
 
 ## Estado de pruebas
@@ -89,5 +89,5 @@ Decisión tras las fotografías laterales y frontales (los transductores están 
 
 - Toda la cabeza (`HEAD_BASE`, servos pan/tilt, mecanismo, placa roja, PCB del sonar, TX/RX) se traslada **rígidamente +2,64 cm** (centro de `HEAD_BASE` 1,31 → 3,95) en `tools/build-iroh-render-asset.mjs`. No se deforma ni se mueve solo la base. SIM-3D-INTEGRATION-2A.1: solo el footprint visual de `HEAD_BASE` se ajusta a lo medido (Blender ≈ 3,6 × 4,0 → **3,50 × 3,20**, centro +3,95, lateral 0; bordes 2,20 / 5,70; holgura al acrílico 0,80); lo montado encima no se mueve.
 - **Cara frontal de TX/RX ≈ +6,64 cm = PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY.** No se declara PHYSICALLY_MEASURED directo.
-- **`+4,0` = valor previo mal interpretado como plano frontal de TX/RX; pendiente de corrección funcional.** `readSonarDistance()` (`MECH.worldPoint(R,4.0,0)`) sigue congelado en este subbloque: el origen funcional del sonar NO cambió. El candidato físico actual para el plano TX/RX es ≈ +6,64. Hasta corregirlo, el modelo visual y el sonar funcional difieren ≈ 2,64 cm (el sonar lee como si estuviera 2,64 cm más atrás); cambiarlo alteraría las lecturas y goldens del sonar y requiere una decisión propia.
+- **`+4,0` = valor previo mal interpretado como plano frontal de TX/RX; CORREGIDO funcionalmente en SONAR-PHYSICAL-ORIGIN-1B.** El origen del sonar es `SONAR_FACE_FORWARD = 7,40` cm = 6,50 (R → borde frontal de la placa, PHYSICALLY_MEASURED) + 0,90 (la cara de los cilindros TX/RX sobresale de la placa, PHYSICALLY_MEASURED) = DERIVED_FROM_PHYSICAL_MEASUREMENTS. El visual TX/RX ≈ +6,64 (PHOTO-CONSTRAINED / PROVISIONAL) **no se movió**: desacople visual pendiente 7,40 − 6,64 = 0,76 cm (el modelo 3D queda 0,76 cm por detrás), a corregir en un bloque aparte con las medidas del módulo 3D.
 - El LCD (ESTIMADO DE FOTO) ya no necesita el ajuste de holgura de +1 mm (**VISUAL_CLEARANCE_ADJUSTMENT**): con la base en 2,20 queda en su posición de placa (−2,30), a ≈ 2,3 cm de la base. El generador conserva la regla por si volviera a invadir. No es medida física.
