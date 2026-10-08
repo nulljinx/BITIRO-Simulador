@@ -6,7 +6,11 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 **Repositorio:** https://github.com/nulljinx/BITIRO-Simulador  
 **BITIRO Lab:** https://bitiro-piloto.nulljinx.com/
 
-> Estado: **piloto público / beta funcional**. El proyecto está en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
+**Última versión etiquetada:** `v0.9.0-rc.1`
+
+> Estado: **Release Candidate / beta avanzada**. No es una versión v1.0 estable: el proyecto sigue en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
+>
+> La rama `main` puede contener cambios posteriores a la última versión etiquetada y también puede ir por delante del despliegue público. No todo lo presente en `main` está necesariamente desplegado en `simulador.nulljinx.com` (ver [Producción vs. main](#producción-vs-main)).
 
 ## Qué es
 
@@ -26,7 +30,12 @@ Si el código está mal, el robot puede salirse de la línea, elegir otra base, 
 
 ## Capacidades actuales
 
-- movimiento diferencial con aceleración y paso fijo determinista;
+- movimiento diferencial con paso fijo determinista;
+- dinámica de motores con aceleración y frenado simétricos;
+- geometría funcional del IROH alineada con mediciones físicas (ver [Geometría física](#geometría-física-del-iroh));
+- modo de calibración manual;
+- modelo visual IROH 3D medido (experimental, mediante `?robot=iroh`), con renderer Canvas2D, sin Three.js/WebGL por ahora;
+- pruebas específicas de geometría y de visual IROH;
 - tres sensores de línea;
 - sonar frontal geométrico;
 - IR izquierdo y derecho como entradas manuales;
@@ -45,9 +54,9 @@ Si el código está mal, el robot puede salirse de la línea, elegir otra base, 
 El intérprete admite, entre otros patrones:
 
 ```cpp
-int velocidad(int distancia) {
-    if (distancia < 8) return 0;
-    if (distancia <= 12) return 20;
+int velocidad(int sensor) {
+    if (sensor > 700) return 20;
+    if (sensor > 500) return 30;
     return 40;
 }
 
@@ -114,7 +123,7 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 ## Estado de las sesiones
 
-Última validación funcional integral: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios), sobre un runtime que ya está desplegado en producción.
+Última validación funcional integral de sesiones: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios). Es anterior a la geometría medida y a la integración IROH 3D de `v0.9.0-rc.1`.
 
 | Sesión | Estado |
 |---|---|
@@ -127,12 +136,61 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 | S07 | 🔴 no realizable completa |
 | S08 | 🟡 parcial |
 
-- **S04** quedó validada completa tras `RUNTIME-FUNCTIONS-1`: gaps, intersecciones y meta con funciones propias reales.
+- **S04** quedó validada completa con funciones propias en el runtime: gaps, intersecciones y meta con funciones propias reales.
 - **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
 - **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable).
 - **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor.
 
-Producción pública (`simulador.nulljinx.com`) está desplegada con `RUNTIME-FUNCTIONS-1` y verificada en escritorio, tablet y móvil. Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
+Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
+
+### Producción vs. main
+
+- `main`: contiene `v0.9.0-rc.1` (última versión etiquetada) y puede incluir cambios posteriores.
+- El despliegue público estable (`simulador.nulljinx.com`) puede ir por detrás de `main`.
+- La integración IROH 3D y la geometría más reciente no deben darse por desplegadas mientras no exista un deploy confirmado.
+
+## Geometría física del IROH
+
+Los valores se clasifican así:
+
+- **PHYSICALLY_MEASURED**: medido sobre el robot físico.
+- **DERIVED_FROM_PHYSICAL_MEASUREMENTS**: derivado de forma autorizada a partir de esas mediciones.
+- **Provisional**: restringido por fotos o pendiente de revisión; no es una medición directa.
+
+Ejes en cm respecto al punto de referencia R del robot (positivo hacia el frente):
+
+| Elemento | Valor | Estado |
+|---|---|---|
+| Wheelbase | 10.0 (centros de rueda a ±5.0) | medido / derivado |
+| Rueda | Ø 6.5 × ancho 2.5 | medido |
+| Placa inferior | 17.6 × 11.0 × 0.3; centro −2.3 respecto a R; frente +6.5 | medido / derivado |
+| Sensor de línea central | +8.0 | medido |
+| Sensores de línea laterales | ±1.9 | medido |
+| PCB del sensor de línea | 1.4 × 3.1 | medido |
+| HEAD_BASE | 3.50 × 3.20; centro +3.95; frente +5.70; atrás +2.20 | medido / derivado |
+| TX/RX visual | ≈ +6.64 | provisional (restringido por fotos) |
+| Origen funcional del sonar | +4.0 | valor funcional actual, pendiente de revisión |
+
+> **Importante:** `+4.0` es el origen funcional que usa hoy la simulación del sonar. **No** debe leerse como la cara física medida del sonar, ni `+6.64` como una medición directa.
+
+Más detalles: [`docs/physical-geometry.md`](docs/physical-geometry.md) y [`docs/iroh-3d-integration.md`](docs/iroh-3d-integration.md).
+
+## Modelos visuales
+
+| Selección | Renderer |
+|---|---|
+| por defecto | 3D clásico/legacy |
+| `?robot=iroh` | modelo IROH 3D medido, experimental |
+
+Ambos comparten la misma física, el mismo R, los mismos sensores, el mismo runtime, las mismas pistas y las mismas colisiones funcionales. **Cambiar el modelo visual no debe cambiar la trayectoria ni el programa.**
+
+El modelo IROH usa `assets/iroh/iroh-render-v1.js`, `iroh-visual.js` y `renderer3d.js`. El asset deriva del modelo Blender mediante `tools/build-iroh-render-asset.mjs`.
+
+Este modelo es una representación medida y aproximada; no es un gemelo digital final ni ultra realista. Todavía no existe un selector visible 2D/3D/realista: pertenece a `DISPLAY-MODES-1` (futuro).
+
+### Rendimiento
+
+La comparación A/B local en Chrome no mostró una regresión sostenida del modelo IROH frente al renderer legacy en los perfiles probados. El rendimiento real depende del hardware y del navegador.
 
 ## Lenguaje soportado
 
@@ -169,6 +227,9 @@ iroh-runtime.js       parser, intérprete y API educativa
 simulator.js          estado, reloj y ciclo de simulación
 strike-physics.js     contacto de garra/cajas
 renderer3d.js         renderer procedural sobre Canvas
+iroh-visual.js        integración visual del modelo IROH medido
+assets/iroh/iroh-render-v1.js   asset de render IROH (derivado del modelo Blender)
+tools/build-iroh-render-asset.mjs   genera el asset desde el modelo Blender
 calibration.js        modelo simulado de sensores de línea + light field
 tracks.js             pistas base
 extra-tracks.js       pistas adicionales
@@ -178,7 +239,13 @@ starters.js           código inicial por sesión
 tests/                pruebas deterministas y regresiones
 ```
 
-El renderer actual es una proyección procedural sobre Canvas, no un CAD ni un motor WebGL completo.
+```text
+SIMULATION STATE
+      ↓
+renderer  (legacy / IROH)
+```
+
+El renderer legacy y el IROH comparten el mismo estado funcional de la simulación. Ambos dibujan sobre Canvas2D; no es un CAD ni un motor WebGL.
 
 Más detalles: [`docs/architecture.md`](docs/architecture.md).
 
@@ -196,24 +263,15 @@ No requiere base de datos, cuenta, credenciales ni servicios externos para ejecu
 
 ## Pruebas
 
-La baseline actual tiene 14 suites principales (más la de interfaz en navegador):
+La validación integral ejecuta actualmente 17 suites Node `tests/*.cjs`, además de pruebas específicas en Chrome. No se enumeran todas; algunas relevantes:
 
 ```bash
-node tests/track-digitize.cjs
-node tests/smoke.cjs
-node tests/regression.cjs
-node tests/sim1.cjs
-node tests/ui-contract.cjs
-node tests/ui-shell.cjs
-node tests/syntax.cjs
-node tests/pilot5.cjs
-node tests/strike-audit.cjs
-node tests/scenario-props.cjs
-node tests/runtime-start.cjs
-node tests/runtime-servo.cjs
-node tests/runtime-functions.cjs
-node tests/calibration.cjs
-node tests/calibration-ui.mjs   # navegador real (Chrome por CDP); se omite sin Chrome
+node tests/physical-geometry.cjs   # geometría física medida
+node tests/motor-dynamics.cjs      # aceleración/frenado simétricos
+node tests/iroh-visual.cjs         # visual IROH
+node tests/calibration-ui.mjs      # navegador real (Chrome por CDP); se omite sin Chrome
+node tests/iroh-visual-ui.mjs      # navegador real (Chrome por CDP)
+node tests/perf/iroh-ab.mjs        # comparación A/B de rendimiento legacy vs IROH
 ```
 
 Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs/calibration-mode.md).
@@ -227,10 +285,48 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Estado S01–S08](docs/sesiones-s01-s08.md)
 - [Arquitectura](docs/architecture.md)
 - [Modelo de pistas y escenarios](docs/track-model.md)
+- [Geometría física del IROH](docs/physical-geometry.md)
+- [Integración del modelo IROH 3D](docs/iroh-3d-integration.md)
+- [Modo calibración](docs/calibration-mode.md)
 - [Baseline actual](docs/current-baseline.md)
 - [Limitaciones conocidas](docs/known-limitations.md)
 - [Baseline v4 histórica](docs/sim-v4-baseline.md)
 - [Historia de decisiones de UI](docs/pilot-ui-reference.md)
+
+## Limitaciones conocidas del sonar
+
+Existe un desacople conocido y deliberado entre la geometría visual y la funcional:
+
+- TX/RX visual ≈ +6.64 cm (provisional, restringido por fotos);
+- origen funcional del sonar = +4.0 cm.
+
+Será resuelto en `SONAR-PHYSICAL-ORIGIN-1`. Los umbrales del sonar usados en materiales y ejemplos no se han recalculado todavía.
+
+## Versiones
+
+| Versión | Contenido |
+|---|---|
+| v0.1.0 | baseline v4 |
+| v0.2.0 | PILOT-1 / rediseño UI |
+| v0.3.0 | pistas y sesiones oficiales |
+| v0.4.0 | scenario props |
+| v0.5.0 | funciones propias en runtime |
+| v0.6.0 | calibración manual |
+| v0.7.0 | dinámica simétrica de motores |
+| v0.8.0 | geometría física medida |
+| v0.9.0-rc.1 | integración IROH 3D medida |
+
+`v0.9.0-rc.1` es un Release Candidate. Por ahora son tags Git, no Releases de GitHub.
+
+## Roadmap inmediato
+
+1. `SONAR-PHYSICAL-ORIGIN-1`
+2. `DISPLAY-MODES-1`: 2D Ligero, 3D Clásico, 3D Realista
+3. regresión / UX / rendimiento final
+4. `v0.9.0`
+5. cierre y `v1.0.0`
+
+El desarrollo actual se centra en terminar BITIRO Simulador. BITIRO Lab se menciona solo como proyecto futuro.
 
 ## Reportar problemas
 
