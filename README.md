@@ -4,7 +4,7 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 
 **Probar en línea:** https://simulador.nulljinx.com  
 **Repositorio:** https://github.com/nulljinx/BITIRO-Simulador  
-**BITIRO Lab:** https://bitiro-piloto.nulljinx.com/
+
 
 **Última versión etiquetada:** `v0.9.0-rc.1`
 
