@@ -306,15 +306,13 @@ function render(){
 function draw(){if(sceneTrack)render();}
 function updateTelemetry(){
  observation=[readLine(0),readLine(1),readLine(2)];
- for(const [s,i] of [['L',0],['C',1],['R',2]]){$app('val'+s).textContent=String(observation[i]).padStart(3,'0');const norm=LINE_SENSOR.normalized(observation[i],i),on=LINE_SENSOR.detected(observation[i],i);$app('bar'+s).style.width=norm/10+'%';$app('state'+s).textContent=norm+' / 1000 · '+(on?'NEGRO':'BLANCO');}
+ for(const [s,i] of [['L',0],['C',1],['R',2]]){$app('val'+s).textContent=String(observation[i]).padStart(3,'0');}
  $app('time').innerHTML=simTime.toFixed(1)+' <small>s</small>';
  $app('motors').textContent=Math.round(R.L)+' / '+Math.round(R.R);
  updateLearningTelemetry();
  $app('sonar').textContent=window.readSonarDistance()+' cm';
- $app('position').textContent=Math.round(R.x)+', '+Math.round(R.y)+' cm';
  {const deg=Math.round(striker.angle),txt=(deg>0?'+':'')+deg+'°',moving=Math.abs(striker.angle-striker.target)>.5;
   $app('strikerStatus').textContent=striker.blocked?txt+' · BLOQUEADO':moving?txt+' · EN MOVIMIENTO':Math.abs(striker.angle)<.5?'CENTRO · 0°':(deg<0?'IZQUIERDA':'DERECHA')+' · '+deg+'°';}
- $app('movedObjects').textContent=String(movedCount);
  $app('lcd').textContent=lcd[0].padEnd(16).slice(0,16)+'\n'+lcd[1].padEnd(16).slice(0,16);
 }
 function frame(now){
@@ -415,11 +413,6 @@ function updateLesson(){
  const [title,goal,question]=lessons[chosen];$app('lessonTitle').textContent=title;$app('lessonGoal').textContent=goal;$app('lessonQuestion').textContent=question;
 }
 function updateLearningTelemetry(){
- const bits=observation.map((v,k)=>LINE_SENSOR.detected(v,k)?1:0);
- const action=R.L===0&&R.R===0?'detenido':R.L===R.R?(R.L>0?'avance recto':'retroceso'):R.L>R.R?'giro a la derecha':'giro a la izquierda';
- const label=mode==='demo'||resumeDemoAfterStrike?'Demo guiada por ruta':mode==='code'?'Órdenes de tu programa':'Último estado';
- $app('decision').textContent=label+': ['+bits.join(' · ')+'] → '+action+'.';
- $app('runEvidence').textContent=runDistance.toFixed(1)+' cm recorridos · '+(observedSeconds?(100*lineSeconds/observedSeconds).toFixed(0)+'% con línea detectada en movimiento':'sin muestras en movimiento')+' · '+collisionCount+' contactos. Evidencia del ensayo; no es una nota ni certifica la misión.';
  for(const [id,angle] of [['clawLeft',-75],['clawCenter',0],['clawRight',75]]){const b=$app(id);b.disabled=mode==='code';b.setAttribute('aria-pressed',String(striker.target===angle));}
  $app('step').disabled=!paused||mode==='idle';
 }

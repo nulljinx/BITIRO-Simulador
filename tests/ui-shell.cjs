@@ -22,8 +22,10 @@ function makeEnv({stacked=false,reduced=false,wide=!stacked,editor=false}={}){
     for(const l of listeners.click||[])l.fn({target:this});},
    getBoundingClientRect(){return {top:0,bottom:0,width:0,height:0};},querySelector(){return null;},querySelectorAll(){return [];},contains(){return false;}},extra);
  }
- const ids=['scene','track','sceneWrap','zoomIn','zoomOut','telemetry','msg','src','runBar','run','codePanel','codeToggle','viewportHost','moreMenu','demo','strike','reference','fileName','gutter'].concat(editor?['hl','hlLine']:[]);
+ const ids=['scene','track','sceneWrap','zoomIn','zoomOut','telemetry','msg','src','runBar','run','codePanel','codeToggle','viewportHost','moreMenu','demo','strike','reference','fileName','gutter','guideDialog','guideOpen','guideClose'].concat(editor?['hl','hlLine']:[]);
  const els=Object.fromEntries(ids.map(i=>[i,el(i)]));
+ els.guideDialog.showModal=function(){this.open=true;calls.push(['showModal']);};
+ els.guideDialog.close=function(){if(!this.open)return;this.open=false;calls.push(['dialogClose']);for(const l of this.listeners.close||[])l.fn({});};
  els.src.value='';els.src.scrollTop=0;els.track.value='s01';
  els.moreMenu.querySelector=()=>el('summary');els.moreMenu.contains=()=>false;
  const canvasRect={top:700,bottom:1100,width:600,height:600};
@@ -66,6 +68,19 @@ function makeEnv({stacked=false,reduced=false,wide=!stacked,editor=false}={}){
   mutateMsg(){for(const cb of observers.mutation)cb([]);},
   resize(w,h){canvasRect.width=w;canvasRect.height=h;for(const cb of observers.resize)cb();flushRaf();}};
 }
+
+/* ---------- 0. Guía (UI-GUIDE-1) ---------- */
+test('Guía: «Guía» abre el diálogo, X y Escape (cierre nativo) lo cierran y el foco vuelve a «Guía»; no toca la simulación',()=>{
+ const e=makeEnv();const {els,calls}=e;
+ const sim={src:'void loop(){}'};els.src.value=sim.src;const before=calls.length;
+ els.guideOpen.click();assert.equal(els.guideDialog.open,true);assert.ok(calls.some(c=>c[0]==='showModal'));
+ els.guideClose.click();assert.equal(els.guideDialog.open,false);
+ assert.deepEqual(calls.filter(c=>c[0]==='focus'&&c[1]==='guideOpen').length,1,'foco devuelto a Guía tras X');
+ els.guideOpen.click();els.guideDialog.close();   // Escape en <dialog> modal dispara close()
+ assert.equal(calls.filter(c=>c[0]==='focus'&&c[1]==='guideOpen').length,2,'foco devuelto a Guía tras Escape');
+ assert.equal(els.src.value,sim.src,'el código no cambia');assert.ok(!calls.slice(before).some(c=>c[0]==='start'||c[0]==='updateZoom'),'no reinicia ni pausa la simulación');
+ els.guideOpen.click();for(const l of els.guideDialog.listeners.click||[])l.fn({target:els.guideDialog});assert.equal(els.guideDialog.open,false,'clic en el fondo cierra');
+});
 
 /* ---------- 1. Función pura ---------- */
 const {getPerspectiveFitFactor:fit}=makeEnv().ctx.BITIRO_UI;

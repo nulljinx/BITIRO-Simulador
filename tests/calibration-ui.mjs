@@ -103,7 +103,7 @@ const finite = (...v) => v.every(Number.isFinite);
     const readings = await ui.ev('[0,1,2].map(k=>String(readLine(k)))');
     const texts = (await ui.visibleText()).join(' | ');
     for (const v of readings) assert.ok(!new RegExp(`(^|[^\\d])${v}([^\\d]|$)`).test(texts), `valor de sensor ${v} no debe aparecer fuera de la LCD: ${texts}`);
-    for (const sel of ['#valL', '#valC', '#valR', '#sonar', '#motors', '#strikerStatus', '#moreData', '.inputs-strip', '.simulator-toolbar', '#decision', '#runEvidence']) {
+    for (const sel of ['#valL', '#valC', '#valR', '#sonar', '#motors', '#strikerStatus', '.inputs-strip', '.simulator-toolbar']) {
       const shown = await ui.ev(`(()=>{const e=document.querySelector('${sel}');if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'})()`);
       assert.equal(shown, false, sel + ' oculto en calibración');
     }
