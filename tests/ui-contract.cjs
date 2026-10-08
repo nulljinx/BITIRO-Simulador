@@ -33,7 +33,7 @@ test('Clases que consultan los scripts existen (.cam con data-view, .threshold-m
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
- assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','renderer3d.js','starters.js','simulator.js','syntax-highlight.js','ui-shell.js','calibration-mode.js','scenario-editor.js']);
+ assert.deepEqual(scripts,['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','assets/iroh/iroh-render-v1.js','iroh-visual.js','renderer3d.js','starters.js','simulator.js','syntax-highlight.js','ui-shell.js','calibration-mode.js','scenario-editor.js']);
 });
 test('Controles de la vista normal y ausencia de elementos pedagógicos visibles',()=>{
  for(const id of ['track','run','pause','reset','step','src','lcd','sonar','codeToggle'])assert.ok(ids.includes(id),id);

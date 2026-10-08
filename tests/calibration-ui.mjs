@@ -23,7 +23,7 @@ const server = http.createServer((q, r) => {
   fs.createReadStream(f).pipe(r);
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
-const URL_ = `http://127.0.0.1:${server.address().port}/`;
+const URL_ = `http://127.0.0.1:${server.address().port}/` + (process.env.BITIRO_TEST_QUERY || '');   // opcional: p. ej. '?robot=iroh' (tests/iroh-visual-ui.mjs); vacío = comportamiento original
 const browser = await launch({ port: 9372 });
 
 const PRINT = 'void setup(){inicializarMovimiento();inicializarSensores();inicializarPantalla();}\\nvoid loop(){escribirPantalla(0,0,leerSensorLineaCentral());avanzar(20);}';

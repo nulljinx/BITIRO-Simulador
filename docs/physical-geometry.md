@@ -33,7 +33,13 @@ Otras medidas físicas entregadas (sin uso funcional todavía): placa 17,6 × 11
 - Sonar: `lectura_nueva = lectura_antigua + 5,83 cm` para la misma cara de obstáculo (origen 4,0 vs 9,83 desde R; verificado sin redondeo). Misma posición física ⇒ lectura mayor; un umbral de lectura escrito para el origen antiguo dispara ahora con el obstáculo más cerca de R. Por eso `sesiones-s01-s08.md` pasó de 12 / 8 a 18 / 14 cm (equivalencia geométrica, no calibración del sonar); los starters no se tocaron.
 - El modelo óptico (cobertura, mezcla, superficie, campo de luz, ganancia, offset, microvariación) y MOTOR-DYNAMICS-1 no cambiaron. El hash histórico del sensor neutro se verifica restaurando EN MEMORIA la geometría histórica (12 / 6 / 2,8 / 9,83), junto con la rampa histórica.
 
-## Desajustes VISUALES restantes del renderer legacy (`renderer3d.js`, no corregidos aquí)
+## Desajustes VISUALES: renderer legacy vs. modelo IROH
+
+La geometría visual sigue **separada** de la física (`R`, `HIT`, `LINE_SENSOR` no leen el asset). Los dos apartados se conservan por separado.
+
+### LEGACY renderer mismatch (histórico; el robot legacy NO cambió y sigue siendo el default)
+
+Con el selector por defecto (sin `?robot=iroh`) `renderer3d.js` dibuja el robot procedural antiguo, así que estos desajustes **siguen presentes** en ese modo:
 
 | Elemento | Renderer legacy | Física / medida |
 |---|---|---|
@@ -45,16 +51,43 @@ Otras medidas físicas entregadas (sin uso funcional todavía): placa 17,6 × 11
 | cabeza del sonar | `sonar(9.48, ±2.45, 15.15)` | cara funcional a 4,0 (la cabeza visual no se movió) |
 | PCB de sensores | consume `LINE_SENSOR.geometry` → se dibujan en 8,0 / ±1,9 automáticamente, pero sobre un soporte (8,0 de ancho) y un cuerpo legacy | PCB 3,1 × 1,4 |
 
-Se resolverá en la integración IROH 3D.
+### IROH renderer alignment (`?robot=iroh`, SIM-3D-INTEGRATION-2/2A; solo apariencia)
+
+El asset `assets/iroh/iroh-render-v1.js` (derivado de `exports/iroh_lowpoly.glb`) se reubica en el marco `R` al generarlo (`tools/build-iroh-render-asset.mjs`); `iroh-visual.js` no desplaza ni escala nada:
+
+| Elemento visual IROH | Valor | Clase / origen |
+|---|---|---|
+| centros de rueda; Ø × ancho | (0, ±5,0); 6,5 × 2,5 | PHYSICALLY_MEASURED (el asset sigue a la medida) |
+| placa | 17,6 × 11,0 × 0,3, centro −2,3, borde frontal +6,5 | DERIVED_FROM_PHYSICAL_MEASUREMENTS |
+| PCB de sensor (centro; ancho) | (8,0 ; 0 / ±1,9); 1,4 (el largo del Blender es 3,0 vs 3,1 medido: residual de 0,1 cm) | PHYSICALLY_MEASURED / DERIVED_FROM_PHYSICAL_PCB_GEOMETRY |
+| servo, centro | = pivote del striker 8,6 | SIMULATION_ASSUMPTION: el visual sigue a la física, no al revés; **no** se reclasifica como PHYSICALLY_MEASURED |
+| LCD | −2,30 (posición de placa). En INTEGRATION-2 llevaba −2,79 por una holgura de +1 mm | **VISUAL_CLEARANCE_ADJUSTMENT** (histórico, hoy inactivo): +1 mm para que el LCD (ESTIMADO DE FOTO) no invadiera la base de la cabeza. **No es una medida física** |
+| base negra de la cabeza; centro +3,95 (+5,70 / +2,20) | traslación rígida de toda la cabeza | DERIVED_FROM_PHYSICAL_MEASUREMENTS |
+| cara TX/RX | ≈ +6,64 | PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY; el sonar funcional sigue en +4,0 (pendiente) |
+| barra del striker | dibujada por `renderer3d.js` con `IROH_MECHANICS.spec` (pivote 8,6, largo 13,2, semiancho 0,52); el asset no trae ninguna barra | SIMULATION_ASSUMPTION; sin cambios |
+| cámara Robot | encuadre derivado de la esfera envolvente del asset (ver `docs/iroh-3d-integration.md` §7) | solo cámara; no es medida |
+
+Se mantiene `bodyRadius = 8,3` = **SIMULATION_ASSUMPTION** (no es la envolvente física medida: el modelo visual se extiende de −11,1 a +9,5 cm desde R). Pivote 8,6, largo 13,2 y semiancho 0,52 siguen siendo SIMULATION_ASSUMPTION.
 
 ## Notas para Blender / IROH 3D (siguiente bloque; no se editó nada aquí)
 
 - `R` = centro del eje; centro de placa a **−2,3 cm** longitudinal; centros de rueda a **±5,0 cm** laterales.
 - Punto funcional del sensor central **+8,0 cm**; sensores a **±1,9 cm** (derivado).
 - Cara funcional del sonar **+4,0 cm**.
-- Correcciones esperables al asset actual: reubicar eje/ruedas a R y reducir separación a 10,0; rueda Ø6,5 × 2,5; placa 17,6 × 11,0 × 0,3 centrada en −2,3; borde frontal de placa a +6,5; mover los transductores a +4,0 y los PCB de sensor a +8,0/±1,9 (PCB 3,1 × 1,4).
+- (Histórico, ya aplicadas en el asset IROH v1 por SIM-3D-INTEGRATION-2) Correcciones esperables al asset: reubicar eje/ruedas a R y reducir separación a 10,0; rueda Ø6,5 × 2,5; placa 17,6 × 11,0 × 0,3 centrada en −2,3; borde frontal de placa a +6,5; mover los transductores a +4,0 y los PCB de sensor a +8,0/±1,9 (PCB 3,1 × 1,4).
 - La geometría visual debe seguir separada de la física del simulador.
 
 ## Estado de pruebas
 
 `tests/physical-geometry.cjs` congela estos valores. La UI de calibración en Chrome (`tests/calibration-ui.mjs`) queda **PENDING LOCAL BROWSER VALIDATION** (no hay navegador utilizable en el servidor).
+
+## Base negra de la cabeza y plano TX/RX (SIM-3D-INTEGRATION-2A, RESUELTO VISUALMENTE / PENDIENTE FUNCIONAL)
+
+Medición autoritativa: R → borde delantero del acrílico = +6,50; holgura acrílico → borde delantero de la base negra = 0,80; base 3,50 (longitudinal) × 3,20 (transversal). Base: delante **+5,70**, centro **+3,95**, detrás **+2,20** (DERIVED_FROM_PHYSICAL_MEASUREMENTS).
+
+Decisión tras las fotografías laterales y frontales (los transductores están claramente por delante de la base, no sobre su centro):
+
+- Toda la cabeza (`HEAD_BASE`, servos pan/tilt, mecanismo, placa roja, PCB del sonar, TX/RX) se traslada **rígidamente +2,64 cm** (centro de `HEAD_BASE` 1,31 → 3,95) en `tools/build-iroh-render-asset.mjs`. No se deforma ni se mueve solo la base. SIM-3D-INTEGRATION-2A.1: solo el footprint visual de `HEAD_BASE` se ajusta a lo medido (Blender ≈ 3,6 × 4,0 → **3,50 × 3,20**, centro +3,95, lateral 0; bordes 2,20 / 5,70; holgura al acrílico 0,80); lo montado encima no se mueve.
+- **Cara frontal de TX/RX ≈ +6,64 cm = PHOTO-CONSTRAINED / PROVISIONAL_PHYSICAL_GEOMETRY.** No se declara PHYSICALLY_MEASURED directo.
+- **`+4,0` = valor previo mal interpretado como plano frontal de TX/RX; pendiente de corrección funcional.** `readSonarDistance()` (`MECH.worldPoint(R,4.0,0)`) sigue congelado en este subbloque: el origen funcional del sonar NO cambió. El candidato físico actual para el plano TX/RX es ≈ +6,64. Hasta corregirlo, el modelo visual y el sonar funcional difieren ≈ 2,64 cm (el sonar lee como si estuviera 2,64 cm más atrás); cambiarlo alteraría las lecturas y goldens del sonar y requiere una decisión propia.
+- El LCD (ESTIMADO DE FOTO) ya no necesita el ajuste de holgura de +1 mm (**VISUAL_CLEARANCE_ADJUSTMENT**): con la base en 2,20 queda en su posición de placa (−2,30), a ≈ 2,3 cm de la base. El generador conserva la regla por si volviera a invadir. No es medida física.
