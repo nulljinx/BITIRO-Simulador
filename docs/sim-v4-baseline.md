@@ -71,7 +71,7 @@ Pose del robot `R = {x, y, th, L, R}`. Vector adelante = `(sin th, −cos th)`; 
 
 ## 5. Sonar (`readSonarDistance`)
 
-- Origen: `pose + 9,83 cm` hacia adelante.
+- Origen: `pose + 9,83 cm` hacia adelante en este baseline v4 **histórico**; desde PHYSICAL-GEOMETRY-2 es `pose + 4,0 cm` (PHYSICALLY_MEASURED).
 - **Tres rayos a −6°, 0° y +6°** (`±Math.PI/30`).
 - Cada rayo se intersecta con las cajas (AABB); solo cuentan cajas con `visualHeightCm ≥ 15,1`.
 - Alcance máximo y valor «sin objeto»: **200**; resultado `round(mínimo)`. Una caja a más de 200 cm devuelve 200 igual que «sin caja».
@@ -107,7 +107,9 @@ Con almacenamiento bloqueado: ninguna operación lanza, se usan los valores por 
 
 Goldens (`tests/golden/*.json`): `s01_straight`, `s01_turn`, `s02_three_sensors`, `oval_continuous`, `s01_demo_strike`, `sonar_range`, `servo_sweep` (+ `runtime`, `storage`). Cada muestra registra `tick`, `x`, `y`, `theta`, ruedas actuales y objetivos, ángulo del golpe, tres lecturas brutas y, cuando aplica, sonar y posiciones de cajas. Todos se generan con `FIXED_DT = 1/120` y se comparan **exactamente**; el umbral de respaldo de 1e-9 solo existe para comparar contra el archivo en otra plataforma y en esta no se usó (diferencia máxima 0). Regenerar un golden exige `SIM1_UPDATE=1`.
 
-## 10. Discrepancia conocida: wheelbase — estado **UNRESOLVED / PENDING PHYSICAL MEASUREMENT**
+## 10. Discrepancia conocida: wheelbase — HISTÓRICO (superado por PHYSICAL-GEOMETRY-2: física = 10,0 cm medido; el renderer sigue en 18,2, desajuste visual)
+
+> Las tablas siguientes describen el estado v4/SIM-1 (base=12). Ver [`physical-geometry.md`](physical-geometry.md) para los valores vigentes.
 
 ### 10.1 Registro de valores (actualizado 2026-10-06)
 

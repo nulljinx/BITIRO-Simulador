@@ -46,15 +46,16 @@ test('Frenado y aceleración tardan lo mismo (V→0 == 0→V) para V=15,25,35,50
  }
 });
 
-// ── Constantes mecánicas congeladas (este bloque NO toca geometría) ──
-test('Constantes sin cambios: max=23, base=12, bodyRadius=8.3, front=6, spread=2.8, rampa 240',()=>{
+// ── Constantes mecánicas congeladas (la dinámica de motor NO cambia; la geometría es la medida de PHYSICAL-GEOMETRY-2) ──
+// PHYSICALLY_MEASURED: base=10 cm, front=8 cm. DERIVED_FROM_PHYSICAL_PCB_GEOMETRY: spread=1,9. SIMULATION_ASSUMPTION: max=23, rampa 240, bodyRadius=8.3.
+test('Constantes: max=23, rampa 240, bodyRadius=8.3 (supuestos) y geometría medida base=10, front=8, spread=1.9',()=>{
  const sim=fs.readFileSync(path.join(root,'simulator.js'),'utf8'),cal=fs.readFileSync(path.join(root,'calibration.js'),'utf8'),sp=fs.readFileSync(path.join(root,'strike-physics.js'),'utf8');
- assert.ok(sim.includes('const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=12;'));
+ assert.ok(sim.includes('const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=10;'));
  assert.ok(sim.includes('const approach=(value,target)=>value+clamp(target-value,-240*dt,240*dt);'),'approach simétrico, sin rama target===0');
  assert.ok(!/target===0\?0/.test(sim));
  assert.ok(sp.includes('bodyRadius: 8.3,'));
- assert.ok(cal.includes('Object.freeze({front:6,spread:2.8})'));
- const h=load();assert.deepEqual(JSON.parse(JSON.stringify(h.js('LINE_SENSOR.geometry'))),{front:6,spread:2.8});
+ assert.ok(cal.includes('Object.freeze({front:8,spread:1.9})'));
+ const h=load();assert.deepEqual(JSON.parse(JSON.stringify(h.js('LINE_SENSOR.geometry'))),{front:8,spread:1.9});
 });
 
 // ── Parada normal (detenerse) vs parada dura (estado terminal mode='idle') ──

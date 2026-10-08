@@ -50,7 +50,9 @@ window.SENSOR_MODEL = (()=>{
  return Object.freeze({DEFAULT,NEUTRAL,compute,micro,read:(k,surface,x,y)=>compute(k,surface,x,y,DEFAULT)});
 })();
 window.LINE_SENSOR = (()=>{
- const geometry=Object.freeze({front:6,spread:2.8});
+ // front=8,0 cm: eje de ruedas → punto óptico del sensor central (PHYSICALLY_MEASURED).
+ // spread=1,9 cm = 1,4 (ancho PCB) + 0,5 (gap entre bordes): DERIVED_FROM_PHYSICAL_PCB_GEOMETRY; supone el punto óptico centrado lateralmente en cada PCB, NO medido directamente.
+ const geometry=Object.freeze({front:8,spread:1.9});
  const defaults=()=>({version:1,white:[155,155,155],black:[865,865,865],threshold:500,calibrated:false});
  const key='bitiro:line-calibration:v1';
  function validate(p){

@@ -96,7 +96,7 @@ test('13–14. Reiniciar restaura la caja configurada; el golpe mueve solo el MU
 test('15. El sonar ve una caja creada por el usuario y no ve una fuera de su cono; el cuerpo no la atraviesa',()=>{
  const h=fresh('s02');const t=track(h);
  apply(h,[{id:'user-box-1',x:t.start.x-4,y:110,width:8,height:8,movable:false}]);
- const d=h.js('readSonarDistance()');assert.ok(Math.abs(d-23.2)<1,'detectada a '+d+' cm (esperado ≈23,2)');
+ const d=h.js('readSonarDistance()');assert.ok(Math.abs(d-29.03)<1,'detectada a '+d+' cm (esperado ≈29,03 = 23,2 + 5,83 por el nuevo origen del sonar 4,0 cm)');
  apply(h,[{id:'user-box-1',x:5,y:110,width:8,height:8,movable:false}]);assert.equal(h.js('readSonarDistance()'),200,'fuera del cono');
  apply(h,[{id:'user-box-1',x:t.start.x-4,y:110,width:8,height:8,movable:false}]);
  h.program('void setup(){inicializarMovimiento();} void loop(){avanzar(40);}');

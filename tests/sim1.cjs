@@ -12,7 +12,7 @@ const assert=require('node:assert/strict');
 const {execFileSync}=require('node:child_process');
 const {S}=require('./sim1/scenarios.cjs');
 const C=require('./sim1/characterization.cjs');
-const {root}=require('./sim1/harness.cjs');
+const {root,load}=require('./sim1/harness.cjs');
 const {probe,pixelCrosscheck}=require('./sim1/wheelbase-probe.cjs');
 const GOLD=path.join(__dirname,'golden'),UPDATE=process.env.SIM1_UPDATE==='1',TOL=1e-9;
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex').slice(0,12);
@@ -67,22 +67,28 @@ test('Goldens: ciclo del servo, caja desplazada una vez y rayos de sonar',()=>{
  assert.equal(sonar['frente d=18'],18);assert.equal(sonar['sin cajas'],200);assert.equal(sonar['lejos 300'],200);
  assert.equal(sonar['altura 15,1 (límite)']!==200,true);assert.equal(sonar['altura 15,0 (por debajo)'],200);
  for(const s of ['+','-']){assert.equal(sonar[`rayo ${s}6° caja lateral 4..5`],200);assert.equal(sonar[`rayo ${s}6° caja lateral 5..6`],50);assert.equal(sonar[`rayo ${s}6° caja lateral 6..7`],200);}
- const st=traces.s01_straight.samples;assert.equal(st.at(-1).theta,0);{const q=st.at(-1).sensors;assert.deepEqual(q.map(v=>v>=510),[false,true,false]);assert.ok(q[0]<200&&q[2]<200&&q[1]>780,'centro sobre la línea, laterales sobre blanco (modelo simulado SIM-CALIBRATION-1: ya no son 155/865 exactos)');}
+ const st=traces.s01_straight.samples;assert.equal(st.at(-1).theta,0);{const q=st.at(-1).sensors;assert.deepEqual(q.map(v=>v>=510),[false,true,false]);// Propiedad semántica (PHYSICAL-GEOMETRY-2A): blanco_ref < lateral < umbral < central. blanco_ref = lectura del MISMO sensor, en la MISMA pose,
+  // sobre una pista sin líneas (incluye campo de luz y microvariación, determinista). Los laterales superan el blanco porque, con spread 1,9 cm
+  // y línea de 2,6 cm, el sensor queda a 0,6 cm del borde (transición espacial esperada); siguen bajo el umbral, así que NO detectan.
+  const last=st.at(-1),hw=load();hw.js("changeTrack('s01')");hw.js('track.paths=[]');hw.js(`R.x=${last.x};R.y=${last.y};R.th=${last.theta}`);
+  const white=[0,1,2].map(k=>hw.js(`readLine(${k})`)),thr=load().js('LINE_SENSOR.profile.threshold');
+  assert.equal(thr,500);for(const k of [0,2])assert.ok(white[k]<q[k]&&q[k]<thr,`lateral ${k}: blanco_ref ${white[k]} < ${q[k]} < ${thr}`);
+  assert.ok(thr<q[1]&&q[1]>780,'central sobre la línea');}
 });
 
 // ───────── 3. Geometría congelada, cinemática y wheelbase ─────────
 const geo=C.geometry();
-test('Geometría de sensores y sonar congeladas (comportamiento v4, NO medidas reales)',()=>{
- assert.deepEqual(geo.lineSensor.geometry,{front:6,spread:2.8});
+test('Geometría física medida (PHYSICAL-GEOMETRY-2): sensor front=8 (PHYSICALLY_MEASURED) y spread=1,9 (DERIVED_FROM_PHYSICAL_PCB_GEOMETRY); sonar a 4,0 cm (PHYSICALLY_MEASURED)',()=>{
+ assert.deepEqual(geo.lineSensor.geometry,{front:8,spread:1.9});assert.equal(geo.sonar.originForwardCm,4);
  assert.equal(geo.lineSensor.rawWhite,155);assert.equal(geo.lineSensor.rawBlack,865);
  assert.deepEqual(geo.sonar.rayOffsetsDeg,[-6,0,6]);assert.equal(geo.sonar.rayOffsetSource,'-Math.PI/30,0,Math.PI/30');
  assert.equal(geo.fixedDtIs1over120,true);assert.equal(geo.mechanics.length,13.2);assert.equal(geo.mechanics.pivotForward,8.6);
 });
-test('Wheelbase: física 12 cm vs visual ≈18,2 cm → UNRESOLVED (no se corrige)',()=>{
- assert.equal(geo.kinematics.physicsWheelbaseCm,12);
+test('Wheelbase: física 10,0 cm (PHYSICALLY_MEASURED) vs visual legacy 18,2 cm → desajuste VISUAL pendiente de la integración IROH 3D',()=>{
+ assert.equal(geo.kinematics.physicsWheelbaseCm,10);
  assert.equal(geo.rendererVisual.wheelCenterOffsetCmPerSide*2,18.2);
- const yaw=C.yawRate();assert.ok(Math.abs(yaw.radPerSec-(2*0.2*23)/12)<1e-9,'ω estable = (vL−vR)/12 = 0,7667 rad/s');
- console.log('   wheelbase: physics=12 cm | renderer wheel centers=±9.1 → 18.2 cm | status=UNRESOLVED / PENDING PHYSICAL MEASUREMENT (observación física ~9,0–9,3 cm centro-centro; medición exacta pendiente) | ω(girarDerecha(20))='+yaw.radPerSec.toFixed(6)+' rad/s');
+ const yaw=C.yawRate();assert.ok(Math.abs(yaw.radPerSec-(2*0.2*23)/10)<1e-9,'ω estable = (vL−vR)/10 = 0,92 rad/s');
+ console.log('   wheelbase: physics=10 cm (PHYSICALLY_MEASURED) | renderer wheel centers=±9.1 → 18.2 cm (visual legacy, NO corregido en este bloque) | ω(girarDerecha(20))='+yaw.radPerSec.toFixed(6)+' rad/s');
 });
 test('Renderer: cadena constante→dibujo; centros de rueda efectivos 18,2 unidades de mundo (= cm de pista), sin escala posterior',()=>{
  const near=(a,b,t=1e-9)=>assert.ok(Math.abs(a-b)<t,`${a} ≉ ${b}`);
@@ -116,7 +122,7 @@ test('Runtime: mensajes amigables y estados clave sin cambiar gramática',()=>{
  assert.match(g['inicialización válida'].msg,/✔ Sintaxis validada/);
  assert.deepEqual(g['avanzar(30) tras 1 s'].motors,[30,30]);assert.deepEqual(g['girarDerecha(20) tras 2 s'].motors,[20,-20]);
  {const v=g['lectura de línea (S01 inicio)'].vars;assert.ok(v.b>=800&&v.b<=930,'negro sobre la línea (modelo simulado)');assert.equal(v.a,Math.round(Math.min(1000,Math.max(0,(v.b-155)*1000/710))),'normalizada coherente con la lectura');assert.equal(v.c,1);assert.equal(v.u,500);}
- assert.equal(g['sonar con caja de práctica'].vars.d,18);
+ assert.equal(g['sonar con caja de práctica'].vars.d,24);   // 18 + 5,83 (origen 4,0 cm en vez de 9,83)
  assert.deepEqual(g['LCD escribirPantalla(col,fila,valor)'].lcd,['123             ','    45          ']);
  assert.equal(g['golpe moverServoGolpe(1) a 0,5 s'].striker,75);   // +1 llega a +75° (derecha del robot) en 0,39 s a 190°/sassert.equal(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].striker,0);assert.match(g['golpe moverServoGolpe(65): valor no admitido, no mueve'].msg,/admite -1, 0 o 1/);assert.equal(g['while con acumulador'].vars.n,3);
  assert.match(g['error: función desconocida con sugerencia'].msg,/¿Quisiste escribir «avanzar\(\)»\?/);
@@ -138,8 +144,8 @@ const productHash=()=>['simulator.js','calibration.js','scenario-props.js','stri
 const before=productHash();
 const noSensors=o=>JSON.parse(JSON.stringify(o,(k,v)=>k==='sensors'?undefined:v));
 const controls=[
- {id:'wheelbase 12 → 18.2',patch:{file:'simulator.js',from:'base=12;',to:'base=18.2;'},mustBreak:['s01_turn'],mustHold:['s01_straight','servo_sweep','sonar_range']},
- {id:'sensor front 6 → 7',patch:{file:'calibration.js',from:'front:6,spread:2.8',to:'front:7,spread:2.8'},mustBreak:['s02_three_sensors','oval_continuous'],mustHold:['servo_sweep'],
+ {id:'wheelbase 10 → 18.2',patch:{file:'simulator.js',from:'base=10;',to:'base=18.2;'},mustBreak:['s01_turn'],mustHold:['s01_straight','servo_sweep','sonar_range']},
+ {id:'sensor front 8 → 9',patch:{file:'calibration.js',from:'front:8,spread:1.9',to:'front:9,spread:1.9'},mustBreak:['s02_three_sensors','oval_continuous'],mustHold:['servo_sweep'],
   // SIM-CALIBRATION-1: las lecturas `sensors` dependen de la posición real del sensor (light field), así que cambian al mover el sensor; el movimiento del servo no.
   holdIgnoresSensors:true},
  {id:'strike length 13.2 → 14.2',patch:{file:'strike-physics.js',from:'length: 13.2,',to:'length: 14.2,'},mustBreak:['s01_demo_strike'],mustHold:['s01_straight','oval_continuous']},
@@ -157,9 +163,9 @@ for(const ctl of controls){
   for(const n of ctl.mustHold)assert.equal(res[n],false,`${ctl.id} no debía alterar ${n}`);
  });
 }
-test('Control negativo: el yaw rate cambia con base=18.2 (ω=0,5055 vs 0,7667 rad/s)',()=>{
- const y=C.yawRate([{file:'simulator.js',from:'base=12;',to:'base=18.2;'}]);
- assert.ok(Math.abs(y.radPerSec-(2*0.2*23)/18.2)<1e-9);assert.ok(Math.abs(y.radPerSec-(2*0.2*23)/12)>.2);
+test('Control negativo: el yaw rate cambia con base=18.2 (ω=0,5055 vs 0,92 rad/s)',()=>{
+ const y=C.yawRate([{file:'simulator.js',from:'base=10;',to:'base=18.2;'}]);
+ assert.ok(Math.abs(y.radPerSec-(2*0.2*23)/18.2)<1e-9);assert.ok(Math.abs(y.radPerSec-(2*0.2*23)/10)>.2);
 });
 test('Los parches no se aplican si el texto no existe (el control no puede pasar en vacío)',()=>{
  assert.throws(()=>S.s01_straight({patches:[{file:'simulator.js',from:'base=99;',to:'base=1;'}]}),/aparece 0 veces/);

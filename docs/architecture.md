@@ -59,7 +59,7 @@ Componentes principales del estado:
 
 La cinemática es diferencial. Las órdenes se convierten a velocidades lineales de rueda y se integran con subpasos para reducir tunneling.
 
-El wheelbase de física actual es 12 cm. El renderer dibuja centros de ruedas con una separación efectiva distinta; esta discrepancia está documentada y pendiente de medición física.
+El wheelbase de física es 10,0 cm (PHYSICALLY_MEASURED, PHYSICAL-GEOMETRY-2). El renderer legacy aún dibuja centros de ruedas a 18,2 cm: es un desajuste VISUAL pendiente de la integración IROH 3D (ver [`physical-geometry.md`](physical-geometry.md)).
 
 ## Física de garra y cajas
 

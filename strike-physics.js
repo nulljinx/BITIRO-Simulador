@@ -11,7 +11,7 @@ window.IROH_MECHANICS = (() => {
   minAngleDeg: -75, centerAngleDeg: 0, maxAngleDeg: 75,
   angularRateDeg: 190,   // velocidad angular del modelo v4 (95 comandos/s × 2°); sin medición real que la sustituya
   subStepDeg: 1.1,       // resolución del barrido continuo (≈ 0,55 comandos × 2° del modelo anterior)
-  bodyRadius: 8.3,
+  bodyRadius: 8.3,       // SIMULATION_ASSUMPTION: radio de colisión circular; NO representa la envolvente física medida (placa 17,6 × 11,0). Pendiente de PHYSICAL-COLLISION-1.
  });
  // Posición pedagógica del servo (−1/0/+1) → ángulo físico interno. Es la ÚNICA traducción; null = valor no admitido.
  const POSITION_ANGLE=Object.freeze({'-1':-75,'0':0,'1':75});

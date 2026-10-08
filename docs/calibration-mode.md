@@ -45,7 +45,7 @@ No hay campos numéricos de X/Y/ángulo ni deslizadores de coordenadas. La conve
 (`BITIRO_SCENE_VIEW` en `renderer3d.js`).
 
 ## Modelo de sensor simulado (`calibration.js`)
-Cada sensor lee **su** posición real: `front = 6 cm`, `spread = 2,8 cm`, rotados por `R.th` (geometría sin cambios). La lectura conserva la escala
+Cada sensor lee **su** posición real: `front = 8 cm` (PHYSICALLY_MEASURED) y `spread = 1,9 cm` (DERIVED_FROM_PHYSICAL_PCB_GEOMETRY: 1,4 PCB + 0,5 gap; supone el punto óptico centrado en cada PCB), rotados por `R.th`. Antes de PHYSICAL-GEOMETRY-2 eran 6 / 2,8. La lectura conserva la escala
 didáctica 0–1023 (blanco ≈ 155, negro ≈ 865) y es función pura de (sensor, superficie, posición):
 
 `lectura = round( superficie × luz(x, y) × ganancia[k] + desplazamiento[k] + variaciónLocal(k, x, y) )`

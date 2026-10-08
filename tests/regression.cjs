@@ -100,8 +100,8 @@ test('Arranque gradual; detenerse() frena con la misma rampa de 240 %/s y luego 
 });
 test('Sonar mide desde el transductor a caras, con giro y altura',()=>{
  js('resetRobot();R.x=50;R.y=130;R.th=0;activeObstacles=[{x:46,y:94,width:8,height:8,visualHeightCm:15.6}]');
- assert.equal(js('readSonarDistance()'),18);
- js('R.th=Math.PI/2;activeObstacles=[{x:80,y:127,width:16,height:6,visualHeightCm:15.6}]');assert.equal(js('readSonarDistance()'),20);
+ assert.equal(js('readSonarDistance()'),24); // 130−4,0−102 = 24 (PHYSICAL-GEOMETRY-2: origen del sonar 4,0 cm desde R; antes 9,83 → 18)
+ js('R.th=Math.PI/2;activeObstacles=[{x:80,y:127,width:16,height:6,visualHeightCm:15.6}]');assert.equal(js('readSonarDistance()'),26); // 80−(50+4,0) = 26 (antes 9,83 → 20)
  js('activeObstacles[0].visualHeightCm=3');assert.equal(js('readSonarDistance()'),200);
 });
 test('Comandos de motor giran hacia el lado anunciado',()=>{

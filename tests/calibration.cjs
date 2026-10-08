@@ -22,7 +22,8 @@ const SILENT='void setup(){inicializarMovimiento();inicializarSensores();inicial
 // ───────── Modelo de sensor ─────────
 test('Escala preservada: LINE_SENSOR.raw/geometry/normalized/detected y umbral 500 intactos (0–1023, 155 blanco … 865 negro)',()=>{
  const h=load();
- assert.deepEqual(plain(h.js('LINE_SENSOR.geometry')),{front:6,spread:2.8});
+ // PHYSICAL-GEOMETRY-2: front=8 (PHYSICALLY_MEASURED), spread=1,9 (DERIVED_FROM_PHYSICAL_PCB_GEOMETRY: 1,4 PCB + 0,5 gap).
+ assert.deepEqual(plain(h.js('LINE_SENSOR.geometry')),{front:8,spread:1.9});
  assert.equal(h.js('LINE_SENSOR.raw(0)'),155);assert.equal(h.js('LINE_SENSOR.raw(1)'),865);
  assert.equal(h.js('LINE_SENSOR.normalized(155,0)'),0);assert.equal(h.js('LINE_SENSOR.normalized(865,2)'),1000);
  assert.equal(h.js('LINE_SENSOR.profile.threshold'),500);assert.equal(h.js('LINE_SENSOR.profile.calibrated'),false);
@@ -100,19 +101,21 @@ test('SIN ALEATORIEDAD NI RELOJ: el camino de lectura no usa Math.random/Date/pe
   h.js('simTime=123.4;frameCounter=987');const a=sensors(h);h.js('simTime=0;frameCounter=0');assert.deepEqual(sensors(h),a,'independiente de simTime/frameCounter');
  }finally{Math.random=realRandom;h.ctx.performance.now=realNow;h.ctx.Date=realDate;}
 });
-test('Posición REAL de cada sensor: usa front=6 y spread=2.8 con la rotación R.th (izquierdo/central/derecho); no usa R.x/R.y para los tres',()=>{
+test('Posición REAL de cada sensor: usa front=8 y spread=1.9 con la rotación R.th (izquierdo/central/derecho); no usa R.x/R.y para los tres',()=>{
  const h=load();h.js("changeTrack('s01')");
  const dark=k=>sensors(h)[k]>600;
- // th=0 (frente hacia −y): los sensores quedan en x = R.x + (k−1)·2.8, y = R.y − 6. Línea vertical bajo SOLO el sensor k.
+ // th=0 (frente hacia −y): los sensores quedan en x = R.x + (k−1)·1.9, y = R.y − 8. Línea vertical bajo SOLO el sensor k.
  for(const k of [0,1,2]){
-  h.js(`track.paths=[{w:1.2,p:[[${50+(k-1)*2.8},60],[${50+(k-1)*2.8},140]]}]`);setPose(h,50,100,0);
+  h.js(`track.paths=[{w:1.2,p:[[${50+(k-1)*1.9},60],[${50+(k-1)*1.9},140]]}]`);setPose(h,50,100,0);
   assert.deepEqual([0,1,2].map(dark),[0,1,2].map(q=>q===k),'th=0 línea bajo sensor '+k);
  }
- // th=π/2 (frente hacia +x): sensores en x = R.x + 6, y = R.y + (k−1)·2.8. Línea horizontal bajo SOLO el sensor k.
+ // th=π/2 (frente hacia +x): sensores en x = R.x + 8, y = R.y + (k−1)·1.9. Línea horizontal bajo SOLO el sensor k.
  for(const k of [0,1,2]){
-  h.js(`track.paths=[{w:1.2,p:[[40,${100+(k-1)*2.8}],[120,${100+(k-1)*2.8}]]}]`);setPose(h,50,100,Math.PI/2);
+  h.js(`track.paths=[{w:1.2,p:[[40,${100+(k-1)*1.9}],[120,${100+(k-1)*1.9}]]}]`);setPose(h,50,100,Math.PI/2);
   assert.deepEqual([0,1,2].map(dark),[0,1,2].map(q=>q===k),'th=π/2 línea bajo sensor '+k);
  }
+ // distancia longitudinal: el sensor central ve una línea transversal a 8,0 cm de R y NO a 6,0 ni a 10,0 (th=0 → y = R.y − front)
+ for(const [dy,expect] of [[8,true],[6,false],[10,false]]){h.js(`track.paths=[{w:1.2,p:[[20,${100-dy}],[80,${100-dy}]]}]`);setPose(h,50,100,0);assert.equal(dark(1),expect,'línea transversal a '+dy+' cm de R');}
  // las tres posiciones son distintas entre sí
  h.js(`track.paths=[{w:1.2,p:[[50,60],[50,140]]}]`);setPose(h,50,100,0);assert.deepEqual([0,1,2].map(dark),[false,true,false]);
 });
@@ -295,10 +298,16 @@ test('Con el modelo NEUTRO (y la dinámica de motor histórica fijada en memoria
  // Esta prueba aísla el SENSOR: los hashes históricos incluyen la traza completa, que depende también de la rampa de rueda.
  // MOTOR-DYNAMICS-1 cambió la rampa a propósito (frenado simétrico); aquí se restaura EN MEMORIA la rampa anterior para que
  // solo un cambio del modelo de sensor pueda romper la equivalencia histórica. Los hashes NO se regeneran.
+ // PHYSICAL-GEOMETRY-2 cambió a propósito la geometría funcional (base 12→10, front 6→8, spread 2,8→1,9, origen del sonar 9,83→4,0);
+ // aquí se restaura EN MEMORIA la geometría histórica por la misma razón: el hash debe romperse por cambios del MODELO DE SENSOR
+ // (superficie/luz/ganancia/offset/microvariación/cobertura), no porque la geometría física se haya corregido deliberadamente.
  patches.push({file:'simulator.js',from:'const approach=(value,target)=>value+clamp(target-value,-240*dt,240*dt);',to:'const approach=(value,target)=>target===0?0:value+clamp(target-value,-240*dt,240*dt);'});
+ patches.push({file:'simulator.js',from:'vR=wheel.right/100*max,base=10;',to:'vR=wheel.right/100*max,base=12;'});
+ patches.push({file:'calibration.js',from:'Object.freeze({front:8,spread:1.9})',to:'Object.freeze({front:6,spread:2.8})'});
+ patches.push({file:'simulator.js',from:'MECH.worldPoint(R,4.0,0)',to:'MECH.worldPoint(R,9.83,0)'});
  const sha=o=>crypto.createHash('sha256').update(JSON.stringify(o)).digest('hex').slice(0,16);
  assert.deepEqual(Object.keys(legacy.hashes).sort(),Object.keys(S).sort(),'mismos escenarios');
- for(const name of Object.keys(S))assert.equal(sha(S[name]({patches})),legacy.hashes[name],'traza neutra '+name+' == golden anterior');
+ for(const name of Object.keys(S))assert.equal(sha(S[name]({patches,sonarForward:9.83})),legacy.hashes[name],'traza neutra '+name+' == golden anterior');
 });
 
 console.log(`\n${checks} comprobaciones SIM-CALIBRATION-1 (lógica) correctas.`);

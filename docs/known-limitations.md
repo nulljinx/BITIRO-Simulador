@@ -23,7 +23,7 @@ Impacto principal: S07 no puede reproducirse completa y S08 necesita una estrate
 
 Modelo actual:
 
-- origen: 9,83 cm delante del centro;
+- origen: 4,0 cm delante de R, cara frontal de los transductores (PHYSICALLY_MEASURED; antes 9,83 cm, supuesto);
 - tres rayos: −6°, 0°, +6°;
 - máximo/sin objeto: 200;
 - sin ruido ni ángulo de incidencia;
@@ -33,17 +33,19 @@ El Lab histórico usa un modelo distinto (más rayos y cono mayor). No debe alin
 
 ## Garra vs sonar
 
-Con garra centrada, la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 9,83 cm. En determinadas aproximaciones una caja puede entrar en contacto con la barra cuando el sonar está cerca de 12 cm.
+Con garra centrada, la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 4,0 cm (antes 9,83). En determinadas aproximaciones una caja puede entrar en contacto con la barra antes de que el sonar marque una distancia pequeña.
+
+Equivalencia de origen (verificada con el raycast real, `tests/physical-geometry.cjs`): para la misma cara de obstáculo, `lectura_nueva = lectura_antigua + 5,83 cm` (origen 4,0 frente a 9,83 cm desde R; el sonar nuevo está más atrás, así que lee MÁS distancia). Con garra centrada, la barra toca la caja a lectura ≈ 12,5 cm con el origen antiguo y ≈ 18,3 cm con el nuevo (misma posición física del robot). Por tanto, un umbral de lectura escrito como «12 cm» ya no correspondería a esa posición física. El material de `sesiones-s01-s08.md` se adaptó (PHYSICAL-GEOMETRY-2B) a 18 / 14 cm (antes 12 / 8) como equivalencia geométrica, no como valor calibrado del sonar. Los starters no se modificaron.
 
 Este acoplamiento afecta S03/S06 y requiere validación física antes de cambiar geometría o umbrales.
 
 ## Wheelbase
 
-- física actual: 12 cm;
+- física actual: 10,0 cm (PHYSICALLY_MEASURED por el usuario; antes 12 cm, supuesto);
 - renderer: centros de rueda separados ~18,2 unidades de mundo;
 - observación física aproximada previa: ~9,0–9,3 cm centro-centro, no medida perpendicular definitiva.
 
-El valor real está pendiente. Cambiarlo modifica directamente la tasa de giro y rompe goldens.
+La observación fotográfica previa (~9,0–9,3 cm) queda superada por la medida física de 10,0 cm. El renderer legacy sigue en 18,2 (desajuste visual). Cambiar `base` modifica directamente la tasa de giro y los goldens.
 
 ## Diferencias standalone / Lab
 

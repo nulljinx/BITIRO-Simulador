@@ -93,7 +93,8 @@ function nearbyObstacle(reach=200){
 }
 // Sonar didáctico: haz central y dos rayos ±6°, desde la cara del transductor.
 window.readSonarDistance=function(){
- const origin=MECH.worldPoint(R,9.83,0);let nearest=200;
+ // Origen = cara frontal de los transductores: 4,0 cm delante de R (PHYSICALLY_MEASURED, eje de ruedas → cara; PHYSICAL-GEOMETRY-2).
+ const origin=MECH.worldPoint(R,4.0,0);let nearest=200;
  for(const offset of [-Math.PI/30,0,Math.PI/30]){
   const direction={x:Math.sin(R.th+offset),y:-Math.cos(R.th+offset)};
   for(const ob of activeObstacles){
@@ -260,7 +261,7 @@ function update(dt){
  // No es una orden de motor; detenerse() NO pasa por aquí (mode sigue en 'code') y frena con la rampa normal.
  if(mode==='idle'){wheel.left=wheel.right=0;}
  else{wheel.left=approach(wheel.left,R.L);wheel.right=approach(wheel.right,R.R);}
- const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=12;
+ const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=10;   // base = separación centro-centro de ruedas, 10,0 cm (PHYSICALLY_MEASURED, PHYSICAL-GEOMETRY-2)
  const before={x:R.x,y:R.y};
  const v=(vL+vR)/2,omega=(vL-vR)/base;
  // Subpasos de traslación/rotación: no permitir atravesar por tunnelling en

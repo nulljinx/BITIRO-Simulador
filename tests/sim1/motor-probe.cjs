@@ -45,7 +45,7 @@ if(require.main===module){
  const tr=wheelTrace([50,0],[0,50]),dth=i=>((tr[i].th-tr[0].th)*180/Math.PI).toFixed(2);
  const cross=tr.findIndex(s=>s.L<s.R),endR=tr.findIndex(s=>s.L===0&&s.R===50);
  console.log('(50,0)→(0,50): [L,R] cada 10 ticks:',tr.filter((s,i)=>i%10===0&&i<=50).map(s=>`[${s.L.toFixed(1)},${s.R.toFixed(1)}]`).join(' '));
- console.log(`  ω=(L-R)/100·23/12 rad/s: inicio ${((50-0)/100*23/12).toFixed(3)}, final ${((0-50)/100*23/12).toFixed(3)}; cambio de signo (L<R) en tick ${cross} (${(cross*FIXED_DT).toFixed(4)} s), θ girado hasta ese tick ${dth(cross)}°`);
+ console.log(`  ω=(L-R)/100·23/10 rad/s: inicio ${((50-0)/100*23/10).toFixed(3)}, final ${((0-50)/100*23/10).toFixed(3)}; cambio de signo (L<R) en tick ${cross} (${(cross*FIXED_DT).toFixed(4)} s), θ girado hasta ese tick ${dth(cross)}°`);
  console.log(`  rampa completa en tick ${endR} (${(endR*FIXED_DT).toFixed(4)} s); θ total girado ${dth(endR)}°`);
  console.log('\n# Bang-bang 1 sensor, óvalo, 30 s simulados');
  for(const pol of ['A','B'])for(const x of [84.7,87.3])for(const thr of [390,500])for(const V of [15,25,35,50]){

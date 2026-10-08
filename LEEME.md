@@ -31,7 +31,7 @@ La demostración guiada es una visualización separada del código del estudiant
 - paso fijo: `1/120 s`;
 - velocidad de rueda máxima del modelo: `23 cm/s` al 100 %;
 - aceleración y frenado graduales de ruedas, con la misma pendiente: 240 %/s (SIMULATION ASSUMPTION, sin calibrar contra el IROH físico);
-- wheelbase usado por la física: 12 cm, pendiente de validación frente al hardware real;
+- wheelbase usado por la física: 10,0 cm (medido físicamente por el usuario; ver `docs/physical-geometry.md`). No implica que el robot esté completamente calibrado;
 - `detenerse()` fija inmediatamente las consignas a cero; las ruedas frenan después con la misma rampa de 240 %/s. `finPrograma()`, error, salida de pista y colisión son paradas duras (ruedas a 0 de inmediato).
 
 `avanzar(izquierda, derecha)` permite consignas independientes. Una rueda izquierda más rápida gira hacia la derecha; una derecha más rápida gira hacia la izquierda.
@@ -62,7 +62,7 @@ Modelo base: blanco ≈155, negro ≈865, umbral normalizado 500, con pequeñas 
 
 ## Sonar
 
-`leerDistanciaSonar()` usa un modelo geométrico determinista con tres rayos `-6° / 0° / +6°`, origen 9,83 cm delante del centro del robot y valor máximo/sin objeto 200.
+`leerDistanciaSonar()` usa un modelo geométrico determinista con tres rayos `-6° / 0° / +6°`, origen 4,0 cm delante del centro del eje (cara de los transductores, medido) y valor máximo/sin objeto 200.
 
 No es un modelo acústico completo y no reproduce ruido, incidencia, zona muerta o todos los rangos del hardware real.
 
