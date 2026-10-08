@@ -254,9 +254,12 @@ function update(dt){
   if(wait<=1e-7){const next=it.next();wait+=Math.max(0,Number(next.value)||0);if(wait<0)wait=0;}
  }catch(e){fail(e);mode='idle';}}
  if(halt){mode='idle';running=0;R.L=R.R=0;setState('FINALIZADO');$app('pause').disabled=true;}
- // Accélération limitée; arrêt explicite immédiat pour respecter detenerse().
- const approach=(value,target)=>target===0?0:value+clamp(target-value,-240*dt,240*dt);
- wheel.left=approach(wheel.left,R.L);wheel.right=approach(wheel.right,R.R);
+ // Rampa simétrica: aceleración y frenado (incluido target 0) usan la misma pendiente máxima, 240 %/s (SIMULATION ASSUMPTION, sin calibrar).
+ const approach=(value,target)=>value+clamp(target-value,-240*dt,240*dt);
+ // Estado terminal (mode 'idle': fin de programa, error, fuera de pista, fin/obstáculo de la demo): PARADA DURA explícita.
+ // No es una orden de motor; detenerse() NO pasa por aquí (mode sigue en 'code') y frena con la rampa normal.
+ if(mode==='idle'){wheel.left=wheel.right=0;}
+ else{wheel.left=approach(wheel.left,R.L);wheel.right=approach(wheel.right,R.R);}
  const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=12;
  const before={x:R.x,y:R.y};
  const v=(vL+vR)/2,omega=(vL-vR)/base;

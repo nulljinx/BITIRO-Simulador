@@ -80,9 +80,23 @@ test('Misma simulación a 30, 60 y 144 fps; velocidad 4× sin recorte',()=>{
  }
  assert.ok(Math.max(...positions)-Math.min(...positions)<.07);el('speed').value='1';
 });
-test('Arranque gradual y detenerse sin deriva residual',()=>{
+test('Arranque gradual; detenerse() frena con la misma rampa de 240 %/s y luego no hay deriva residual',()=>{
+ // detenerse() es una orden normal de motor (objetivo 0): la rueda baja por la rampa, no cae a 0 de golpe. 240 %/s = SIMULATION ASSUMPTION.
+ const dt=1/120,STEP=240*dt,EPS=1e-9;
  program('void setup(){inicializarMovimiento();avanzar(100);pausa(200);detenerse();pausa(1000);}void loop(){}');
- tick(1/120);assert.ok(js('wheel.left')>0&&js('wheel.left')<100);tick(.25);const y=js('R.y');tick(.4);assert.equal(js('R.y'),y);
+ tick(dt);assert.ok(js('wheel.left')>0&&js('wheel.left')<100);          // arranque gradual
+ let prev=js('wheel.left'),w0=null;
+ for(let i=0;i<120&&w0===null;i++){js('update(1/120)');const w=js('wheel.left');
+  if(js('R.L')===0){w0=prev;prev=w;break;}                           // este update ejecutó detenerse()
+  prev=w;}
+ assert.ok(w0>0,'antes de detenerse() la rueda gira (wheel='+w0+')');
+ assert.ok(prev>0,'inmediatamente después de detenerse() la rueda NO salta a 0 (wheel='+prev+')');
+ assert.ok(Math.abs(w0-prev)<=STEP+EPS);
+ const need=Math.ceil(prev/STEP-1e-9);                                    // ticks restantes derivados: wheel / (240·dt)
+ let last=prev;
+ for(let k=1;k<=need;k++){js('update(1/120)');const w=js('wheel.left');assert.ok(last-w<=STEP+EPS&&last-w>=-EPS,'tick '+k+': |Δwheel| ≤ 240·dt');last=w;if(k<need)assert.ok(w>0);}
+ assert.equal(js('wheel.left'),0);assert.equal(js('wheel.right'),0);     // llega exactamente a 0 (en exactamente ceil(wheel/(240·dt)) ticks)
+ tick(dt);const y=js('R.y');tick(.4);assert.equal(js('R.y'),y);          // sin deriva residual
 });
 test('Sonar mide desde el transductor a caras, con giro y altura',()=>{
  js('resetRobot();R.x=50;R.y=130;R.th=0;activeObstacles=[{x:46,y:94,width:8,height:8,visualHeightCm:15.6}]');

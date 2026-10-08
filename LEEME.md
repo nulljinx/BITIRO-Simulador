@@ -30,9 +30,9 @@ La demostración guiada es una visualización separada del código del estudiant
 
 - paso fijo: `1/120 s`;
 - velocidad de rueda máxima del modelo: `23 cm/s` al 100 %;
-- aceleración gradual de ruedas: 240 %/s;
+- aceleración y frenado graduales de ruedas, con la misma pendiente: 240 %/s (SIMULATION ASSUMPTION, sin calibrar contra el IROH físico);
 - wheelbase usado por la física: 12 cm, pendiente de validación frente al hardware real;
-- `detenerse()` fija inmediatamente las consignas a cero.
+- `detenerse()` fija inmediatamente las consignas a cero; las ruedas frenan después con la misma rampa de 240 %/s. `finPrograma()`, error, salida de pista y colisión son paradas duras (ruedas a 0 de inmediato).
 
 `avanzar(izquierda, derecha)` permite consignas independientes. Una rueda izquierda más rápida gira hacia la derecha; una derecha más rápida gira hacia la izquierda.
 

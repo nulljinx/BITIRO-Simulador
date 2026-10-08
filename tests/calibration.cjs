@@ -289,9 +289,13 @@ test('No hay calibración automática en modo alumno: sin botones AUTO/DETECTAR/
 });
 
 // ───────── Compatibilidad con los goldens SIM-1 ─────────
-test('Con el modelo NEUTRO las trazas SIM-1 coinciden EXACTAMENTE con las de antes de SIM-CALIBRATION-1 (hashes guardados de los goldens anteriores)',()=>{
+test('Con el modelo NEUTRO (y la dinámica de motor histórica fijada en memoria) las trazas SIM-1 coinciden EXACTAMENTE con las de antes de SIM-CALIBRATION-1 (hashes guardados de los goldens anteriores)',()=>{
  const legacy=JSON.parse(read(root,'tests/golden/sensor-model-legacy-hashes.json'));
  const patches=[{file:'calibration.js',from:'read:(k,surface,x,y)=>'+LEGACY,to:'read:(k,surface,x,y)=>compute(k,surface,x,y,NEUTRAL)'}];
+ // Esta prueba aísla el SENSOR: los hashes históricos incluyen la traza completa, que depende también de la rampa de rueda.
+ // MOTOR-DYNAMICS-1 cambió la rampa a propósito (frenado simétrico); aquí se restaura EN MEMORIA la rampa anterior para que
+ // solo un cambio del modelo de sensor pueda romper la equivalencia histórica. Los hashes NO se regeneran.
+ patches.push({file:'simulator.js',from:'const approach=(value,target)=>value+clamp(target-value,-240*dt,240*dt);',to:'const approach=(value,target)=>target===0?0:value+clamp(target-value,-240*dt,240*dt);'});
  const sha=o=>crypto.createHash('sha256').update(JSON.stringify(o)).digest('hex').slice(0,16);
  assert.deepEqual(Object.keys(legacy.hashes).sort(),Object.keys(S).sort(),'mismos escenarios');
  for(const name of Object.keys(S))assert.equal(sha(S[name]({patches})),legacy.hashes[name],'traza neutra '+name+' == golden anterior');

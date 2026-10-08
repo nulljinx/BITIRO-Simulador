@@ -53,7 +53,7 @@ Pose del robot `R = {x, y, th, L, R}`. Vector adelante = `(sin th, −cos th)`; 
 
 - Velocidad de rueda: `v_rueda = (orden/100) × 23` cm/s (23 cm/s al 100 %).
 - `v = (vL + vR)/2`; `ω = (vL − vR) / base`, con **`base = 12` cm** (ver §10).
-- Rampa de aceleración de cada rueda: `approach(valor, objetivo)` = `valor + clamp(objetivo − valor, ±240·dt)` (unidades de orden, 240 %/s). Si el objetivo es exactamente 0, la rueda se detiene de inmediato.
+- Rampa de aceleración de cada rueda: `approach(valor, objetivo)` = `valor + clamp(objetivo − valor, ±240·dt)` (unidades de orden, 240 %/s), **para cualquier objetivo, incluido 0**: aceleración y frenado usan la misma pendiente (MOTOR-DYNAMICS-1). Los 240 %/s son una **SIMULATION ASSUMPTION**: no están calibrados contra el IROH físico (calibración pendiente). **Deceleración normal** (`detenerse()`, `avanzar(0,…)`: objetivo 0, `mode` sigue en `code`) usa esa rampa. **Parada dura** (ruedas a 0 en el mismo update, explícita en `simulator.js`): cualquier update que deja `mode='idle'` (`finPrograma()`/`halt`, error de ejecución, fuera de pista, fin u obstáculo de la demo), colisión con bloqueo y `resetRobot()`.
 - Integración con subpasos: `n = max(1, ceil(|v·dt|/0,30 + |ω·dt|/0,025))`; en cada subpaso se gira y avanza; si el cuerpo o la barra solapan una caja, el robot se detiene (`L=R=0`, ruedas a 0) y no avanza ese subpaso.
 - Salida del área: se detiene con estado `FUERA DE PISTA` si `x < −16`, `x > w+16`, `y < −16` o `y > h+16`.
 - Medición del giro estable: `girarDerecha(20)` produce ω = 2·0,2·23/12 = 0,7667 rad/s (caracterizado en `tests/sim1.cjs`).
