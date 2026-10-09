@@ -200,6 +200,8 @@ Bisel oscuro (`#2D353C`) con pantalla `#CAD3C2`, retícula tenue de caracteres (
 
 ## 10. NAV-1 — navegación cruzada con BITIRO Lab
 
+> **Actualización `SIM-UI-RELEASE-4` (2026-10-08):** la marca del Simulador ya **no enlaza** a BITIRO Lab: es un `<div class="brand">` sin enlace, foco ni cursor de puntero. El punto «Simulador → Lab» de abajo describe el comportamiento anterior. El panel «Más datos» mencionado en este documento también fue retirado.
+
 - **Lab → Simulador:** en la navegación principal del Lab (`primary-nav`), el enlace «Simulador» va inmediatamente a la derecha de «Inicio» y apunta a `https://simulador.nulljinx.com/`. Es un enlace normal (misma pestaña, sin `target`, sin clase propia, sin estilo de CTA ni estado activo) que hereda la tipografía, el espaciado y el foco de «Inicio». No aparece en la ruta de migas de las sesiones ni en la de los grupos.
 - **Simulador → Lab:** la marca completa de la cabecera («BITIRO Simulador / Simulador libre del IROH») enlaza a `https://bitiro-piloto.nulljinx.com/` con `aria-label="BITIRO Simulador: volver a BITIRO Lab"` (el nombre accesible contiene el texto visible). No se añadió ningún botón «Inicio» y la cabecera es idéntica a nivel de píxeles.
 - **CSP:** sin cambios. Un enlace de navegación no está regulado por `connect-src`, `script-src`, `form-action` ni `frame-ancestors`; se comprobó con la CSP real de producción (0 violaciones).

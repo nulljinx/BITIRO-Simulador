@@ -109,7 +109,7 @@ No hay ruido ni aleatoriedad por defecto. Esto permite pruebas exactas, pero sig
 - El modo calibración tiene un costo de render mayor que la vista normal (smoke de 20 s: P1 ≈ 49,7 FPS normal frente a ≈ 40,4 FPS en calibración); la causa no está demostrada.
 - La guarda de colocación manual protege el cuerpo del robot, no la huella de la garra: tras colocarlo, la garra puede quedar solapada con una caja.
 - La calibración v1 (legacy) sigue oculta e inalcanzable desde la interfaz del estudiante; solo es invocable programáticamente (consola del navegador).
-- `leerUmbralLinea()` y el marcador de umbral de «Más datos» en la vista normal son preexistentes y requieren una decisión pedagógica antes del piloto; no se muestran dentro del modo calibración.
+- (Desde `SIM-UI-RELEASE-4` el panel «Más datos» ya no existe en producción; confirmar el destino del marcador de umbral.) `leerUmbralLinea()` y el marcador de umbral de «Más datos» en la vista normal eran preexistentes y requieren una decisión pedagógica antes del piloto; no se muestran dentro del modo calibración.
 - No se ha probado en un dispositivo táctil físico: la verificación de Pointer Events es sintética (CDP).
 
 ## Renderer
