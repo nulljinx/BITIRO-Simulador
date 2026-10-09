@@ -65,6 +65,15 @@
  for(const d of pops)d.addEventListener('keydown',e=>{if(e.key==='Escape'&&d.open){d.open=false;d.querySelector('summary').focus();}});
  for(const id of ['demo','reference','codeToggle'])$(id)?.addEventListener('click',()=>{const m=$('moreMenu');if(m)m.open=false;});
 
+ /* ── Guía del editor (UI-GUIDE-1): <dialog> de solo lectura; no toca la simulación ─────────── */
+ const guideDialog=$('guideDialog'),guideOpen=$('guideOpen'),guideClose=$('guideClose');
+ if(guideDialog&&guideOpen&&typeof guideDialog.showModal==='function'){
+  guideOpen.addEventListener('click',()=>{if(!guideDialog.open)guideDialog.showModal();});
+  guideClose?.addEventListener('click',()=>guideDialog.close());
+  guideDialog.addEventListener('click',e=>{if(e.target===guideDialog)guideDialog.close();});
+  guideDialog.addEventListener('close',()=>guideOpen.focus());
+ }
+
  /* ── Telemetría: siempre abierta en escritorio y apilado ancho; colapsable en móvil ─ */
  const telemetry=$('telemetry'),wide=matchMedia('(min-width:1024px)');
  const syncTelemetry=()=>{if(telemetry&&wide.matches)telemetry.open=true;};
