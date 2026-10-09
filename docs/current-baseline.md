@@ -9,13 +9,29 @@ b5683f0fcb25b06057ddcb87502a6acca3b75ccf
 feat(runtime): support student-defined functions
 ```
 
-**Producción actual** (`https://simulador.nulljinx.com`): `SIM-CALIBRATION-1`, desplegado y verificado el 2026-10-07.
+**Producción actual** (`https://simulador.nulljinx.com`): `SIM-UI-RELEASE-4`, desplegada y verificada el 2026-10-08 (`DEPLOY_OK`). Es una **release selectiva de cuatro archivos sobre el baseline `954c37c`** y está registrada en la rama `release/sim-ui-release-4` (commit `1a555ea`, tag `sim-ui-release-4-deployed`). **Producción no coincide con ningún commit de `main`.** No debe deducirse la versión publicada a partir de HEAD de `main`; la identidad válida son los SHA-256 de abajo.
 
 ```text
-PRODUCTION SHA:
-84051cecce3058c7241d31f639cbe0c5f0c6b6e4
-feat: add manual IROH calibration mode
+BASELINE ANTERIOR (sin la release):
+954c37c  fix: make motor acceleration and braking symmetric
 ```
+
+Historial inmediato: `SIM-CALIBRATION-1` (`84051ce`, 2026-10-07) → baseline `954c37c` (rampa simétrica y parada dura) → `SIM-UI-RELEASE-4` (2026-10-08). Respaldo previo al despliegue: `SIM-UI-DEPLOY-1-20261008-222844` (en el servidor, `/home/nulljinx/deploy-backups/`). Detalle, hashes y respaldo en [`release-sim-ui-release-4.md`](release-sim-ui-release-4.md).
+
+Archivos publicados (únicos que cambiaron) y SHA-256 completos (`SHA256SUMS.candidate` del paquete `release-SIM-UI-RELEASE-4.tar.gz`, SHA-256 `792cdb0c7bc3caca3c2b4114e23746ed4bf79a3f19905004b86645b1015fedfe`):
+
+```text
+50e44de13ed85f12fc0f0ac3c149962a2f5cf1c101802a5693e348f287431cf0  index.html
+394123c49387f251eb0b5da242be572978fcc05adcb89ed6e53280e6d39153fd  simulator.js
+023c9cd622b8e212a562c8d75b945cb07404a2d10dd7fd274cfddb4c1394eaf2  styles.css
+4d8d6e0e9d8a2bd323b5d3427fa33bcd70cbc7dc3cabdbf18701e149dd7839ae  ui-shell.js
+```
+
+Cambios de la release: Guía de programación integrada (botón «Guía», 9 tarjetas, diálogo modal); la marca de la cabecera es un elemento visual **sin navegación** (clic, toque ni teclado); se **eliminó el panel «Más datos»**. La física y el frenado de `954c37c` se conservan (rampa simétrica de 240 %/s y parada dura en `idle`); no cambian pistas, sonar, geometría ni goldens. La documentación y los tests no se publican.
+
+**Relación con `main`:** `main` es el desarrollo más avanzado y **no está publicado íntegramente**. Contiene, además de lo publicado, la geometría IROH medida y el modelo 3D (renderer3d, iroh-visual, goldens regenerados), el nuevo origen del sonar y la base de 10 cm entre ruedas, que **no** están en producción. La Guía y el retiro de «Más datos» llegaron a `main` por su propio camino (`UI-GUIDE-1`); de la release publicada solo faltaba la marca sin navegación, incorporada en la integración selectiva `SIM-UI-RELEASE-4 → main`. No se fusionó la rama de release: producción sigue siendo la combinación `954c37c` + 4 archivos, identificable solo por los hashes de arriba.
+
+Estado anterior (para referencia histórica): `SIM-CALIBRATION-1`, desplegado el 2026-10-07 y byte a byte igual a `84051cecce3058c7241d31f639cbe0c5f0c6b6e4` (`feat: add manual IROH calibration mode`). Para ese despliegue:
 
 Producción coincide byte a byte con ese commit. La documentación y los tests no se publican. `SIM-CALIBRATION-1` sí modificó el modelo de sensores, la interfaz y siete goldens (ver «Modo calibración y modelo de sensor simulado»); no modificó la física, el timestep ni las pistas.
 
