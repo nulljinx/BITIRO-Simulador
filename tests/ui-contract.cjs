@@ -130,17 +130,17 @@ test('Fuentes locales referenciadas existen y no se cargan recursos externos (el
  for(const m of css.matchAll(/url\(([^)]+)\)/g))assert.ok(fs.existsSync(path.join(root,m[1])),m[1]);
  for(const f of ['tokens.css','styles.css'])assert.ok(!/https?:\/\//.test(fs.readFileSync(path.join(root,f),'utf8')),f+' contiene una URL externa');
  const absolute=[...html.replace(/<!--.*?-->/gs,'').matchAll(/https?:\/\/[^"'\s)<]+/g)].map(m=>m[0]);
- assert.deepEqual(absolute,['https://bitiro-piloto.nulljinx.com/'],'solo la marca puede apuntar fuera');
+ assert.deepEqual(absolute,[],'sin enlaces absolutos: el logo ya no navega a BITIRO Lab');
  for(const m of html.matchAll(/<(?:script|img|link|source|iframe)\b[^>]*\b(?:src|href)="([^"]+)"/g))assert.ok(!/^(?:https?:)?\/\//.test(m[1]),'recurso externo: '+m[1]);
 });
-test('NAV-1: la marca vuelve a BITIRO Lab (misma pestaña, mismo aspecto) y no hay botón «Inicio» adicional',()=>{
+test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la cabecera no contiene enlaces',()=>{
  const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
- const links=[...header.matchAll(/<a\b[^>]*>/g)].map(m=>m[0]);assert.equal(links.length,1,'la cabecera solo tiene la marca');
- assert.match(links[0],/^<a class="brand" href="https:\/\/bitiro-piloto\.nulljinx\.com\/" aria-label="BITIRO Simulador: volver a BITIRO Lab">$/);
- assert.ok(!/target=|rel=/.test(links[0]),'sin target ni rel: se abre en la misma pestaña');
- assert.ok(/aria-label="[^"]*BITIRO Simulador[^"]*"/.test(links[0]),'el nombre accesible contiene el texto visible');
+ assert.ok(!/<a\b/.test(header),'la cabecera no tiene enlaces');
+ assert.ok(!/href=|target=|rel=/.test(header.match(/<div class="brand"[^>]*>/)[0]),'el logo no lleva href/target/rel');
+ assert.match(header,/<div class="brand">/);
  assert.match(header,/<strong>BITIRO <span>Simulador<\/span><\/strong><small>Simulador libre del IROH<\/small>/);   // texto visible sin cambios
  assert.ok(!/>\s*Inicio\s*</.test(header));
- const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);   // mismo estilo: es la misma clase .brand
+ assert.ok(!/bitiro-piloto/.test(html),'sin referencias a BITIRO Lab');
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);
 });
 console.log(`\n${checks} comprobaciones de contrato de interfaz superadas.`);
