@@ -20,7 +20,7 @@ test('Todos los ids que usan los scripts existen en el HTML',()=>{
   for(const m of src.matchAll(/(?:\$app|\$|getElementById)\('([A-Za-z0-9_-]+)'\)/g))used.add(m[1]);
  }
  // Ids construidos dinámicamente en los scripts: 'val'+S, 'bar'+S, 'state'+S (S∈L,C,R), 'ir'+k, 'white'+k, 'black'+k (k∈0..2)
- for(const s of ['L','C','R'])for(const p of ['val','bar','state'])used.add(p+s);
+ for(const s of ['L','C','R'])for(const p of ['val'])used.add(p+s);   // «Más datos» retirado: ya no hay bar*/state*
  for(const k of [0,1])used.add('ir'+k);
  for(const k of [0,1,2]){used.add('white'+k);used.add('black'+k);}
  const missing=[...used].filter(id=>!ids.includes(id));
@@ -29,7 +29,7 @@ test('Todos los ids que usan los scripts existen en el HTML',()=>{
 });
 test('Clases que consultan los scripts existen (.cam con data-view, .threshold-marker)',()=>{
  for(const v of ['perspective','top','follow','robot'])assert.match(html,new RegExp(`class="cam[^"]*" data-view="${v}"`));
- assert.ok((html.match(/class="threshold-marker"/g)||[]).length>=3);
+ assert.equal((html.match(/class="threshold-marker"/g)||[]).length,0,'los marcadores vivían solo en «Más datos»; simulator.js los consulta con querySelectorAll (no-op sin elementos)');
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
@@ -53,11 +53,12 @@ test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetr�
  const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
  for(const id of ['codeToggle','speed','quality','showTrail','demo','clawLeft','clawCenter','clawRight','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
  for(const id of ['ir0','ir1','pulsador'])assert.ok(!menu[1].includes(`id="${id}"`),id+' ya NO va en «Más»: es una entrada siempre visible');
- const strip=html.match(/<div class="telemetry-strip".*?<details class="more-data pop"/s);assert.ok(strip,'franja de telemetría');
+ const strip=html.match(/<div class="telemetry-strip".*?<\/details>/s);assert.ok(strip,'franja de telemetría');
  for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');
  for(const id of ['barL','barC','barR','stateL','stateC','stateR'])assert.ok(!strip[0].includes(`id="${id}"`),id+' no debe estar en la vista principal');
- const more=html.match(/<details class="more-data pop".*?<\/details>/s);assert.ok(more);
- for(const id of ['stateL','stateC','stateR','position','movedObjects'])assert.match(more[0],new RegExp(`id="${id}"`),id);
+ assert.ok(!/more-data/.test(html),'«Más datos» retirado del HTML');
+ for(const id of ['position','movedObjects','decision','runEvidence'])assert.ok(!ids.includes(id),id+' pertenecía a «Más datos» y ya no existe');
+ for(const f of ['simulator.js','ui-shell.js','calibration-mode.js','scenario-editor.js'])assert.ok(!/\$app\('(?:position|movedObjects|decision|runEvidence)'\)/.test(fs.readFileSync(path.join(root,f),'utf8')),f+' no debe referenciar elementos retirados');
  assert.ok(!/1000 \/ 1000/.test(html),'no debe haber texto «1000 / 1000» estático');
 });
 test('PILOT-2: el editor documenta la salida con teclado y el canvas no depende de una columna lateral',()=>{
@@ -109,24 +110,34 @@ test('PILOT-5: S01–S08 sin selector de soluciones; «Restaurar código inicial
  assert.match(html,/<button type="button" id="restoreStarter" class="restore-button">Restaurar código inicial<\/button>/);
  const dlg=html.match(/<dialog id="restoreDialog"[^>]*>(.*?)<\/dialog>/s);assert.ok(dlg);assert.match(dlg[1],/id="restoreConfirm"/);assert.match(dlg[1],/id="restoreCancel"/);assert.ok(!/<form/.test(dlg[1]),'sin <form> (CSP form-action none)');
  assert.ok(fs.existsSync(path.join(root,'starters.js')));
- const help=html.match(/<details><summary>Funciones y límites.*?<\/details>/s)[0];assert.match(help,/leerBoton\(\)/);assert.match(help,/leerSensorObstaculoIzquierdo\(\)/);
+ const help=html.match(/<dialog id="guideDialog".*?<\/dialog>/s)[0];   // la ayuda «Funciones y límites» pasó a la Guía (SIM-UI-RELEASE)
+ assert.match(help,/leerBoton\(\)/);assert.match(help,/leerSensorObstaculoIzquierdo\(\)/);
 });
 test('Fuentes locales referenciadas existen y no se cargan recursos externos (el único enlace absoluto es la marca hacia el Lab)',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
  for(const m of css.matchAll(/url\(([^)]+)\)/g))assert.ok(fs.existsSync(path.join(root,m[1])),m[1]);
  for(const f of ['tokens.css','styles.css'])assert.ok(!/https?:\/\//.test(fs.readFileSync(path.join(root,f),'utf8')),f+' contiene una URL externa');
  const absolute=[...html.replace(/<!--.*?-->/gs,'').matchAll(/https?:\/\/[^"'\s)<]+/g)].map(m=>m[0]);
- assert.deepEqual(absolute,['https://bitiro-piloto.nulljinx.com/'],'solo la marca puede apuntar fuera');
+ assert.deepEqual(absolute,[],'sin enlaces absolutos: el logo ya no navega a BITIRO Lab');
  for(const m of html.matchAll(/<(?:script|img|link|source|iframe)\b[^>]*\b(?:src|href)="([^"]+)"/g))assert.ok(!/^(?:https?:)?\/\//.test(m[1]),'recurso externo: '+m[1]);
 });
-test('NAV-1: la marca vuelve a BITIRO Lab (misma pestaña, mismo aspecto) y no hay botón «Inicio» adicional',()=>{
+test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la cabecera no contiene enlaces',()=>{
  const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
- const links=[...header.matchAll(/<a\b[^>]*>/g)].map(m=>m[0]);assert.equal(links.length,1,'la cabecera solo tiene la marca');
- assert.match(links[0],/^<a class="brand" href="https:\/\/bitiro-piloto\.nulljinx\.com\/" aria-label="BITIRO Simulador: volver a BITIRO Lab">$/);
- assert.ok(!/target=|rel=/.test(links[0]),'sin target ni rel: se abre en la misma pestaña');
- assert.ok(/aria-label="[^"]*BITIRO Simulador[^"]*"/.test(links[0]),'el nombre accesible contiene el texto visible');
+ assert.ok(!/<a\b/.test(header),'la cabecera no tiene enlaces');
+ assert.ok(!/href=|target=|rel=/.test(header.match(/<div class="brand"[^>]*>/)[0]),'el logo no lleva href/target/rel');
+ assert.match(header,/<div class="brand">/);
  assert.match(header,/<strong>BITIRO <span>Simulador<\/span><\/strong><small>Simulador libre del IROH<\/small>/);   // texto visible sin cambios
  assert.ok(!/>\s*Inicio\s*</.test(header));
- const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);   // mismo estilo: es la misma clase .brand
+ assert.ok(!/bitiro-piloto/.test(html),'sin referencias a BITIRO Lab');
+ const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);
+});
+test('Guía: botón y diálogo integrados (ids, aria, cierre) y cableados en ui-shell.js',()=>{
+ assert.match(html,/<button[^>]*id="guideOpen"[^>]*aria-haspopup="dialog"[^>]*aria-controls="guideDialog"/);
+ assert.match(html,/<dialog id="guideDialog"[^>]*aria-labelledby="guideTitle"[^>]*aria-describedby="guideSub"/);
+ for(const id of ['guideTitle','guideSub','guideClose'])assert.ok(ids.includes(id),id);
+ assert.equal(ids.filter(i=>i==='guideDialog').length,1);
+ const shell=fs.readFileSync(path.join(root,'ui-shell.js'),'utf8');
+ for(const w of ["guideOpen.addEventListener('click'","guideClose?.addEventListener('click'","e.target===guideDialog"])assert.ok(shell.includes(w),w);
+ assert.ok(!/<script[^>]*src="https?:/.test(html));
 });
 console.log(`\n${checks} comprobaciones de contrato de interfaz superadas.`);

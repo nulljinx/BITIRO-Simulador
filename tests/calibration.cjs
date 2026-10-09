@@ -272,11 +272,12 @@ test('Sin lecturas fuera de la LCD: en calibración el LED de detección del 3D 
  h.js('BITIRO_MANUAL.calibration=true');h.js('draw()');assert.deepEqual(plain(last.lineActive),[false,false,false],'sin detección visible en calibración');
  h.js('BITIRO_MANUAL.calibration=false');h.js('draw()');assert.deepEqual(plain(last.lineActive),[false,true,false]);
  const css=read(root,'styles.css');
- for(const sel of ['.telemetry-strip>.tcell:not(.lcd-cell)','.telemetry-strip>.more-data','.simulator-toolbar','.code-panel','.inputs-strip'])
+ for(const sel of ['.telemetry-strip>.tcell:not(.lcd-cell)','.simulator-toolbar','.code-panel','.inputs-strip'])
   assert.ok(css.includes('.workspace.calibration-mode '+sel),'CSS oculta '+sel+' en calibración');
  const html=read(root,'index.html');assert.ok(html.indexOf('id="lcd"')<html.indexOf('</details>',html.indexOf('lcd-cell')),'la LCD vive en la franja de telemetría');
  // los valores de sensores (valL/valC/valR) están dentro de .tcell no-LCD → ocultos
- const strip=html.match(/<div class="telemetry-strip".*?<details class="more-data pop"/s)[0];
+ const strip=html.match(/<div class="telemetry-strip".*?<\/details>/s)[0];
+ assert.ok(!/more-data/.test(html),'la interfaz no depende del panel «Más datos»');
  const tcells=strip.split('<div class="tcell').slice(1);const withVal=tcells.filter(c=>/id="val[LCR]"/.test(c));
  assert.equal(withVal.length,1);assert.ok(!withVal[0].startsWith(' lcd-cell'));
 });
