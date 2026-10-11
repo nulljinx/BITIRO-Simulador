@@ -85,9 +85,9 @@ for (const [label, w, h, touch] of [['escritorio 1440', 1440, 900, false], ['mó
     const click = async (x, y) => { for (const type of ['mousePressed', 'mouseReleased']) await page.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mousePressed' ? 1 : 0, clickCount: 1 }); await sleep(250); };
     await click(g.cx, g.cy);
     const st = await page.evaluate(`(()=>{const d=document.getElementById('guideDialog'),r=d.getBoundingClientRect(),b=d.querySelector('.guide-body');
-      return {open:d.open,modal:d.matches(':modal'),x:r.x,y:r.y,w:r.width,h:r.height,cards:d.querySelectorAll('.guide-card').length,bodyH:b.clientHeight,hOverflow:b.scrollWidth>b.clientWidth+1,
-        pageOverflow:document.documentElement.scrollWidth>innerWidth,vw:innerWidth,vh:innerHeight,cardOut:[...d.querySelectorAll('.guide-card')].some(c=>c.scrollWidth>c.clientWidth+1)}})()`);
-    assert.ok(st.open && st.modal && st.cards === 9, `modal abierto con 9 tarjetas (${st.cards})`);
+      return {open:d.open,modal:d.matches(':modal'),x:r.x,y:r.y,w:r.width,h:r.height,cards:d.querySelectorAll('.guide-topic').length,bodyH:b.clientHeight,hOverflow:b.scrollWidth>b.clientWidth+1,
+        pageOverflow:document.documentElement.scrollWidth>innerWidth,vw:innerWidth,vh:innerHeight,cardOut:[...d.querySelectorAll('.guide-topic, .guide-item')].some(c=>c.scrollWidth>c.clientWidth+1)}})()`);
+    assert.ok(st.open && st.modal && st.cards === 8, `modal abierto con 8 temas (${st.cards})`);
     assert.ok(st.x >= 0 && st.y >= 0 && st.x + st.w <= st.vw + 1 && st.y + st.h <= st.vh + 1, 'diálogo dentro del viewport');
     assert.ok(!st.hOverflow && !st.cardOut && !st.pageOverflow, 'sin desbordamiento horizontal');
     await shot(page, `${w}-guia.png`);

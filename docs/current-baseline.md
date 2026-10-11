@@ -142,6 +142,20 @@ Las 21 builtins `void` no pueden usarse como valores; las 12 funciones de lectur
 
 Nota de rendimiento: el modo calibración es mediblemente más pesado que el renderizado normal. En un smoke de 20 s con dos repeticiones, P1 normal ≈ 49,7 FPS y P1 en calibración ≈ 40,4 FPS. No se ha demostrado la causa. Synthetic CPU throttling is not a substitute for validation on actual school hardware.
 
+## Cambios locales pendientes (no desplegados)
+
+Hay cambios **solo en el árbol de trabajo**, sin commit y **sin desplegar**: producción sigue en `SIM-UI-RELEASE-4`. Esperan auditoría visual y funcional.
+
+| Tarea | Alcance | Archivos |
+|---|---|---|
+| `SIM-MENU-CLEANUP-1` / `1B` | El menú «Más» queda con cinco opciones (Ocultar editor, Velocidad, Calidad 3D, Rastro del recorrido, Editar escenario). Se retiran de la interfaz «Demostración guiada», «Garra manual», «Ver plotter original» y «Local · Sin conexión». La lógica de demo, garra y plotter se conserva en `simulator.js` (enlaces opcionales). Mensaje de obstáculo en demo sin referencia al menú. | `index.html`, `styles.css`, `simulator.js`, `tests/ui-contract.cjs`, `docs/user-guide.md` |
+| `SIM-GUIDE-NNJ-1` | Guía de programación IROH rediseñada: ocho temas desplegables, buscador, ejemplos con «Prueba», seis programas completos copiables. Contenido verificado contra el intérprete real. | `index.html`, `styles.css`, `ui-shell.js`, `tests/ui-contract.cjs`, `tests/brand-logo-ui.mjs`, `docs/user-guide.md`, `tests/guide-content.cjs`, `tests/guide-ui.mjs` |
+| `SIM-GUIDE-NNJ-2` | Código legible a 390 px (líneas ≤ 39 caracteres, comentarios ≤ 34); buscador con relevancia (nombre → firma → palabras clave → texto, con resultados relacionados plegados y desplazamiento al inicio); «Primeros pasos» empieza por un programa completo y enseña después `setup()`, `loop()`, inicializar y `;` `{ }`. | `index.html`, `styles.css`, `ui-shell.js`, `tests/guide-content.cjs`, `tests/guide-ui.mjs`, `docs/current-baseline.md` |
+
+No cambian: runtime (`iroh-runtime.js`), física, sensores, escenarios, calibración, pistas ni goldens. La Guía no define comportamiento: lo describe, y `tests/guide-content.cjs` lo comprueba.
+
+Discrepancias conocidas del intérprete, documentadas y **sin alterar**: `avanzar(-30)` retrocede sin aviso; los mensajes de error de `switch` («Falta «;»») y de referencias `int &a` («Para «y» usa «&&»») no describen la causa; los sensores IR y el Pulsador son entradas manuales de la franja «Entradas».
+
 ## Tests
 
 En el ciclo de `SIM-CALIBRATION-1` se verificaron 15 suites: 14 de Node (las 13 anteriores más `tests/calibration.cjs`) y 1 de navegador real (`tests/calibration-ui.mjs`, Chrome por CDP; se omite si no hay Chrome). Las 13 suites anteriores se mantienen verdes:
@@ -168,6 +182,15 @@ Suites añadidas por `SIM-CALIBRATION-1`:
 calibration 26      (Node: modelo de sensor, light field, pose manual, runtime, LCD)
 calibration-ui 13   (navegador real: entrar/salir, arrastre, rotación, teclado, táctil sintético, 1366/1024/390 px)
 ```
+
+Suites añadidas por los cambios locales pendientes (ver arriba; no desplegados):
+
+```text
+guide-content 21   (Node: la Guía contra el intérprete real: llamadas, ejemplos cortos, seis programas, rangos y lo no disponible, orden de «Primeros pasos», metadatos de búsqueda, legibilidad en móvil)
+guide-ui 21        (navegador real: temas, búsqueda con relevancia, Copiar, teclado, cierre, desplazamiento, sin desbordes a 1440 y 390 px)
+```
+
+`tests/ui-contract.cjs` (15) y `tests/brand-logo-ui.mjs` (9) se ajustaron a los ocho temas y al menú «Más» de cinco opciones.
 
 Los goldens no cambiaron durante `RUNTIME-FUNCTIONS-1`. `SIM-CALIBRATION-1` regeneró siete goldens solo por el modelo de sensor simulado (cuatro cambian únicamente el campo `sensors`; dos seguidores de línea desplazan su trayectoria como máximo 0,2 cm y 0,02 rad; `runtime` cambia una lectura). Con el modelo neutro, siete trazas SIM-1 reproducen exactamente las anteriores.
 

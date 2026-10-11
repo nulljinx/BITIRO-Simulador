@@ -18,6 +18,8 @@ El botón «Más» de la barra de la escena abre un panel con cinco opciones, en
 
 ## 2. Escribir código
 
+El botón **Guía** de la barra del editor abre la Guía de programación IROH, organizada en ocho temas desplegables (de «Primeros pasos» a «Para seguir aprendiendo»), con un buscador de instrucciones y programas completos que se pueden copiar.
+
 El editor acepta un subconjunto de Arduino/C++.
 
 Ejemplo de seguidor sencillo:

@@ -121,7 +121,13 @@ test('PILOT-5: S01–S08 sin selector de soluciones; «Restaurar código inicial
  assert.match(bar,/<button type="button" id="guideOpen"[^>]*aria-haspopup="dialog"[^>]*>Guía<\/button>/);assert.ok(bar.indexOf('id="guideOpen"')<bar.indexOf('id="codeClose"'),'Guía antes de cerrar');
  const gd=html.match(/<dialog id="guideDialog"[^>]*>(.*?)<\/dialog>/s);assert.ok(gd,'dialog Guía');
  assert.match(gd[1],/Guía de programación IROH/);assert.match(gd[1],/id="guideClose"/);assert.ok(!/<form/.test(gd[1]));
- for(const t of ['MOVIMIENTO','SENSORES DE LÍNEA','SONAR','ENTRADAS','LCD','SERVO','LENGUAJE','LIMITACIONES'])assert.ok(gd[1].toUpperCase().includes(t),t);
+ // SIM-GUIDE-NNJ-1: ocho temas de aprendizaje, desplegables y en este orden; buscador y avisos accesibles.
+ const topics=[...gd[1].matchAll(/<details class="guide-topic" id="([^"]+)"[^>]*>\s*<summary>.*?<strong>(.*?)<\/strong>/gs)].map(m=>m[2]);
+ assert.deepEqual(topics,['Primeros pasos','¡Vamos a movernos!','Siguiendo la línea','Detectando obstáculos','La pantalla de IROH','Moviendo sus mecanismos','Aprende a programar','Para seguir aprendiendo']);
+ assert.equal((gd[1].match(/<details class="guide-topic"[^>]*\sopen/g)||[]).length,1,'solo el primer tema empieza abierto');
+ assert.match(gd[1],/<input type="search" id="guideSearch"/);assert.match(gd[1],/<label class="sr-only" for="guideSearch">/);
+ assert.match(gd[1],/id="guideSearchStatus"[^>]*role="status"/);assert.ok(!/guide-card/.test(gd[1]));
+ for(const b of gd[1].matchAll(/<button type="button" class="guide-copy"[^>]*>/g))assert.match(b[0],/aria-label="Copiar el programa «[^»]+»"/);
  // cada función de la guía existe en el runtime (fuente de verdad) y cada función del runtime está en la guía
  const rt=fs.readFileSync(path.join(root,'iroh-runtime.js'),'utf8');const FN=rt.slice(rt.indexOf('const FN={'),rt.indexOf('function find(n,ln)'));
  const real=[...FN.matchAll(/(?:^|[\s,{])([a-zA-Z]+):\[\[/g)].map(m=>m[1]);assert.ok(real.length>=33,'funciones del runtime: '+real.length);

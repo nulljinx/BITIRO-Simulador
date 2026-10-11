@@ -72,6 +72,85 @@
   guideClose?.addEventListener('click',()=>guideDialog.close());
   guideDialog.addEventListener('click',e=>{if(e.target===guideDialog)guideDialog.close();});
   guideDialog.addEventListener('close',()=>guideOpen.focus());
+
+  /* Buscador de instrucciones (SIM-GUIDE-NNJ-2): sin tildes ni mayúsculas, con relevancia. Cada palabra puntúa según dónde aparece:
+     4 nombre de la tarjeta o del comando · 3 firma · 2 palabras clave · 1 texto explicativo y ejemplos. Coincidencias de 2 a 4 = principales;
+     las de 1 = relacionadas (se muestran después y plegadas). Los resultados son copias de las tarjetas, en orden visual = orden de tabulación. */
+  const gSearch=$('guideSearch'),gStatus=$('guideSearchStatus'),gEmpty=$('guideEmpty'),gResults=$('guideResults');
+  if(gSearch&&gResults){
+   const norm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+   const gBody=guideDialog.querySelector('.guide-body');
+   const topics=[...guideDialog.querySelectorAll('.guide-topic')];
+   const items=[...guideDialog.querySelectorAll('.guide-item')].map((el,order)=>{
+    const h=el.querySelector('h4'),d=el.dataset||{};
+    return {el,order,topic:el.closest('.guide-topic'),name:norm((h?h.textContent:'')+' '+(d.cmd||'')),cmds:norm(d.cmd).split(/\s+/).filter(Boolean),
+     sig:norm(d.sig),keys:norm(d.keywords),body:norm(el.textContent)};
+   });
+   const SECONDARY_SHOWN=3;
+   let openBefore=null;
+   const score=(it,words)=>{
+    let min=9;
+    for(const w of words){const t=it.name.includes(w)?4:it.sig.includes(w)?3:it.keys.includes(w)?2:it.body.includes(w)?1:0;if(!t)return 0;min=Math.min(min,t);}
+    return min+(words.length===1&&it.cmds.includes(words[0])?.5:0);
+   };
+   const card=it=>{
+    const c=it.el.cloneNode(true),num=it.topic&&it.topic.querySelector('.guide-num'),title=it.topic&&it.topic.querySelector('summary strong');
+    if(num&&title){const l=document.createElement('p');l.className='guide-result-topic';l.textContent='Tema '+num.textContent+' · '+title.textContent;c.insertBefore(l,c.firstChild);}
+    return c;
+   };
+   const section=(title,list)=>{
+    const sec=document.createElement('section'),h=document.createElement('h3'),grid=document.createElement('div');
+    h.className='guide-results-title';h.textContent=title;grid.className='guide-results-list';
+    sec.appendChild(h);sec.appendChild(grid);list.forEach(it=>grid.appendChild(card(it)));
+    return {sec,grid};
+   };
+   const plural=(n,one,many)=>n+' '+(n===1?one:many);
+   gSearch.addEventListener('input',()=>{
+    const words=norm(gSearch.value).split(/\s+/).filter(Boolean);
+    if(gBody)gBody.scrollTop=0;
+    if(!words.length){
+     gResults.textContent='';gResults.hidden=true;
+     topics.forEach((t,k)=>{t.hidden=false;if(openBefore)t.open=openBefore[k];});openBefore=null;
+     if(gEmpty)gEmpty.hidden=true;if(gStatus)gStatus.textContent='';return;
+    }
+    if(!openBefore)openBefore=topics.map(t=>t.open);
+    const hits=items.map(it=>({it,s:score(it,words)})).filter(x=>x.s>0).sort((x,y)=>y.s-x.s||x.it.order-y.it.order);
+    const main=hits.filter(x=>x.s>=2).map(x=>x.it),rel=hits.filter(x=>x.s<2).map(x=>x.it);
+    topics.forEach(t=>{t.hidden=true;});
+    gResults.textContent='';gResults.hidden=hits.length===0;
+    if(gEmpty)gEmpty.hidden=hits.length>0;
+    if(main.length)gResults.appendChild(section('Resultados principales',main).sec);
+    if(rel.length){
+     const {sec,grid}=section(main.length?'También se menciona en':'Tarjetas que mencionan tu búsqueda',rel);
+     const extra=[...grid.children].slice(SECONDARY_SHOWN);
+     if(extra.length){
+      extra.forEach(c=>{c.hidden=true;});
+      const btn=document.createElement('button');btn.type='button';btn.className='guide-more';btn.setAttribute('aria-expanded','false');btn.textContent='Ver '+extra.length+' más';
+      btn.addEventListener('click',()=>{const open=btn.getAttribute('aria-expanded')!=='true';extra.forEach(c=>{c.hidden=!open;});btn.setAttribute('aria-expanded',String(open));btn.textContent=open?'Ver menos':'Ver '+extra.length+' más';});
+      sec.appendChild(btn);
+     }
+     gResults.appendChild(sec);
+    }
+    if(gStatus)gStatus.textContent=hits.length?(main.length?plural(main.length,'resultado principal','resultados principales'):'Sin coincidencias directas')+(rel.length?(main.length?' y ':'; ')+plural(rel.length,'relacionado','relacionados'):''):'Sin resultados';
+   });
+  }
+
+  /* Copiar ejemplos: Clipboard API cuando existe y, si no, selección + execCommand; siempre informa el resultado. */
+  const gCopyStatus=$('guideCopyStatus');
+  guideDialog.addEventListener('click',async e=>{
+   const b=e.target&&e.target.closest?e.target.closest('.guide-copy'):null;if(!b)return;
+   const pre=guideDialog.querySelector('[data-program="'+b.dataset.copy+'"]');if(!pre)return;
+   const text=pre.textContent;let ok=false;
+   try{if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);ok=true;}}catch{}
+   if(!ok){
+    try{const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+     guideDialog.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove();b.focus();}catch{ok=false;}
+   }
+   const label=b.dataset.label||(b.dataset.label=b.textContent);
+   b.textContent=ok?'¡Copiado!':'No se pudo copiar';
+   if(gCopyStatus)gCopyStatus.textContent=ok?'Programa copiado al portapapeles.':'No se pudo copiar. Selecciona el código y usa Ctrl+C.';
+   setTimeout(()=>{b.textContent=label;},1800);
+  });
  }
 
  /* ── Telemetría: siempre abierta en escritorio y apilado ancho; colapsable en móvil ─ */
