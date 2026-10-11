@@ -226,6 +226,25 @@ detenerse();</code></pre>
               <pre class="guide-sig"><code>finPrograma();</code></pre>
               <p>Detiene a IROH y termina el programa: ya no se repite <code>loop()</code>.</p>
             </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo secuencia pasos orden tiempo">
+              <div class="guide-program-head"><h4>Avanza, gira y detente</h4><button type="button" class="guide-copy" data-copy="avanzagira" aria-label="Copiar el programa «Avanza, gira y detente»">Copiar</button></div>
+              <pre class="guide-program" data-program="avanzagira" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+}
+
+void loop() {
+  avanzar(40);
+  pausa(1000);
+  detenerse();
+  pausa(300);
+  girarDerecha(40);
+  pausa(700);
+  detenerse();
+  finPrograma();
+}</code></pre>
+              <p>IROH avanza un poco, se detiene, gira hacia la derecha y termina. Cada paso dura el tiempo que escribes en <code>pausa()</code>.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia <code>700</code> por otro número y mira cómo cambia el giro.</p>
+            </article>
           </div>
         </details>
 
@@ -482,33 +501,6 @@ detenerse();</code></pre>
   return 40;
 }</code></pre>
               <p><code>return</code> entrega un valor a quien llamó a la función. Úsala así: <code>avanzar(velocidadSegura(leerDistanciaSonar()));</code></p>
-            </article>
-            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo cuadrado funciones giro esquina">
-              <div class="guide-program-head"><h4>Dibujar un cuadrado</h4><button type="button" class="guide-copy" data-copy="cuadrado" aria-label="Copiar el programa «Dibujar un cuadrado»">Copiar</button></div>
-              <pre class="guide-program" data-program="cuadrado" tabindex="0"><code>void lado() {
-  avanzar(40);
-  pausa(1000);
-  detenerse();
-  pausa(300);
-}
-
-void esquina() {
-  girarDerecha(40);
-  pausa(850);
-  detenerse();
-  pausa(300);
-}
-
-void setup() {
-  inicializarMovimiento();
-}
-
-void loop() {
-  lado();
-  esquina();
-}</code></pre>
-              <p>Programa completo con dos funciones propias: IROH avanza un tramo, gira cerca de un cuarto de vuelta y repite, dibujando un cuadrado.</p>
-              <p class="guide-try"><b>Prueba:</b> cambia <code>850</code> para que el giro quede más exacto.</p>
             </article>
           </div>
         </details>

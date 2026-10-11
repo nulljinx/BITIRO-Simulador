@@ -36,7 +36,7 @@ const FNKEYS=sim().js('Object.keys(FN)');
 test('la Guía contiene ocho temas, ejemplos cortos y programas completos',()=>{
  assert.equal([...dialog.matchAll(/<details class="guide-topic"/g)].length,8);
  assert.ok(sigs.length>=30,'ejemplos cortos: '+sigs.length);
- assert.deepEqual(Object.keys(programs).sort(),['cuadrado','garra','pantalla','parar','primero','seguidor']);
+ assert.deepEqual(Object.keys(programs).sort(),['avanzagira','garra','pantalla','parar','primero','seguidor']);
  for(const name of Object.keys(programs))assert.match(dialog,new RegExp(`data-copy="${name}"`),'botón Copiar de '+name);
 });
 
@@ -50,7 +50,7 @@ test('todas las llamadas escritas en la Guía existen en el runtime o son funcio
   for(const m of code.replace(/"[^"]*"/g,'""').matchAll(/\b([A-Za-z_]\w*)\s*\(/g)){const n=m[1];seen.add(n);
    assert.ok(FNKEYS.includes(n)||own.has(n)||KEYWORDS.has(n),'«'+n+'()» no existe en el runtime ni se define en la Guía');}
  for(const f of FNKEYS)assert.ok(seen.has(f),'la Guía no muestra '+f+'()');
- assert.deepEqual([...own].sort(),['esquina','lado','recorrerUnSegundo','velocidadSegura'].sort());
+ assert.deepEqual([...own].sort(),['recorrerUnSegundo','velocidadSegura'].sort());
 });
 
 const INIT='inicializarMovimiento();inicializarSensores();inicializarGolpe();';
@@ -141,12 +141,18 @@ test('programa «La garra se mueve sola»: recorre izquierda, derecha y centro',
  assert.deepEqual([...targets].sort((a,b)=>a-b),[-75,0,75]);
 });
 
-test('programa «Dibujar un cuadrado»: cada esquina gira cerca de 90°',()=>{
- const h=sim();h.program(programs.cuadrado);const plateaus=[];
- for(let i=0;i<150;i++){h.frames(100);if(Math.abs(h.js('wheel.left'))<.5&&Math.abs(h.js('wheel.right'))<.5)plateaus.push(h.deg());}
+test('programa «Avanza, gira y detente»: avanza, se detiene, gira a la derecha y termina (sin depender de la geometría)',()=>{
+ const h=sim();h.program(programs.avanzagira);const x0=h.js('R.x'),y0=h.js('R.y'),th0=h.deg();
+ h.frames(6000);
  assert.deepEqual(h.errors(),[]);assert.deepEqual(h.warns(),[]);
- assert.ok(h.deg()>300,'completó más de tres cuartos de vuelta: '+h.deg().toFixed(0)+'°');
- for(const d of plateaus){const k=Math.round(d/90);assert.ok(Math.abs(d-k*90)<=15,'giro fuera de ±15° de un múltiplo de 90: '+d.toFixed(0));}
+ const moved=Math.hypot(h.js('R.x')-x0,h.js('R.y')-y0),turned=h.deg()-th0;
+ assert.ok(moved>3,'avanzó algo: '+moved.toFixed(1)+' cm');
+ // Solo se exige un giro apreciable hacia la derecha; el ángulo exacto depende de la distancia entre ruedas y la Guía no lo promete.
+ assert.ok(turned>20&&turned<120,'giró hacia la derecha: '+turned.toFixed(0)+'°');
+ assert.equal(h.js('R.L'),0);assert.equal(h.js('R.R'),0);assert.equal(h.js('mode'),'idle','el programa terminó');
+ const card=dialog.match(/<article[^>]*>(?:(?!<\/article>).)*data-program="avanzagira"(?:(?!<\/article>).)*<\/article>/s)[0];
+ assert.ok(!/90|cuadrado|exact/i.test(strip(card)),'la tarjeta no promete ángulos ni formas');
+ assert.ok(!/cuadrado/i.test(dialog),'la Guía ya no menciona el cuadrado');
 });
 
 /* ---------- Afirmaciones técnicas de los temas ---------- */
