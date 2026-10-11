@@ -6,6 +6,16 @@ Abre https://simulador.nulljinx.com y selecciona una pista.
 
 Las pistas S01–S08 corresponden a sesiones de trabajo; Óvalo y Ocho son circuitos libres. Elegir una sesión **no obliga** al robot a resolverla.
 
+### Menú «Más»
+
+El botón «Más» de la barra de la escena abre un panel con cinco opciones, en este orden:
+
+1. **Ocultar editor**: oculta o muestra el panel de código para ampliar la escena.
+2. **Velocidad**: 0,5×, 1×, 2× o 4×.
+3. **Calidad 3D**: Estándar o Alta.
+4. **Rastro del recorrido**: muestra u oculta la huella que deja el robot.
+5. **Editar escenario**: abre el editor top-down de cajas (ver la sección «Editar escenario»).
+
 ## 2. Escribir código
 
 El editor acepta un subconjunto de Arduino/C++.
@@ -111,7 +121,7 @@ moverServoGolpe(0);  // centro
 moverServoGolpe(1);  // derecha
 ```
 
-En `Más → Garra manual` puedes moverla fuera de ejecución de código. Durante un programa, los controles manuales se deshabilitan para que la acción dependa del código.
+La garra se controla desde el programa con `moverServoGolpe()`. El menú «Más» ya no incluye controles manuales de garra (Izquierda, Centro, Derecha).
 
 ## 9. Editar escenario
 

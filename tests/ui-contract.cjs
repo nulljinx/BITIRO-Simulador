@@ -23,7 +23,10 @@ test('Todos los ids que usan los scripts existen en el HTML',()=>{
  for(const s of ['L','C','R'])for(const p of ['val'])used.add(p+s);
  for(const k of [0,1])used.add('ir'+k);
  for(const k of [0,1,2]){used.add('white'+k);used.add('black'+k);}
- const missing=[...used].filter(id=>!ids.includes(id));
+ // SIM-MENU-CLEANUP-1: controles retirados de «Más»; su lógica sigue en simulator.js con enlaces opcionales (?.) y no deben volver al HTML.
+ const retiredMenu=['demo','reference','clawLeft','clawCenter','clawRight'];
+ for(const id of retiredMenu)assert.ok(!ids.includes(id),id+' retirado del HTML: no debe reaparecer');
+ const missing=[...used].filter(id=>!ids.includes(id)&&!retiredMenu.includes(id));
  assert.deepEqual(missing,[],'Ids usados por los scripts y ausentes del HTML: '+missing.join(', '));
  console.log('   ids comprobados: '+used.size);
 });
@@ -51,7 +54,11 @@ test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetr�
  assert.ok(!/workspace-heading/.test(html),'la fila de título redundante debe estar eliminada');
  assert.match(html,/<h1 class="sr-only">/,'conserva un h1 accesible');
  const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
- for(const id of ['codeToggle','speed','quality','showTrail','demo','clawLeft','clawCenter','clawRight','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ for(const id of ['codeToggle','speed','quality','showTrail','editScenario'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ // SIM-MENU-CLEANUP-1: exactamente cinco opciones, en este orden, sin elementos retirados.
+ assert.deepEqual([...menu[1].matchAll(/id="(codeToggle|speed|quality|showTrail|editScenario|demo|clawLeft|clawCenter|clawRight|reference)"/g)].map(m=>m[1]),['codeToggle','speed','quality','showTrail','editScenario']);
+ for(const txt of ['Demostración guiada','Garra manual','Ver plotter original','Sin conexión','menu-note','claw-'])assert.ok(!menu[1].includes(txt),txt+' retirado de «Más»');
+ assert.ok(!/<div class="menu-divider"><\/div>\s*<\/div>\s*$/.test(menu[1]),'sin separador final sobrante');
  for(const id of ['ir0','ir1','pulsador'])assert.ok(!menu[1].includes(`id="${id}"`),id+' ya NO va en «Más»: es una entrada siempre visible');
  const strip=html.match(/<div class="telemetry-strip".*?<div class="inputs-strip"/s);assert.ok(strip,'franja de telemetría');
  for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');
@@ -84,10 +91,10 @@ test('PILOT-4: tokens de sintaxis = tema «bitiro-night» del Lab y LCD con bise
  assert.match(html,/<div class="lcd-bezel"><pre id="lcd"/);
  assert.ok(fs.existsSync(path.join(root,'syntax-highlight.js')));
 });
-test('Micro-pulido: cabecera sin «Local · Sin conexión» (pasa a «Más»), selector de pista de ancho fijo y deshabilitados claros',()=>{
+test('Micro-pulido: cabecera y «Más» sin «Local · Sin conexión», selector de pista de ancho fijo y deshabilitados claros',()=>{
  const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
  assert.ok(!/Sin conexión|top-note/.test(header),'la cabecera solo lleva la marca');
- const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s)[1];assert.match(menu,/<p class="menu-note">Local · Sin conexión<\/p>/);
+ const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s)[1];assert.ok(!/Sin conexión/.test(menu),'el indicador visual «Local · Sin conexión» ya no se muestra en «Más»');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
  // El selector no puede crecer con nombres largos: ancho y máximo fijos (184 px; 150 px entre 1024 y 1279) y la <select> al 100 %.
  assert.match(css,/\.track-field\{[^}]*flex:0 1 184px;width:184px;max-width:184px\}/);assert.match(css,/\.track-field\{flex-basis:150px;width:150px;max-width:150px\}/);
