@@ -1,0 +1,15 @@
+{
+ "publicada": {
+  "V": 30,
+  "acercar": 1000,
+  "acercar_err_cm": 0.04,
+  "centrar": 1075,
+  "centrar_err_cm": 0.02,
+  "entrar": 1800,
+  "entrar_err_cm": 0.01,
+  "sensores": {
+   "front": 6,
+   "spread": 2.8
+  }
+ }
+}

@@ -6,10 +6,10 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..','..');
-const FILES=['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','simulator.js'];
+const FILES=['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','head-sonar.js','head-config.js','simulator.js'];
 const FIXED_DT=1/120;
 
-function load({patches=[],storage={},blocked=false}={}){
+function load({patches=[],storage={},blocked=false,files=null}={}){   // files: lista explícita y ordenada (pruebas de carga parcial/antigua)
  const saved=new Map(Object.entries(storage)),nodes=new Map();
  const behavior={blocked:!!blocked};
  function el(id){
@@ -33,7 +33,7 @@ function load({patches=[],storage={},blocked=false}={}){
   devicePixelRatio:1,clamp:(n,a,b)=>Math.max(a,Math.min(n,b)),requestAnimationFrame(){},renderScene3D(){}};
  ctx.window=ctx;vm.createContext(ctx);
  const pending=patches.map(p=>({...p,hit:0}));
- for(const file of FILES){
+ for(const file of (files||FILES)){
   let src=fs.readFileSync(path.join(root,file),'utf8');
   for(const p of pending)if(p.file===file){
    const count=src.split(p.from).length-1;
