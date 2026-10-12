@@ -2,6 +2,8 @@
 
 ## Identidad
 
+> **Actualización 2026-10-12:** producción sirve **SIM-NNJ-101d19f** (ver [`release-sim-nnj-101d19f.md`](release-sim-nnj-101d19f.md)). Lo que sigue describe el baseline anterior `SIM-UI-RELEASE-4`, sobre el que se construyó.
+
 Baseline funcional de `RUNTIME-FUNCTIONS-1` (último cambio del lenguaje y del intérprete):
 
 ```text

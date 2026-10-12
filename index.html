@@ -28,11 +28,6 @@
               <label class="menu-check"><input id="showTrail" type="checkbox" checked> Rastro del recorrido</label>
               <div class="menu-divider"></div>
               <button id="editScenario" class="button menu-item" type="button" aria-haspopup="dialog">Editar escenario</button>
-              <button id="demo" class="button menu-item" type="button">Demostración guiada</button>
-              <div class="claw-group" role="group" aria-label="Garra manual"><span class="claw-label" id="clawLabel">Garra manual</span><div class="claw-row"><button id="clawLeft" class="button menu-item" type="button" aria-pressed="false" aria-label="Garra a la izquierda">Izquierda</button><button id="clawCenter" class="button menu-item" type="button" aria-pressed="true" aria-label="Garra al centro">Centro</button><button id="clawRight" class="button menu-item" type="button" aria-pressed="false" aria-label="Garra a la derecha">Derecha</button></div></div>
-              <button type="button" id="reference" class="button menu-item">Ver plotter original</button>
-              <div class="menu-divider"></div>
-              <p class="menu-note">Local · Sin conexión</p>
             </div>
           </details>
         </div>
@@ -105,7 +100,465 @@
       <p id="restoreText">Tu código actual de esta pista se reemplazará por el código inicial. Esta acción no se puede deshacer.</p>
       <div class="confirm-actions"><button type="button" id="restoreCancel" class="button">Cancelar</button><button type="button" id="restoreConfirm" class="button primary">Restaurar</button></div>
     </dialog>
-    <dialog id="guideDialog" class="guide-dialog" aria-labelledby="guideTitle" aria-describedby="guideSub"><div class="reference-title"><div class="guide-heading"><h2 id="guideTitle">Guía de programación IROH</h2><p id="guideSub" class="guide-sub">Referencia rápida de comandos y lenguaje disponible.</p></div><button type="button" id="guideClose" aria-label="Cerrar guía">✕</button></div><div class="guide-body" tabindex="0" role="region" aria-label="Contenido de la guía"><section class="guide-card"><h3>Movimiento</h3><dl><div><dt><code>avanzar(v)</code><code>avanzar(izq, der)</code></dt><dd>Ruedas hacia delante, de 0 a 100. Con un valor, ambas ruedas igual.</dd></div><div><dt><code>retroceder(v)</code><code>retroceder(izq, der)</code></dt><dd>Ruedas hacia atrás.</dd></div><div><dt><code>girarDerecha(v)</code></dt><dd>Giro sobre su eje hacia la derecha.</dd></div><div><dt><code>girarIzquierda(v)</code></dt><dd>Giro sobre su eje hacia la izquierda.</dd></div><div><dt><code>detenerse()</code></dt><dd>Pone ambas ruedas en 0.</dd></div><div><dt><code>pausa(ms)</code></dt><dd>Espera en tiempo simulado; el resto del programa se suspende.</dd></div><div><dt><code>finPrograma()</code></dt><dd>Detiene el robot y termina el programa.</dd></div></dl></section><section class="guide-card"><h3>Sensores de línea</h3><dl><div><dt><code>leerSensorLineaIzquierdo()</code><code>leerSensorLineaCentral()</code><code>leerSensorLineaDerecho()</code></dt><dd>Lectura bruta, 0–1023.</dd></div><div><dt><code>leerLineaNormalizada(k)</code></dt><dd>0–1000 según la calibración; k = 0 izquierdo, 1 central, 2 derecho.</dd></div><div><dt><code>lineaIzquierda()</code><code>lineaCentral()</code><code>lineaDerecha()</code></dt><dd>1 si el sensor detecta negro según la calibración, 0 si no.</dd></div><div><dt><code>leerUmbralLinea()</code></dt><dd>Umbral normalizado guardado (500 por defecto).</dd></div></dl></section><section class="guide-card"><h3>Sonar</h3><dl><div><dt><code>leerDistanciaSonar()</code></dt><dd>Distancia en cm a la caja más cercana al frente; 200 = sin objeto o fuera de alcance.</dd></div></dl></section><section class="guide-card"><h3>Entradas</h3><dl><div><dt><code>leerSensorObstaculoIzquierdo()</code><code>leerSensorObstaculoDerecho()</code></dt><dd>Sensores IR: 1 = activo, 0 = libre.</dd></div><div><dt><code>leerBoton()</code></dt><dd>Pulsador: 1 = presionado, 0 = libre.</dd></div><div><dt><code>botonInicio()</code></dt><dd>Espera hasta que el Pulsador esté presionado (por nivel, no por flanco).</dd></div></dl></section><section class="guide-card"><h3>LCD 16 × 2</h3><dl><div><dt><code>inicializarPantalla()</code></dt><dd>Inicialización lógica de la LCD.</dd></div><div><dt><code>escribirPantalla(col, fila, valor)</code></dt><dd>Escribe en la columna y fila indicadas (fila 0 o 1).</dd></div><div><dt><code>borrarPantalla()</code></dt><dd>Limpia la LCD.</dd></div><div><dt><code>apagarPantalla()</code><code>prenderPantalla()</code></dt><dd>Reconocidas; sin efecto en este modelo.</dd></div></dl></section><section class="guide-card"><h3>Servo</h3><dl><div><dt><code>inicializarGolpe()</code></dt><dd>Habilita la garra y la lleva al centro.</dd></div><div><dt><code>moverServoGolpe(v)</code></dt><dd>−1 izquierda, 0 centro, 1 derecha. Otros valores avisan y no mueven la garra.</dd></div><div><dt><code>inicializarCabeza()</code><code>apagarCabeza()</code><code>moverServoYaw(v)</code><code>moverServoPitch(v)</code></dt><dd>Reconocidas; sin efecto en este modelo (la cabeza no está modelada).</dd></div></dl></section><section class="guide-card"><h3>Inicialización</h3><p>Con <code>setup()</code>/<code>loop()</code> el modo es estricto: llama a <code>inicializarMovimiento()</code>, <code>inicializarSensores()</code> e <code>inicializarGolpe()</code> antes de usarlos. Sin ellos hay avisos y el movimiento o las lecturas no son válidos.</p></section><section class="guide-card"><h3>Lenguaje</h3><ul><li>Tipos <code>int</code>, <code>float</code>, <code>long</code>, <code>bool</code>, <code>byte</code>; variables globales y locales.</li><li>Asignación, <code>+=</code>, <code>-=</code>, <code>++</code>, <code>--</code>.</li><li><code>if</code> / <code>else</code> y <code>while</code>.</li><li>Operadores <code>+ - * / %</code>, <code>== != &lt; &gt; &lt;= &gt;=</code>, <code>&amp;&amp; || !</code>.</li><li>Funciones propias con parámetros tipados, <code>return</code> y recursión hasta 64 niveles.</li><li><code>loop()</code> es obligatoria; <code>setup()</code> es opcional.</li></ul></section><section class="guide-card"><h3>Limitaciones</h3><p>No soportado: <code>const</code>, <code>for</code>, <code>switch</code>, arrays, <code>do-while</code>, <code>break</code>, operador ternario, prototipos, referencias, parámetros por defecto, <code>millis()</code>, <code>delay()</code> y <code>analogRead()</code>. Es un intérprete de un subconjunto de Arduino/C++, no un compilador, y no usa la biblioteca original de Arduino.</p></section></div></dialog>
+    <dialog id="guideDialog" class="guide-dialog" aria-labelledby="guideTitle" aria-describedby="guideSub">
+      <div class="reference-title">
+        <div class="guide-heading"><h2 id="guideTitle">Guía de programación IROH</h2><p id="guideSub" class="guide-sub">Aprende a darle instrucciones a IROH, paso a paso. Abre un tema o busca una instrucción.</p></div>
+        <button type="button" id="guideClose" aria-label="Cerrar guía">✕</button>
+      </div>
+      <div class="guide-tools">
+        <label class="sr-only" for="guideSearch">Buscar una instrucción</label>
+        <input type="search" id="guideSearch" class="guide-search" placeholder="Buscar una instrucción (por ejemplo: avanzar)" autocomplete="off" spellcheck="false" aria-describedby="guideSearchStatus">
+        <p id="guideSearchStatus" class="guide-search-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="guide-body" tabindex="0" role="region" aria-label="Contenido de la guía">
+
+        <details class="guide-topic" id="guide-primeros-pasos" open>
+          <summary><span class="guide-num" aria-hidden="true">1</span><span class="guide-topic-title"><strong>Primeros pasos</strong><small>Cómo darle instrucciones a IROH y cómo funciona un programa</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">Empieza por aquí: copia este programa, pulsa <b>Ejecutar</b> y mira qué hace IROH. Después te explicamos cada parte, una por una.</p>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo primero empezar inicio hola saludo copiar ejecutar">
+              <div class="guide-program-head"><h4>Mi primer programa</h4><button type="button" class="guide-copy" data-copy="primero" aria-label="Copiar el programa «Mi primer programa»">Copiar</button></div>
+              <pre class="guide-program" data-program="primero" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+  inicializarPantalla();
+  escribirPantalla(0, 0, "Hola, IROH");
+}
+
+void loop() {
+  avanzar(40);
+  pausa(1500);
+  detenerse();
+  finPrograma();
+}</code></pre>
+              <p><b>Qué hace:</b> IROH escribe «Hola, IROH» en su pantalla, avanza un segundo y medio y se detiene.</p>
+              <ol class="guide-steps">
+                <li>Escribe o copia el programa en el editor.</li>
+                <li>Pulsa <b>Ejecutar</b>.</li>
+                <li>Mira la pantalla de IROH y cómo avanza.</li>
+              </ol>
+              <p class="guide-try"><b>Prueba:</b> cambia «Hola, IROH» por tu nombre, o cambia <code>1500</code> por <code>3000</code>. ¿Qué notas?</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="setup" data-sig="void setup()" data-keywords="preparar preparacion empezar una vez inicio configuracion">
+              <h4>¿Qué es setup()?</h4>
+              <pre class="guide-sig" data-ctx="setupdef"><code>void setup() {
+  inicializarMovimiento();
+}</code></pre>
+              <p><code>setup()</code> significa «preparación». Lo que escribas dentro se ejecuta una sola vez, al empezar. Es opcional.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="loop" data-sig="void loop()" data-keywords="repetir repeticion ciclo bucle siempre obligatoria">
+              <h4>¿Qué es loop()?</h4>
+              <pre class="guide-sig" data-ctx="loopdef"><code>void loop() {
+  avanzar(40);
+}</code></pre>
+              <p><code>loop()</code> significa «repetir». Lo que escribas dentro se ejecuta una y otra vez mientras el programa corre. Es obligatoria.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="inicializarMovimiento inicializarSensores inicializarGolpe" data-sig="inicializarMovimiento() inicializarSensores() inicializarGolpe()" data-keywords="activar preparar ruedas sensores garra aviso">
+              <h4>¿Qué significa inicializar?</h4>
+              <pre class="guide-sig"><code>inicializarMovimiento();
+inicializarSensores();
+inicializarGolpe();</code></pre>
+              <p>Como en el robot real, cada parte se activa una vez antes de usarla: el movimiento (ruedas), los sensores (línea, sonar e infrarrojos) y el golpe (garra). Se hace dentro de <code>setup()</code>.</p>
+              <p class="guide-try"><b>Prueba:</b> cuando tu programa lea un sensor, añade <code>inicializarSensores();</code> en <code>setup()</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="; { }" data-keywords="punto y coma llaves bloque comentarios // sintaxis fin de instruccion">
+              <h4>Para qué sirven ; y { }</h4>
+              <pre class="guide-sig"><code>avanzar(40);
+if (lineaCentral()) {
+  detenerse();
+}</code></pre>
+              <p>El punto y coma <code>;</code> marca el final de una instrucción. Las llaves <code>{ }</code> agrupan las instrucciones de un bloque: el cuerpo de <code>setup()</code>, de <code>loop()</code> o de un <code>if</code>.</p>
+              <p>Las líneas que empiezan con <code>//</code> son comentarios: IROH las ignora.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="" data-keywords="avisos errores advertencia mensajes panel linea error">
+              <h4>Lee los mensajes del simulador</h4>
+              <p>Debajo del editor aparecen mensajes: <b>✔</b> todo bien, <b>⚠</b> aviso (el programa sigue, pero algo no funcionará) y <b>✖</b> error (el programa se detiene y te dice en qué línea está el problema).</p>
+              <p>Si falta inicializar una parte, verás un aviso ⚠ que te dice cuál.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-movimiento">
+          <summary><span class="guide-num" aria-hidden="true">2</span><span class="guide-topic-title"><strong>¡Vamos a movernos!</strong><small>Avanzar, retroceder, girar, detenerse y esperar</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">Las ruedas reciben una velocidad de 0 a 100. IROH mantiene la última orden hasta que le des otra, incluso mientras esperas con <code>pausa()</code>. Recuerda llamar a <code>inicializarMovimiento();</code> en <code>setup()</code>.</p>
+            <article class="guide-item guide-cmd" data-cmd="avanzar" data-sig="avanzar(velocidad)" data-keywords="adelante mover ir ruedas velocidad rapido lento">
+              <h4>Avanzar</h4>
+              <pre class="guide-sig"><code>avanzar(50);</code></pre>
+              <p>IROH avanza con sus dos ruedas. El número indica la velocidad: 0 es quieto y 100 es la máxima.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia el 50 por 30. ¿Qué notas?</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="avanzar" data-sig="avanzar(izquierda, derecha)" data-keywords="curva doblar girar dos ruedas izquierda derecha">
+              <h4>Avanzar en curva</h4>
+              <pre class="guide-sig"><code>avanzar(20, 60);</code></pre>
+              <p>Con dos números, el primero es la rueda izquierda y el segundo la derecha. IROH curva hacia el lado de la rueda más lenta.</p>
+              <p class="guide-try"><b>Prueba:</b> intercambia el 20 y el 60. ¿Hacia dónde gira ahora?</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="retroceder" data-sig="retroceder(velocidad) retroceder(izquierda, derecha)" data-keywords="atras reversa marcha atras">
+              <h4>Retroceder</h4>
+              <pre class="guide-sig"><code>retroceder(40);</code></pre>
+              <p>IROH va hacia atrás. Igual que <code>avanzar()</code>, acepta un número o dos: <code>retroceder(izquierda, derecha)</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="girarDerecha" data-sig="girarDerecha(velocidad)" data-keywords="giro rotar derecha sobre su eje">
+              <h4>Girar a la derecha</h4>
+              <pre class="guide-sig"><code>girarDerecha(40);</code></pre>
+              <p>IROH gira sobre sí mismo hacia la derecha: una rueda avanza y la otra retrocede.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="girarIzquierda" data-sig="girarIzquierda(velocidad)" data-keywords="giro rotar izquierda sobre su eje">
+              <h4>Girar a la izquierda</h4>
+              <pre class="guide-sig"><code>girarIzquierda(40);</code></pre>
+              <p>Lo mismo, hacia la izquierda.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="detenerse" data-sig="detenerse()" data-keywords="parar frenar alto quieto stop">
+              <h4>Detenerse</h4>
+              <pre class="guide-sig"><code>detenerse();</code></pre>
+              <p>Pone las dos ruedas en 0. IROH frena de forma gradual, no de golpe.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="pausa" data-sig="pausa(milisegundos)" data-keywords="espera tiempo retraso demora milisegundos segundos delay">
+              <h4>Esperar</h4>
+              <pre class="guide-sig"><code>avanzar(40);
+pausa(1000);
+detenerse();</code></pre>
+              <p><code>pausa(1000);</code> hace que el programa espere 1000 milisegundos (1 segundo). Mientras espera, las ruedas siguen con la última orden: aquí IROH avanza un segundo y luego se detiene.</p>
+              <p class="guide-try"><b>Prueba:</b> ¿cuánto avanza con <code>pausa(2000);</code>?</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="finPrograma" data-sig="finPrograma()" data-keywords="fin terminar acabar detener programa">
+              <h4>Terminar el programa</h4>
+              <pre class="guide-sig"><code>finPrograma();</code></pre>
+              <p>Detiene a IROH y termina el programa: ya no se repite <code>loop()</code>.</p>
+            </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo secuencia pasos orden tiempo">
+              <div class="guide-program-head"><h4>Avanza, gira y detente</h4><button type="button" class="guide-copy" data-copy="avanzagira" aria-label="Copiar el programa «Avanza, gira y detente»">Copiar</button></div>
+              <pre class="guide-program" data-program="avanzagira" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+}
+
+void loop() {
+  avanzar(40);
+  pausa(1000);
+  detenerse();
+  pausa(300);
+  girarDerecha(40);
+  pausa(700);
+  detenerse();
+  finPrograma();
+}</code></pre>
+              <p>IROH avanza un poco, se detiene, gira hacia la derecha y termina. Cada paso dura el tiempo que escribes en <code>pausa()</code>.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia <code>700</code> por otro número y mira cómo cambia el giro.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-linea">
+          <summary><span class="guide-num" aria-hidden="true">3</span><span class="guide-topic-title"><strong>Siguiendo la línea</strong><small>Sensores que reconocen una línea negra</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">IROH tiene tres sensores de línea en la parte delantera: izquierdo, central y derecho. Cada uno mira el suelo y reconoce si ve negro. Llama a <code>inicializarSensores();</code> en <code>setup()</code> antes de leerlos.</p>
+            <article class="guide-item guide-cmd" data-cmd="lineaIzquierda lineaCentral lineaDerecha" data-sig="lineaIzquierda() lineaCentral() lineaDerecha()" data-keywords="sensor linea negro suelo detectar seguir">
+              <h4>¿Hay línea debajo?</h4>
+              <pre class="guide-sig"><code>if (lineaCentral()) {
+  avanzar(30);
+}</code></pre>
+              <p><code>lineaIzquierda()</code>, <code>lineaCentral()</code> y <code>lineaDerecha()</code> responden 1 si el sensor ve negro y 0 si no. Como 1 significa «verdadero», se usan directamente dentro de un <code>if</code>.</p>
+              <p class="guide-try"><b>Prueba:</b> haz que IROH se detenga cuando el sensor central deje de ver la línea.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="leerLineaNormalizada" data-sig="leerLineaNormalizada(sensor)" data-keywords="sensor valor normalizado 0 1000 negro blanco lectura">
+              <h4>Medir cuánto negro ve</h4>
+              <pre class="guide-sig"><code>int valor = leerLineaNormalizada(1);</code></pre>
+              <p>Devuelve un número de 0 (blanco) a 1000 (negro). El número entre paréntesis elige el sensor: 0 izquierdo, 1 central y 2 derecho.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="leerSensorLineaIzquierdo leerSensorLineaCentral leerSensorLineaDerecho" data-sig="leerSensorLineaIzquierdo() leerSensorLineaCentral() leerSensorLineaDerecho()" data-keywords="sensor lectura cruda bruta 1023 analogica">
+              <h4>Lectura sin ajustar</h4>
+              <pre class="guide-sig"><code>int bruto = leerSensorLineaCentral();</code></pre>
+              <p>Valor directo del sensor, de 0 a 1023. También existen <code>leerSensorLineaIzquierdo()</code> y <code>leerSensorLineaDerecho()</code>. Sirven para calibrar; para decidir suele ser más cómodo usar las funciones anteriores.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="leerUmbralLinea" data-sig="leerUmbralLinea()" data-keywords="umbral calibracion limite 500 sensibilidad">
+              <h4>El umbral de la línea</h4>
+              <pre class="guide-sig"><code>int umbral = leerUmbralLinea();</code></pre>
+              <p>Es el valor (de 0 a 1000) desde el cual un sensor considera que ve línea. Empieza en 500 y puedes cambiarlo con el botón <b>Calibración</b>.</p>
+            </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo seguir linea sensores pista ovalo">
+              <div class="guide-program-head"><h4>Seguidor de línea</h4><button type="button" class="guide-copy" data-copy="seguidor" aria-label="Copiar el programa «Seguidor de línea»">Copiar</button></div>
+              <pre class="guide-program" data-program="seguidor" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+  inicializarSensores();
+}
+
+void loop() {
+  if (lineaCentral()) {
+    avanzar(30);
+  } else if (lineaIzquierda()) {
+    avanzar(10, 30);
+  } else if (lineaDerecha()) {
+    avanzar(30, 10);
+  } else {
+    detenerse();
+  }
+}</code></pre>
+              <p>Programa completo. Si el centro ve la línea, avanza; si la ve a un lado, curva hacia ese lado; si no la ve, se detiene. Pruébalo en la pista <b>Óvalo</b>.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia <code>30</code> por <code>50</code>. ¿Sigue la línea o se sale?</p>
+              <p class="guide-caution">Este programa básico puede detenerse en cruces, bifurcaciones o huecos de las pistas S01–S08: necesitarás más reglas.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-obstaculos">
+          <summary><span class="guide-num" aria-hidden="true">4</span><span class="guide-topic-title"><strong>Detectando obstáculos</strong><small>Sonar, sensores infrarrojos y botón</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">IROH puede medir la distancia a una caja con el sonar y recibir señales de dos sensores infrarrojos y de un botón. Usa <code>inicializarSensores();</code> en <code>setup()</code>.</p>
+            <article class="guide-item guide-cmd" data-cmd="leerDistanciaSonar" data-sig="leerDistanciaSonar()" data-keywords="sonar distancia centimetros ultrasonido obstaculo caja cm">
+              <h4>Medir la distancia con el sonar</h4>
+              <pre class="guide-sig"><code>int distancia = leerDistanciaSonar();</code></pre>
+              <p>Devuelve la distancia en centímetros hasta la caja más cercana que está justo delante. Si no hay ninguna al alcance, devuelve 200.</p>
+              <p class="guide-try"><b>Prueba:</b> con <b>Editar escenario</b> acerca una caja y observa cómo cambia el valor en «Sonar».</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="leerSensorObstaculoIzquierdo leerSensorObstaculoDerecho" data-sig="leerSensorObstaculoIzquierdo() leerSensorObstaculoDerecho()" data-keywords="infrarrojo ir obstaculo sensor izquierdo derecho">
+              <h4>Sensores infrarrojos</h4>
+              <pre class="guide-sig"><code>if (leerSensorObstaculoIzquierdo()) {
+  detenerse();
+}</code></pre>
+              <p><code>leerSensorObstaculoIzquierdo()</code> y <code>leerSensorObstaculoDerecho()</code> devuelven 1 si el sensor está activo y 0 si está libre. En el simulador no detectan las cajas por sí solos: los activas tú con los botones <b>IR izquierdo</b> e <b>IR derecho</b> de la franja «Entradas».</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="leerBoton" data-sig="leerBoton()" data-keywords="boton pulsador presionado entrada">
+              <h4>Leer el botón</h4>
+              <pre class="guide-sig"><code>int presionado = leerBoton();</code></pre>
+              <p>Devuelve 1 si el Pulsador está presionado y 0 si está libre. Lo cambias con el botón <b>Pulsador</b> de la franja «Entradas».</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="botonInicio" data-sig="botonInicio()" data-keywords="boton pulsador inicio esperar empezar presionar">
+              <h4>Esperar el botón</h4>
+              <pre class="guide-sig"><code>botonInicio();</code></pre>
+              <p>El programa se queda aquí hasta que el Pulsador esté presionado. Úsalo al final de <code>setup()</code> para que IROH espere tu señal antes de empezar.</p>
+              <p class="guide-try"><b>Prueba:</b> ejecuta tu programa con <code>botonInicio();</code> y pulsa <b>Pulsador</b>.</p>
+            </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo sonar obstaculo caja distancia parar">
+              <div class="guide-program-head"><h4>Detenerse ante una caja</h4><button type="button" class="guide-copy" data-copy="parar" aria-label="Copiar el programa «Detenerse ante una caja»">Copiar</button></div>
+              <pre class="guide-program" data-program="parar" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+  inicializarSensores();
+}
+
+void loop() {
+  int distancia = leerDistanciaSonar();
+  if (distancia &lt; 17) {
+    detenerse();
+  } else {
+    avanzar(30);
+  }
+}</code></pre>
+              <p>Programa completo. IROH avanza y se detiene cuando la caja está a menos de 17 cm, antes de tocarla con la garra.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia <code>17</code> por <code>40</code>. ¿Dónde se detiene ahora?</p>
+              <p class="guide-caution">Si no hay ninguna caja delante, IROH avanzará sin parar: añade una con <b>Editar escenario</b>.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-pantalla">
+          <summary><span class="guide-num" aria-hidden="true">5</span><span class="guide-topic-title"><strong>La pantalla de IROH</strong><small>Mostrar mensajes y números en la LCD</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">La pantalla tiene 2 filas (0 y 1) de 16 columnas (0 a 15). Sirve para que IROH te cuente lo que está leyendo o pensando.</p>
+            <article class="guide-item guide-cmd" data-cmd="inicializarPantalla" data-sig="inicializarPantalla()" data-keywords="lcd pantalla preparar iniciar display">
+              <h4>Preparar la pantalla</h4>
+              <pre class="guide-sig"><code>inicializarPantalla();</code></pre>
+              <p>Prepara la LCD, como en el robot real. En el simulador funciona aunque la olvides, pero conviene incluirla en <code>setup()</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="escribirPantalla" data-sig="escribirPantalla(columna, fila, valor)" data-keywords="lcd pantalla mostrar texto numero mensaje display columna fila">
+              <h4>Escribir en la pantalla</h4>
+              <pre class="guide-sig"><code>escribirPantalla(0, 0, "Hola");</code></pre>
+              <p>Los tres valores son: columna, fila y lo que quieres mostrar. El texto va entre comillas dobles; también puedes pasar un número o una variable.</p>
+              <p class="guide-try"><b>Prueba:</b> escribe en la columna 5 de la fila 1.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="borrarPantalla" data-sig="borrarPantalla()" data-keywords="lcd pantalla limpiar vaciar display">
+              <h4>Borrar la pantalla</h4>
+              <pre class="guide-sig"><code>borrarPantalla();</code></pre>
+              <p>Deja las dos filas vacías. Úsala antes de escribir números que cambian, para que no queden dígitos de la lectura anterior.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="apagarPantalla prenderPantalla" data-sig="apagarPantalla() prenderPantalla()" data-keywords="lcd pantalla encender apagar sin efecto">
+              <h4>Apagar y prender la pantalla</h4>
+              <pre class="guide-sig"><code>apagarPantalla();
+prenderPantalla();</code></pre>
+              <p>El simulador las reconoce, pero todavía no cambian nada en la LCD: mostrará un aviso ⚠.</p>
+            </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo lcd pantalla sonar distancia">
+              <div class="guide-program-head"><h4>Mostrar la distancia</h4><button type="button" class="guide-copy" data-copy="pantalla" aria-label="Copiar el programa «Mostrar la distancia»">Copiar</button></div>
+              <pre class="guide-program" data-program="pantalla" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+  inicializarSensores();
+  inicializarPantalla();
+}
+
+void loop() {
+  int distancia = leerDistanciaSonar();
+  borrarPantalla();
+  escribirPantalla(0, 0, "Distancia:");
+  escribirPantalla(0, 1, distancia);
+  if (distancia &lt; 17) {
+    detenerse();
+  } else {
+    avanzar(30);
+  }
+}</code></pre>
+              <p>Programa completo: es el de la caja, pero además muestra en la LCD la distancia que mide el sonar.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-mecanismos">
+          <summary><span class="guide-num" aria-hidden="true">6</span><span class="guide-topic-title"><strong>Moviendo sus mecanismos</strong><small>Servomotores, garra y cabeza</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">La garra de IROH puede girar a la izquierda, al centro o a la derecha. En el simulador la garra se mueve solo con instrucciones de tu programa.</p>
+            <article class="guide-item guide-cmd" data-cmd="inicializarGolpe" data-sig="inicializarGolpe()" data-keywords="servo golpe garra activar centro">
+              <h4>Activar la garra</h4>
+              <pre class="guide-sig"><code>inicializarGolpe();</code></pre>
+              <p>Activa la garra y la lleva al centro. Va en <code>setup()</code>, antes de moverla.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="moverServoGolpe" data-sig="moverServoGolpe(posicion)" data-keywords="servo golpe garra izquierda centro derecha mover empujar">
+              <h4>Mover la garra</h4>
+              <pre class="guide-sig"><code>moverServoGolpe(1);</code></pre>
+              <p>El número elige la posición: <code>-1</code> izquierda, <code>0</code> centro y <code>1</code> derecha. Con cualquier otro número aparece un aviso ⚠ y la garra no se mueve.</p>
+              <p>La garra tarda un momento en girar: usa <code>pausa()</code> entre movimientos. Solo mueve una caja si la toca; no la empuja a distancia.</p>
+              <p class="guide-try"><b>Prueba:</b> mueve la garra a <code>-1</code> y luego de vuelta a <code>0</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="inicializarCabeza apagarCabeza moverServoYaw moverServoPitch" data-sig="inicializarCabeza() apagarCabeza() moverServoYaw(grados) moverServoPitch(grados)" data-keywords="servo cabeza yaw pitch girar inclinar sin efecto">
+              <h4>La cabeza de IROH</h4>
+              <pre class="guide-sig"><code>inicializarCabeza();
+moverServoYaw(30);
+moverServoPitch(30);
+apagarCabeza();</code></pre>
+              <p>La cabeza tiene dos servomotores: <code>moverServoYaw()</code> la gira a los lados y <code>moverServoPitch()</code> la inclina. El simulador reconoce estas instrucciones, pero todavía no modela la cabeza: no verás movimiento y aparecerá un aviso ⚠.</p>
+            </article>
+            <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo garra servo golpe">
+              <div class="guide-program-head"><h4>La garra se mueve sola</h4><button type="button" class="guide-copy" data-copy="garra" aria-label="Copiar el programa «La garra se mueve sola»">Copiar</button></div>
+              <pre class="guide-program" data-program="garra" tabindex="0"><code>void setup() {
+  inicializarMovimiento();
+  inicializarGolpe();
+}
+
+void loop() {
+  moverServoGolpe(-1);
+  pausa(800);
+  moverServoGolpe(1);
+  pausa(800);
+  moverServoGolpe(0);
+  pausa(800);
+}</code></pre>
+              <p>Programa completo: la garra va a la izquierda, a la derecha y al centro, y repite.</p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-programar">
+          <summary><span class="guide-num" aria-hidden="true">7</span><span class="guide-topic-title"><strong>Aprende a programar</strong><small>Variables, condiciones, repeticiones y funciones</small></span></summary>
+          <div class="guide-topic-body">
+            <p class="guide-lead">Estas ideas sirven en cualquier lenguaje. Con ellas, tus programas pueden recordar datos, tomar decisiones, repetir y reutilizar partes.</p>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="int nombre = valor;" data-keywords="variable int entero numero guardar dato memoria float long bool byte">
+              <h4>Variables: guardar un dato</h4>
+              <pre class="guide-sig"><code>int velocidad = 40;
+avanzar(velocidad);
+velocidad += 10;</code></pre>
+              <p>Una variable es una cajita con nombre que guarda un número. <code>int</code> guarda números enteros. <code>velocidad += 10;</code> le suma 10.</p>
+              <p class="guide-try"><b>Prueba:</b> cambia el 40 y mira cómo cambia todo lo que usa <code>velocidad</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="if" data-sig="if (condicion) { } else { }" data-keywords="si decidir condicion if else comparar igual mayor menor">
+              <h4>Condiciones: decidir</h4>
+              <pre class="guide-sig"><code>if (leerDistanciaSonar() &lt; 20) {
+  detenerse();
+} else {
+  avanzar(30);
+}</code></pre>
+              <p><code>if</code> significa «si»: el bloque se ejecuta solo cuando la condición se cumple. <code>else</code> es «si no». Para más opciones usa <code>else if</code>.</p>
+              <p>Se comparan valores con <code>==</code> (igual), <code>!=</code> (distinto), <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> y <code>&gt;=</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="&amp;&amp; || !" data-keywords="y o no logica operadores combinar condiciones">
+              <h4>Combinar condiciones</h4>
+              <pre class="guide-sig"><code>if (lineaCentral() &amp;&amp;
+    !lineaDerecha()) {
+  avanzar(30);
+}</code></pre>
+              <p><code>&amp;&amp;</code> significa «y», <code>||</code> significa «o» y <code>!</code> significa «no». Aquí IROH avanza si el centro ve línea y la derecha no.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="while" data-sig="while (condicion) { }" data-keywords="repetir bucle ciclo mientras while for repeticion">
+              <h4>Repeticiones: hacer algo varias veces</h4>
+              <pre class="guide-sig"><code>while (leerDistanciaSonar() &gt; 20) {
+  avanzar(30);
+}
+detenerse();</code></pre>
+              <p><code>loop()</code> ya se repite sola. <code>while</code> repite su bloque mientras la condición sea verdadera; cuando deja de serlo, el programa continúa con lo que sigue.</p>
+              <p>Este lenguaje no tiene <code>for</code>: usa <code>while</code>.</p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="void nombre() { }" data-keywords="funcion procedimiento reutilizar parametro void">
+              <h4>Funciones: ponerle nombre a un grupo de pasos</h4>
+              <pre class="guide-sig" data-ctx="top"><code>void recorrerUnSegundo(int velocidad) {
+  avanzar(velocidad);
+  pausa(1000);
+  detenerse();
+}</code></pre>
+              <p>Una función agrupa instrucciones bajo un nombre. Se escribe fuera de <code>setup()</code> y <code>loop()</code>, y después se usa como cualquier otra instrucción: <code>recorrerUnSegundo(50);</code></p>
+            </article>
+            <article class="guide-item guide-cmd" data-cmd="" data-sig="int nombre(int valor) { return valor; }" data-keywords="funcion return devolver resultado valor">
+              <h4>Funciones que devuelven un resultado</h4>
+              <pre class="guide-sig" data-ctx="top"><code>int velocidadSegura(int distancia) {
+  if (distancia &lt; 20) {
+    return 0;
+  }
+  return 40;
+}</code></pre>
+              <p><code>return</code> entrega un valor a quien llamó a la función. Úsala así: <code>avanzar(velocidadSegura(leerDistanciaSonar()));</code></p>
+            </article>
+          </div>
+        </details>
+
+        <details class="guide-topic" id="guide-avanzado">
+          <summary><span class="guide-num" aria-hidden="true">8</span><span class="guide-topic-title"><strong>Para seguir aprendiendo</strong><small>Conceptos y límites técnicos del simulador</small></span></summary>
+          <div class="guide-topic-body">
+            <article class="guide-item guide-note" data-cmd="apagarPantalla prenderPantalla inicializarCabeza apagarCabeza moverServoYaw moverServoPitch" data-sig="" data-keywords="sin efecto reconocidas aviso cabeza lcd limitaciones">
+              <h4>Instrucciones que se reconocen pero no hacen nada visible</h4>
+              <p><code>apagarPantalla()</code>, <code>prenderPantalla()</code>, <code>inicializarCabeza()</code>, <code>apagarCabeza()</code>, <code>moverServoYaw()</code> y <code>moverServoPitch()</code> se aceptan, pero no tienen efecto en este modelo y muestran un aviso ⚠. <code>inicializarPantalla()</code> se acepta sin aviso y la LCD funciona aunque no la llames.</p>
+            </article>
+            <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="rango unidades limite velocidad 100 1023 1000 sonar 200 centimetros milisegundos pantalla columnas">
+              <h4>Rangos y unidades</h4>
+              <ul>
+                <li>Velocidad de las ruedas: de 0 a 100. Un valor mayor se limita a 100 y aparece un aviso ⚠.</li>
+                <li>Línea sin ajustar: de 0 a 1023. Línea normalizada: de 0 a 1000. El negro da valores altos.</li>
+                <li>Sonar: centímetros, número entero de 0 a 200. El valor 200 significa «nada al alcance». Solo ve cajas altas que estén justo delante, en un haz estrecho.</li>
+                <li><code>pausa()</code>: milisegundos de tiempo del simulador.</li>
+                <li>Pantalla: columnas 0–15 y filas 0–1. Lo que no cabe en 16 columnas se corta.</li>
+                <li>Garra: solo <code>-1</code>, <code>0</code> y <code>1</code>.</li>
+              </ul>
+            </article>
+            <article class="guide-item guide-note" data-cmd="inicializarMovimiento inicializarSensores inicializarGolpe" data-sig="" data-keywords="estricto inicializar aviso setup loop instrucciones sueltas">
+              <h4>Inicializaciones y avisos</h4>
+              <p>Cuando el programa tiene <code>setup()</code> y <code>loop()</code>, el simulador exige <code>inicializarMovimiento()</code>, <code>inicializarSensores()</code> e <code>inicializarGolpe()</code> antes de mover las ruedas, leer sensores o mover la garra. Si faltan, avisa y esa parte no responde. Las instrucciones sueltas, sin <code>setup()</code> ni <code>loop()</code>, se repiten como si estuvieran en <code>loop()</code> y no exigen inicializar.</p>
+            </article>
+            <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="entradas manuales infrarrojo pulsador franja sensores simulados linea sonar">
+              <h4>Entradas manuales y sensores simulados</h4>
+              <p>La línea y el sonar se calculan a partir de la posición de IROH en la pista. Los dos infrarrojos y el Pulsador son entradas que tú activas y desactivas con los botones de la franja «Entradas».</p>
+            </article>
+            <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="tipos int long float bool byte operadores division entera true false high low nombres tildes recursion">
+              <h4>Tipos y operaciones</h4>
+              <ul>
+                <li>Tipos de variable: <code>int</code>, <code>long</code>, <code>float</code>, <code>bool</code> y <code>byte</code> (0 a 255). Pueden ser globales (fuera de las funciones) o locales.</li>
+                <li>Dividir enteros descarta los decimales: <code>7 / 2</code> da 3.</li>
+                <li>Operadores: <code>+ - * / %</code>, comparaciones, <code>&amp;&amp; || !</code>, y <code>+=</code>, <code>-=</code>, <code>++</code>, <code>--</code>.</li>
+                <li>Valores predefinidos: <code>true</code>, <code>false</code>, <code>HIGH</code> (1) y <code>LOW</code> (0).</li>
+                <li>Los nombres usan letras sin tilde ni ñ, números y guion bajo.</li>
+                <li>El texto entre comillas solo se puede usar en <code>escribirPantalla()</code>; no se guarda en variables.</li>
+                <li>Una función puede llamarse a sí misma hasta 64 niveles.</li>
+              </ul>
+            </article>
+            <article class="guide-item guide-note" data-cmd="pausa" data-sig="" data-keywords="tiempo simulado velocidad pausa milisegundos">
+              <h4>Tiempo simulado</h4>
+              <p>El programa corre en el tiempo del simulador: con velocidad 2× una <code>pausa(1000)</code> dura medio segundo reales. Mientras esperas con <code>pausa()</code>, IROH sigue con la última orden de las ruedas.</p>
+            </article>
+            <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="no disponible limitaciones for const switch break arreglos delay millis serial limites lenguaje">
+              <h4>Lo que todavía no está disponible</h4>
+              <p><code>for</code>, <code>const</code>, <code>switch</code>, <code>do-while</code>, <code>break</code>, arreglos, el operador <code>? :</code>, prototipos de función, referencias, parámetros con valor por defecto, <code>*=</code> y <code>/=</code>, <code>millis()</code>, <code>delay()</code>, <code>analogRead()</code> y <code>Serial</code>. Es un intérprete de un subconjunto de Arduino/C++, no un compilador, y no usa la biblioteca original de Arduino. Las líneas <code>#include</code> se ignoran.</p>
+            </article>
+          </div>
+        </details>
+
+        <div id="guideResults" class="guide-results" role="region" aria-label="Resultados de la búsqueda" hidden></div>
+        <p class="guide-empty" id="guideEmpty" hidden>No encontramos esa instrucción. Prueba con otra palabra, por ejemplo «avanzar», «sonar» o «pantalla».</p>
+      </div>
+      <p id="guideCopyStatus" class="sr-only" role="status" aria-live="polite"></p>
+    </dialog>
     <dialog id="referenceDialog" class="reference-dialog" aria-labelledby="referenceHeading"><div class="reference-title"><h2 id="referenceHeading">Plotter de referencia</h2><button type="button" id="referenceClose" aria-label="Cerrar plotter">✕</button></div><p>Compara la pista 3D virtual con la imagen de referencia. S01–S06 y S08 usan geometrías reconstruidas desde los PDF vectoriales oficiales; S07 es un repaso sin plotter propio.</p><img id="referenceImg" alt="Imagen original del plotter seleccionado"></dialog>
   </main>
   <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="calibration-mode.js"></script><script src="scenario-editor.js"></script>

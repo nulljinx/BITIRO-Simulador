@@ -48,7 +48,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--action-primary);f
 .menu-check{display:flex;align-items:center;gap:8px;font-size:var(--text-label)}
 .menu-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
 .menu-divider{height:1px;background:var(--border-subtle);margin:2px 0}
-.menu-note{margin:0;font-size:var(--text-micro);color:var(--text-secondary)}
 .menu-pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .menu-item{justify-content:flex-start;width:100%;min-height:32px}
 .toggle-ir{flex-direction:column;align-items:flex-start;gap:0;padding:6px 10px}
@@ -304,14 +303,6 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 @media(max-width:1023px){.scenario-field input{min-height:44px}}
 @media(max-width:640px){.scenario-layout{grid-template-columns:minmax(0,1fr)}.scenario-map{max-height:38dvh}.scenario-dialog{padding:var(--space-4)}.scenario-spacer{display:none}.scenario-footer{position:sticky;bottom:calc(-1 * var(--space-4));margin-bottom:calc(-1 * var(--space-4));padding:var(--space-3) 0;background:var(--surface-panel-raised);justify-content:flex-end}}
 
-/* Garra manual (Más): tres posiciones del servo del robot; el menú queda abierto para encadenarlas. */
-.claw-group{display:grid;gap:var(--space-1)}
-.claw-label{font-size:var(--text-micro);font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
-.claw-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-1)}
-.claw-row .menu-item{justify-content:center;padding:4px 6px}
-.claw-row .menu-item[aria-pressed=true]{background:var(--action-primary-soft);border-color:var(--action-primary);font-weight:600}
-.claw-row .menu-item:disabled{opacity:.55;cursor:not-allowed}
-
 /* ── Modo calibración (SIM-CALIBRATION-1) ───────────────────────────────────────────────────────────────────────
    Cambio de interfaz, no de runtime: oculta editor y controles de programación, amplía el plotter y deja solo la LCD.
    Ningún valor de sensor se muestra fuera de la LCD que el programa del alumno escribe. */
@@ -366,16 +357,57 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .guide-sub{margin:2px 0 0;font-size:var(--text-label);line-height:1.4;color:var(--text-secondary)}
 .guide-dialog .reference-title button{margin-top:-4px;border:1px solid transparent}
 .guide-dialog .reference-title button:hover{background:var(--surface-panel-muted)}
-.guide-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:var(--space-4) var(--space-5) var(--space-5);background:var(--surface-page);font-size:13px;line-height:1.5;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;columns:2;column-gap:var(--space-4)}
+.guide-tools{flex:none;display:flex;flex-direction:column;gap:2px;padding:var(--space-3) var(--space-5);background:var(--surface-panel);border-bottom:1px solid var(--border-subtle)}
+.guide-search{width:100%;min-height:36px;padding:0 var(--space-3);border:1px solid var(--border-strong);border-radius:var(--radius-control);background:var(--surface-panel-raised);color:var(--text-primary);font:inherit;font-size:var(--text-body)}
+.guide-search:focus-visible{outline:2px solid var(--action-primary);outline-offset:1px}
+.guide-search-status{margin:0;min-height:1.1em;line-height:1.1;font-size:var(--text-micro);color:var(--text-secondary)}
+.guide-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:var(--space-4) var(--space-5) var(--space-5);background:var(--surface-page);font-size:14px;line-height:1.5;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;display:grid;gap:var(--space-3);align-content:start}
 .guide-body:focus-visible{outline:2px solid var(--action-primary);outline-offset:-2px}
-.guide-card{break-inside:avoid;margin:0 0 var(--space-4);padding:var(--space-3) var(--space-4);background:var(--surface-panel-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-panel)}
-.guide-card h3{margin:0 0 var(--space-3);padding-bottom:var(--space-2);border-bottom:1px solid var(--border-subtle);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--action-primary)}
-.guide-card dl{margin:0;display:grid;gap:var(--space-3)}
-.guide-card dt{display:grid;justify-items:start;gap:3px}
-.guide-card dt code{padding:1px 6px;border-radius:4px;background:var(--surface-panel-muted);font:500 12.5px/1.45 var(--font-mono);color:var(--text-primary);overflow-wrap:anywhere}
-.guide-card dd{margin:3px 0 0;color:var(--text-secondary)}
-.guide-card p,.guide-card ul{margin:0}
-.guide-card ul{padding-left:1.1em;display:grid;gap:4px}
-.guide-card p code,.guide-card li code{padding:0 4px;border-radius:3px;background:var(--surface-panel-muted);font:500 12px var(--font-mono);overflow-wrap:anywhere}
-@media(max-width:700px){.guide-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 24px)}.guide-dialog .reference-title{padding-left:var(--space-4)}.guide-body{columns:1;padding:var(--space-3) var(--space-3) var(--space-4);font-size:14px}.guide-card{padding:var(--space-3)}.guide-card dt code{font-size:13px}}
+.guide-topic{background:var(--surface-panel-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-panel)}
+.guide-topic[hidden],.guide-item[hidden],.guide-empty[hidden]{display:none}
+.guide-topic>summary{display:flex;align-items:center;gap:var(--space-3);min-height:56px;padding:var(--space-2) var(--space-4);cursor:pointer;list-style:none;border-radius:var(--radius-panel)}
+.guide-topic>summary::-webkit-details-marker{display:none}
+.guide-topic>summary::after{content:"";margin-left:auto;flex:none;width:8px;height:8px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:rotate(45deg);transition:transform .15s}
+.guide-topic[open]>summary::after{transform:rotate(-135deg)}
+.guide-topic>summary:hover{background:var(--surface-hover)}
+.guide-topic>summary:focus-visible{outline:2px solid var(--action-primary);outline-offset:-2px}
+.guide-num{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:var(--radius-pill);background:var(--action-primary-soft);color:var(--action-primary);font-weight:600;font-size:var(--text-label)}
+.guide-topic-title{display:grid;gap:1px;min-width:0}
+.guide-topic-title strong{font-size:15px;font-weight:600;line-height:1.3}
+.guide-topic-title small{font-size:var(--text-label);color:var(--text-secondary);line-height:1.4}
+.guide-topic[open]>summary{border-bottom:1px solid var(--border-subtle);border-radius:var(--radius-panel) var(--radius-panel) 0 0}
+.guide-topic-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3);padding:var(--space-4)}
+.guide-lead,.guide-program-card,.guide-note{grid-column:1/-1}
+.guide-lead{margin:0;color:var(--text-secondary)}
+.guide-item{min-width:0;padding:var(--space-3);background:var(--surface-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-control);display:flex;flex-direction:column;gap:var(--space-2)}
+.guide-item h4{margin:0;font-size:14px;font-weight:600;line-height:1.35}
+.guide-item p,.guide-item ul{margin:0}
+.guide-item ul{padding-left:1.1em;display:grid;gap:4px}
+.guide-body code{padding:0 4px;border-radius:3px;background:var(--surface-panel-muted);font:500 12.5px/1.45 var(--font-mono);overflow-wrap:anywhere}
+.guide-sig,.guide-program{margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-control);background:var(--editor-bg);color:var(--editor-text);font:400 12.5px/1.55 var(--font-mono);overflow-x:auto;white-space:pre;tab-size:2}
+.guide-sig code,.guide-program code{padding:0;background:none;border-radius:0;font:inherit;color:inherit;overflow-wrap:normal}
+.guide-program{font-size:13px}
+.guide-program:focus-visible{outline:2px solid var(--action-primary);outline-offset:2px}
+.guide-program-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.guide-copy{flex:none;min-height:32px;padding:0 var(--space-3);border:1px solid var(--border-strong);border-radius:var(--radius-control);background:var(--surface-panel-raised);color:var(--text-primary);font:inherit;font-size:var(--text-label);font-weight:500;cursor:pointer}
+.guide-copy:hover{background:var(--surface-hover)}
+.guide-copy:focus-visible{outline:2px solid var(--action-primary);outline-offset:2px}
+.guide-try{padding:6px var(--space-3);border-left:3px solid var(--action-primary);background:var(--action-primary-soft);border-radius:0 var(--radius-control) var(--radius-control) 0;color:var(--text-primary)}
+.guide-caution{padding:6px var(--space-3);border-left:3px solid var(--border-strong);background:var(--surface-panel-muted);border-radius:0 var(--radius-control) var(--radius-control) 0;color:var(--text-secondary);font-size:var(--text-label)}
+.guide-note{background:var(--surface-panel)}
+.guide-results{display:grid;gap:var(--space-4)}
+.guide-results[hidden]{display:none}
+.guide-results-title{margin:0 0 var(--space-2);font-size:var(--text-label);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--action-primary)}
+.guide-results-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3)}
+.guide-results-list>[hidden]{display:none}
+.guide-result-topic{margin:0;font-size:var(--text-micro);letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary)}
+.guide-results-list .guide-program-card{grid-column:1/-1}
+.guide-more{justify-self:start;margin-top:var(--space-2);min-height:36px;padding:0 var(--space-3);border:1px solid var(--border-strong);border-radius:var(--radius-control);background:var(--surface-panel-raised);color:var(--text-primary);font:inherit;font-size:var(--text-label);font-weight:500;cursor:pointer}
+.guide-more:hover{background:var(--surface-hover)}
+.guide-more:focus-visible{outline:2px solid var(--action-primary);outline-offset:2px}
+.guide-steps{margin:0;padding-left:1.3em;display:grid;gap:2px}
+@media(max-width:700px){.guide-more{min-height:44px}}
+.guide-empty{margin:0;padding:var(--space-4);text-align:center;color:var(--text-secondary)}
+.guide-search-status,.guide-empty{overflow-wrap:anywhere}
+@media(max-width:700px){.guide-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 24px)}.guide-dialog .reference-title{padding-left:var(--space-4)}.guide-tools{padding:var(--space-2) var(--space-3)}.guide-search{min-height:44px}.guide-body{padding:var(--space-3) var(--space-3) var(--space-4)}.guide-topic>summary{min-height:60px;padding:var(--space-2) var(--space-3)}.guide-topic-body{padding:var(--space-3);grid-template-columns:minmax(0,1fr)}.guide-copy{min-height:44px}.guide-item{padding:var(--space-2) var(--space-3)}.guide-sig,.guide-program{font-size:12px;padding:var(--space-2)}}
 @media(min-width:1024px) and (max-height:700px){.guide-dialog{max-height:calc(100dvh - 32px)}}

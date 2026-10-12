@@ -22,7 +22,7 @@ function changeTrack(name){
  chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);scenarioList=BITIRO_SCENARIO.load(chosen,track).list;
  if($app('src'))$app('src').value=BITIRO_STORAGE.get('bitiro:standalone:code:'+chosen)||EJ[0];ui.name.textContent=track.id.toUpperCase()+' / '+shorten(track.name.replace(/^S\d+ · /,''),32);ui.size.textContent=track.w+' × '+track.h+' cm';ui.stage.textContent=track.id.toUpperCase();
  ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
- $app('reference').hidden=!sourceImageForTrack(name);
+ {const r=$app('reference');if(r)r.hidden=!sourceImageForTrack(name);}
  camera={azimuth:.10,elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
  ui.feedback.textContent=track.note;ui.track.value=name;updateLesson();updateZoom();draw();
 }
@@ -223,7 +223,7 @@ function demoDrive(){
   ui.feedback.textContent='Demostración del trazado terminada; no implica superar la misión.';
  }
  const ob=nearbyObstacle(13);
- if(ob&&ob.forward-ob.ob.height/2<=HIT.pivotForward+HIT.length+1.2){R.L=R.R=0;mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;ui.feedback.textContent='Un objeto impide avanzar. Gira la garra a la derecha (Más → Garra manual) para apartarlo.';}
+ if(ob&&ob.forward-ob.ob.height/2<=HIT.pivotForward+HIT.length+1.2){R.L=R.R=0;mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;ui.feedback.textContent='Un objeto impide avanzar: la demostración se detuvo ante él.';}
 }
 function update(dt){
  if(paused)return;
@@ -329,7 +329,7 @@ function cameraUI(name){
 document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>cameraUI(b.dataset.view)));
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
-$app('demo').addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
+$app('demo')?.addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
  // Solo la demo visual: con cajas en el escenario, aparta la garra (−1) antes de acercarse; sin cajas no hay nada que preparar.
  if(activeObstacles.length)setStrikerPosition(-1);
  mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
@@ -337,7 +337,7 @@ $app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textCon
 $app('step').addEventListener('click',()=>{if(!paused||mode==='idle')return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
 $app('reset').addEventListener('click',()=>{window.resetRobot();$app('msg').textContent='Simulación reiniciada; tu código se conserva.';});
 // Garra manual: Izquierda (−1), Centro (0), Derecha (+1) del robot. Sin retorno automático: el usuario decide la posición.
-for(const [id,cmd] of [['clawLeft',-1],['clawCenter',0],['clawRight',1]])$app(id).addEventListener('click',()=>{
+for(const [id,cmd] of [['clawLeft',-1],['clawCenter',0],['clawRight',1]])$app(id)?.addEventListener('click',()=>{
  if(mode==='code'){ui.feedback.textContent='En modo código, usa moverServoGolpe() en tu programa.';return;}
  if(resumeDemoAfterStrike&&cmd!==0)demoStrike(cmd);else setStrikerPosition(cmd);
 });
@@ -369,7 +369,7 @@ $app('zoomOut').addEventListener('click',()=>{camera.distance=Math.min(3.4,camer
 $app('full').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $app('viewportHost').requestFullscreen();}catch(e){ui.feedback.textContent='Este navegador no permite pantalla completa desde este archivo.';}});
 const referenceDialog=$app('referenceDialog');
 function sourceImageForTrack(id){return ['s01','s02','s03','s04','s05','s06','s08'].includes(id)?id:null;}
-$app('reference').addEventListener('click',()=>{const id=sourceImageForTrack(chosen);if(!id)return;
+$app('reference')?.addEventListener('click',()=>{const id=sourceImageForTrack(chosen);if(!id)return;
  $app('referenceHeading').textContent='Plotter de referencia · '+chosen.toUpperCase();
  $app('referenceImg').src='assets/plotters/'+id+'.png';
  $app('referenceImg').alt='Imagen de referencia del plotter '+id.toUpperCase();
@@ -408,7 +408,7 @@ function updateLesson(){
  const [title,goal,question]=lessons[chosen];$app('lessonTitle').textContent=title;$app('lessonGoal').textContent=goal;$app('lessonQuestion').textContent=question;
 }
 function updateLearningTelemetry(){
- for(const [id,angle] of [['clawLeft',-75],['clawCenter',0],['clawRight',75]]){const b=$app(id);b.disabled=mode==='code';b.setAttribute('aria-pressed',String(striker.target===angle));}
+ for(const [id,angle] of [['clawLeft',-75],['clawCenter',0],['clawRight',75]]){const b=$app(id);if(!b)continue;b.disabled=mode==='code';b.setAttribute('aria-pressed',String(striker.target===angle));}
  $app('step').disabled=!paused||mode==='idle';
 }
 // API mínima para scenario-editor.js (el editor no toca el estado interno del simulador).
