@@ -28,7 +28,7 @@ Si el código está mal, el robot puede salirse de la línea, elegir otra base, 
 
 - movimiento diferencial con aceleración y paso fijo determinista;
 - tres sensores de línea;
-- sonar frontal geométrico;
+- sonar geométrico: al frente por omisión y orientable con la cabeza virtual (`moverServoYaw`, 0°–180°; valores virtuales, no medidos en el robot real);
 - IR izquierdo y derecho como entradas manuales;
 - Pulsador y `botonInicio()` como barrera real de ejecución;
 - LCD 16×2;
@@ -129,8 +129,8 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 - **S04** quedó validada completa tras `RUNTIME-FUNCTIONS-1`: gaps, intersecciones y meta con funciones propias reales.
 - **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
-- **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable).
-- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor.
+- **S07** conserva su estado hasta una nueva validación formal: el giro yaw de la cabeza y el sonar orientable existen ya como **modelo virtual** (HEAD-CANVAS), pero el pitch no está modelado y ningún parámetro de la cabeza está medido en el robot real.
+- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor. S08 cuenta además con una solución de referencia **experimental** que mira con la cabeza sin girar el cuerpo (validada solo en simulación; no es código inicial del estudiante). **Base 2 se conserva en 90/90 puntos verificables; los diez puntos de selección A/B siguen pendientes.**
 
 Producción pública (`simulador.nulljinx.com`) está desplegada con `RUNTIME-FUNCTIONS-1` y verificada en escritorio, tablet y móvil. Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
 

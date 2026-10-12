@@ -80,7 +80,7 @@ Se validan límites del arena, cuerpo, barra y colisión caja-caja. No hay fuerz
 
 ### Sonar
 
-El sonar se calcula en `simulator.js` mediante ray casting contra AABB de cajas. Actualmente está fijo al frente; HEAD-SERVO deberá acoplar su orientación a yaw.
+El sonar se calcula en `simulator.js` mediante ray casting contra AABB de cajas. El origen y la dirección del haz salen de `HEAD_SONAR.geometry.frame()` (`head-sonar.js`) según el ángulo **real** de la cabeza; con la cabeza al frente (90°) el cálculo es el anterior. El estado de la cabeza avanza en `update()` y el renderizador solo lee `HEAD_SONAR.state` para girar las piezas (apariencia, sin efecto sobre la física).
 
 ### IR y Pulsador
 

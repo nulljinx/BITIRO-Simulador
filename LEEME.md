@@ -139,7 +139,7 @@ moverServoPitch(...);
 apagarCabeza();
 ```
 
-son reconocidas por la API, pero todavía no tienen efecto físico. El sonar permanece fijo al eje frontal del robot. Esto bloquea la reproducción fiel de S07 y limita S08.
+`inicializarCabeza()` y `moverServoYaw(angulo)` mueven una cabeza virtual: 0° derecha, 90° frente, 180° izquierda, con ángulos intermedios y movimiento progresivo, y el sonar mide hacia donde apunta. `moverServoPitch()` y `apagarCabeza()` siguen sin efecto. Velocidad, alcance y alturas del sonar son valores virtuales aún sin medir en el robot real (ver `docs/known-limitations.md`).
 
 ## Geometría de sesiones
 

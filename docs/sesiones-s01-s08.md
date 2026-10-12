@@ -24,6 +24,8 @@ La regla de lectura: **los hallazgos físicos de la validación 1 siguen vigente
 | S07 | ✅ | N/A | N/A | ✅ | ✅ | 🟡 | ✅ | ✅ | ❌ | ✅ | ✅ | N/A | 🔴 |
 | S08 | ✅ | ✅ | ✅ | ✅ | ✅ | 🟡 | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ 4/4 | 🟡 |
 
+> La matriz anterior es el resultado histórico de SESSION-VALIDATION-2 y **no se ha modificado**: la columna «Cabeza» y los estados de S07/S08 corresponden a un simulador sin cabeza móvil. Lo que cambió con HEAD-CANVAS está en «Actualización HEAD-CANVAS» más abajo; ningún estado de sesión se reasigna sin una nueva validación formal.
+
 ## Comparación Validation-1 → Validation-2
 
 | Sesión | Validation-1 | Validation-2 | Qué cambió |
@@ -164,9 +166,11 @@ Sigue vigente la observación física de que, con garra centrada, el umbral de s
 
 **Resultado actual: 🔴 no realizable completa** (sin cambio).
 
-Funcionan variables, IR, LCD, garra, funciones propias y sonar frontal. `inicializarCabeza()`, `moverServoYaw(...)` y `moverServoPitch(...)` se reconocen y emiten un aviso, pero **no tienen efecto físico**: el sonar no cambia de orientación (con una caja a la derecha, el sonar sigue leyendo 200 con yaw = 0 y 180). Esto impide reproducir la actividad de mover la cabeza derecha→izquierda→centro y detectar una caja lateral.
+**Histórico (SESSION-VALIDATION-2):** funcionaban variables, IR, LCD, garra, funciones propias y sonar frontal; `inicializarCabeza()`, `moverServoYaw(...)` y `moverServoPitch(...)` se reconocían con aviso y no tenían efecto: con una caja a la derecha, el sonar leía 200 con yaw = 0 y 180. Eso impedía reproducir la actividad de mover la cabeza derecha→izquierda→centro y detectar una caja lateral.
 
-S07 es el caso principal de aceptación para el futuro bloque HEAD-SERVO.
+**Actualización HEAD-CANVAS:** `inicializarCabeza()` y `moverServoYaw(angulo)` mueven una cabeza **virtual**, con ángulos intermedios y movimiento progresivo, y el sonar detecta objetos lateralmente cuando la cabeza gira (0° derecha, 180° izquierda). `moverServoPitch()` sigue sin efecto. S07 **no ha sido re-validada** como sesión (no tiene plotter propio y su actividad completa no se ejecutó de nuevo): su estado no cambia aquí hasta hacerlo, y nada de lo anterior está comprobado en el robot real.
+
+S07 sigue siendo el caso principal de aceptación para esa re-validación.
 
 ## S08
 
@@ -174,7 +178,9 @@ S07 es el caso principal de aceptación para el futuro bloque HEAD-SERVO.
 
 Con 1, 2, 3 y 4 cajas agregadas por escenario (los `boxSlots` son metadata, no crean cajas) y ambas rutas A/B se validaron **8/8 combinaciones**, alcanzando las bases 1–4 con LCD correcto y sin colisiones. Se repitió con funciones propias (`seguirLinea`, `contarCajasLaterales`, `elegirBase`, `girar90`, `hayCaja`) y a V=20, 30, 40 y 60.
 
-La solución funcional actual **gira el cuerpo** para mirar lateralmente con el sonar. Eso demuestra que la física y la ruta son viables, pero no reproduce la intención de usar servomotores de cabeza; **HEAD-SERVO sigue siendo necesario para la solución fiel/natural**.
+La solución funcional validada en SESSION-VALIDATION-2 **gira el cuerpo** para mirar lateralmente con el sonar. Eso demuestra que la física y la ruta son viables, pero no reproduce la intención de usar servomotores de cabeza.
+
+**Actualización HEAD-CANVAS:** existe además una solución de referencia **experimental** que mira con la cabeza virtual sin mover el cuerpo (ver «Actualización HEAD-CANVAS»). Solo está validada en simulación, no es código inicial del estudiante y no demuestra nada sobre el robot físico. La estimación de la espera de la cabeza (`esperaCabeza = 1200 ms`) es una referencia virtual provisional, no una medición.
 
 Limitaciones:
 
@@ -183,9 +189,46 @@ Limitaciones:
 - con cajas laterales la posición de la garra importa durante el giro y al avanzar (con la garra a un lado, el robot puede empujar cajas laterales);
 - las lecturas laterales rondan 3 cm, por debajo de la zona muerta del sensor real, que el modelo no simula.
 
+## Actualización HEAD-CANVAS (cabeza virtual)
+
+Fecha: 2026-10-12. Distingue tres niveles que no deben confundirse.
+
+### 1. Capacidades virtuales comprobadas (en simulación, headless y Chrome)
+
+| Capacidad | Evidencia |
+|---|---|
+| `moverServoYaw(angulo)` acepta ángulos continuos de 0° a 180° (se cuantiza a 1°, se limita con aviso) y el movimiento es progresivo (180 °/s, valor provisional) | pruebas `head-sonar` y `head-ui`; ángulos intermedios observados durante el giro |
+| `leerDistanciaSonar()` mide según la orientación **real** de la cabeza: 0° derecha, 90° frente, 180° izquierda; detecta cajas laterales | prueba `head-sonar` (C2); matriz S08 |
+| Con la cabeza al frente (90°) la lectura es idéntica a la anterior | 10 pistas, 400 lecturas frente a la versión publicada |
+| Un programa NNJ de referencia resuelve S08 sin mover el cuerpo | matriz S08: 68 ejecuciones, 67 con todo lo verificable (la restante es una espera indefinida esperada); 0 colisiones; 0 cajas movidas; Base 2 = **90/90 verificables** |
+| Los programas anteriores no cambian | programa inicial de las 10 pistas, 20 s simulados: estado final idéntico |
+| Pausa, paso, continuar, reiniciar y velocidades 0,5×–4× con la cabeza | `head-ui` |
+
+### 2. Actividades educativas
+
+- La Guía documenta `inicializarCabeza()` y `moverServoYaw(grados)` (ángulos intermedios, giro progresivo, esperar con `pausa()` antes de leer el sonar). `moverServoPitch()` y `apagarCabeza()` siguen sin efecto y avisan.
+- La actividad de S07 «mover la cabeza derecha→izquierda→centro y detectar una caja lateral» **puede programarse** en el simulador; la sesión no está re-validada formalmente.
+- La solución de S08 con cabeza es una **referencia docente experimental**: no se publica como código inicial. La solución anterior que gira el cuerpo sigue siendo válida.
+- **Base 2: 90/90 puntos verificables; los diez puntos de selección A/B siguen pendientes** (el recorrido por el tronco no distingue A de B; solo hay evidencia declarativa en la LCD).
+
+### 3. Capacidades físicas todavía NO medidas (nada está validado en hardware real)
+
+| Parámetro | Valor virtual | Estado |
+|---|---|---|
+| velocidad del giro | 180 °/s | provisional |
+| espera de la cabeza | `esperaCabeza = 1200 ms` | referencia virtual provisional |
+| alcance mecánico | 0°–180° | contrato de diseño |
+| altura del sonar | 15,1 cm (el modelo 3D sugiere 18,1–19,7 cm) | incierta |
+| altura de las cajas | 15,6 cm | supuesto; con 18,9 cm de sonar una caja de 15,6 cm no se detecta |
+| zona muerta, ruido, tiempo de asentamiento, tope mecánico | no modelados | pendientes |
+| pitch | sin modelo | sin implementar |
+| animación | piezas del robot procedural; no representa el montaje real elevado; `?robot=iroh` no gira la cabeza | limitación visual |
+
+**No se afirma que S07 ni S08 estén validadas sobre hardware real.**
+
 ## Próximas validaciones
 
-1. HEAD-SERVO y nueva validación de S07/S08.
+1. Nueva validación formal de S07/S08 con la cabeza virtual (HEAD-CANVAS) y medición física de los parámetros de la cabeza (velocidad, alcance, alturas del sonar y de las cajas).
 2. Props de línea/intersección y nueva revisión de S03/S06.
 3. Compatibilidad pequeña de runtime (`millis`, `const`, aliases) según necesidad curricular.
 4. Medición física antes de alterar garra, cono del sonar o velocidades.

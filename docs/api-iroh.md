@@ -94,11 +94,11 @@ Estas funciones no devuelven valor y solo pueden usarse como sentencias:
 | `prenderPantalla()` | Reconocida; sin efecto físico modelado. |
 | `inicializarMovimiento()` | Habilita movimiento en modo estricto. |
 | `inicializarSensores()` | Habilita lecturas en modo estricto. |
-| `inicializarCabeza()` | Reconocida; cabeza aún no modelada. |
+| `inicializarCabeza()` | Habilita la cabeza móvil (en modo estricto debe llamarse antes de `moverServoYaw`). Si el módulo `head-sonar.js` no está cargado, avisa y no tiene efecto. |
 | `inicializarGolpe()` | Inicializa garra y la lleva al centro. |
 | `inicializarPantalla()` | Inicialización lógica de LCD. |
 | `apagarCabeza()` | Reconocida; sin efecto físico modelado. |
-| `moverServoYaw(v)` | Reconocida; sin efecto físico modelado. |
+| `moverServoYaw(v)` | Gira la cabeza (sonar) a `v` grados: 0 = derecha, 90 = frente, 180 = izquierda. Acepta **ángulos intermedios** (se cuantiza a 1°; fuera de 0–180 se limita con aviso) y el movimiento es **progresivo** (180 °/s, parámetro virtual provisional, no medido): la orden no bloquea y la cabeza tarda hasta 1 s en recorrer 0°–180°, así que el programa debe esperar (`pausa()`) antes de leer el sonar. Requiere un número finito. Sin `head-sonar.js` cargado, avisa y no tiene efecto. |
 | `moverServoPitch(v)` | Reconocida; sin efecto físico modelado. |
 | `moverServoGolpe(v)` | `-1` izquierda, `0` centro, `1` derecha. |
 
@@ -112,7 +112,7 @@ Un uso como `int x = pausa(10);` se rechaza antes de ejecutar.
 | `leerSensorLineaCentral()` | lectura bruta 0–1023 |
 | `leerSensorLineaDerecho()` | lectura bruta 0–1023 |
 | `leerBoton()` | 0 libre / 1 presionado |
-| `leerDistanciaSonar()` | distancia geométrica; 200 = sin objeto/en alcance máximo |
+| `leerDistanciaSonar()` | distancia geométrica; 200 = sin objeto/en alcance máximo. Mide en la dirección **real** de la cabeza en ese instante (no en la del último `moverServoYaw`); con la cabeza al frente (90°) es idéntica a la lectura anterior |
 | `leerLineaNormalizada(k)` | 0–1000 para k=0/1/2 |
 | `leerUmbralLinea()` | umbral normalizado guardado |
 | `lineaIzquierda()` | 0/1 |
@@ -159,3 +159,21 @@ Valores distintos de `-1/0/1` producen aviso y no mueven la garra.
 El runtime valida aridad, nombres, funciones duplicadas, parámetros duplicados, uso incorrecto de `return`, variables no declaradas y funciones inexistentes. La profundidad máxima de llamadas es 64 para evitar que una recursión infinita congele el navegador.
 
 Algunas construcciones no soportadas tienen mensajes específicos; otras siguen siendo parte del trabajo de compatibilidad futura.
+
+## Cabeza móvil (yaw) — referencia de desarrollo
+
+- Módulos: `head-sonar.js` (estado, movimiento y geometría del haz) y `head-config.js` (parámetros de esta versión). Orden de carga fijo en `index.html`: `head-sonar.js` → `head-config.js` → `simulator.js`. `iroh-runtime.js` no depende del orden: consulta `HEAD_SONAR` al ejecutar cada comando.
+- Si la página se carga sin esos módulos (por ejemplo, `index.html` en caché de una versión anterior), los programas antiguos funcionan igual y `inicializarCabeza()` / `moverServoYaw()` muestran un aviso comprensible en lugar de un error.
+- `moverServoPitch()` y `apagarCabeza()` siguen sin efecto.
+- La cabeza vuelve a 90° al reiniciar y al cambiar de pista.
+
+### Valores virtuales provisionales (NO medidos en el robot real)
+
+| Valor | Uso | Estado |
+|---|---|---|
+| 180 °/s | velocidad del giro | provisional |
+| `esperaCabeza = 1200` ms | referencia virtual para esperar el recorrido máximo (1000 ms + margen) en el programa docente experimental | provisional |
+| altura del sonar 15,1 cm | las cajas más bajas no se detectan | **incierta**: el modelo 3D sugiere 18,1–19,7 cm |
+| altura de las cajas 15,6 cm | valor por omisión del escenario | **supuesto** |
+
+Con una altura de sonar de 18,9 cm una caja de 15,6 cm no se detecta: la combinación real de ambas alturas puede producir «SIN CAJAS» y debe medirse antes de usar valores como definitivos.

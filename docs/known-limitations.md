@@ -15,9 +15,9 @@ Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepa
 
 ## Cabeza y sonar orientable
 
-`inicializarCabeza()`, `moverServoYaw()`, `moverServoPitch()` y `apagarCabeza()` son reconocidas pero no tienen efecto físico. El sonar permanece fijo al eje frontal.
+`inicializarCabeza()` y `moverServoYaw()` mueven una cabeza **virtual**: ángulos intermedios, movimiento progresivo (180 °/s provisional) y sonar orientado según el ángulo real. `moverServoPitch()` y `apagarCabeza()` siguen sin efecto. Nada de esto está medido en el robot real: velocidad, alcance mecánico, tiempo de asentamiento, altura del sonar (15,1 cm en el simulador; 18,1–19,7 cm según el modelo 3D) y altura de las cajas (15,6 cm, supuesto) son incertidumbres abiertas.
 
-Impacto principal: S07 no puede reproducirse completa y S08 necesita una estrategia alternativa girando el cuerpo.
+La animación usa las piezas del robot procedural; no representa el montaje real elevado. El modelo `?robot=iroh` no gira la cabeza. La solución de referencia de S08 con cabeza móvil es experimental y no se publica como código inicial; S08 mantiene Base 2 en 90/90 verificables (diez puntos de selección A/B pendientes).
 
 ## Sonar
 

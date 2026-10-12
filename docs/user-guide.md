@@ -100,7 +100,7 @@ inicializarSensores();
 int d = leerDistanciaSonar();
 ```
 
-El sonar actual mira hacia delante con un cono geométrico estrecho. Una caja fuera del cono no se detecta aunque esté cerca lateralmente.
+El sonar mira hacia donde apunta la cabeza (al frente por omisión) con un cono geométrico estrecho. Una caja fuera del cono no se detecta aunque esté cerca lateralmente. Con `moverServoYaw(angulo)` (0 = derecha, 90 = frente, 180 = izquierda; admite ángulos intermedios) puedes girar la cabeza sin mover el robot; el giro es progresivo, así que espera con `pausa()` antes de leer.
 
 ## 8. Garra
 
@@ -176,4 +176,4 @@ Ese comportamiento forma parte del aprendizaje.
 
 ## 13. Limitaciones actuales
 
-La cabeza yaw/pitch aún no está modelada; `millis()` y varias construcciones Arduino/C++ tampoco. Consulta `known-limitations.md` antes de portar código del robot físico o del Lab literalmente.
+La cabeza móvil modela solo el giro yaw (valores virtuales, no medidos); el pitch no está modelado; `millis()` y varias construcciones Arduino/C++ tampoco. Consulta `known-limitations.md` antes de portar código del robot físico o del Lab literalmente.
