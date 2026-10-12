@@ -1,5 +1,7 @@
 # Estado funcional de sesiones S01–S08
 
+> **Lectura vigente (12-10-2026):** la matriz de `SESSION-VALIDATION-2` y las descripciones de S07/S08 que aparecen a continuación son **históricas**. Los avances posteriores de producción HEAD-CANVAS se registran al final, en «Actualización posterior». La geometría de `main` es diferente y no ha sido revalidada integralmente con esas soluciones.
+
 ## Alcance de esta matriz
 
 Este documento recoge dos auditorías funcionales con programas reales, recorridos físicos, sensores, actuadores y escenarios:
@@ -11,7 +13,7 @@ Este documento recoge dos auditorías funcionales con programas reales, recorrid
 
 La regla de lectura: **los hallazgos físicos de la validación 1 siguen vigentes**; lo que cambió es el bloqueo de lenguaje.
 
-## Matriz actual (SESSION-VALIDATION-2)
+## Matriz histórica (SESSION-VALIDATION-2)
 
 | Sesión | Movimiento | Línea | Gaps | IR | Pulsador | Sonar | LCD | Garra | Cabeza | Funciones | Escenario | Ruta/Base | Estado |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -185,9 +187,30 @@ Limitaciones:
 - con cajas laterales la posición de la garra importa durante el giro y al avanzar (con la garra a un lado, el robot puede empujar cajas laterales);
 - las lecturas laterales rondan 3 cm, por debajo de la zona muerta del sensor real, que el modelo no simula.
 
-## Próximas validaciones
+## Próximas validaciones propuestas en SESSION-VALIDATION-2 (histórico)
 
 1. HEAD-SERVO y nueva validación de S07/S08.
 2. Props de línea/intersección y nueva revisión de S03/S06.
 3. Compatibilidad pequeña de runtime (`millis`, `const`, aliases) según necesidad curricular.
 4. Medición física antes de alterar garra, cono del sonar o velocidades.
+
+## Actualización posterior — HEAD-CANVAS / S08-PRODUCTION-FIX-1 (2026-10-12)
+
+Esta sección añade evidencia a la evaluación histórica, sin sustituir su matriz ni cambiar automáticamente los estados curriculares. **HEAD-CANVAS existe en producción, no en el código funcional de `main`.** Ningún resultado posterior se ha comprobado con hardware físico ni con la geometría medida de `main`.
+
+### S07: capacidad virtual disponible, sesión aún sin cierre
+
+En HEAD-CANVAS `inicializarCabeza()` y `moverServoYaw(angulo)` permiten mover la cabeza horizontalmente y orientar las lecturas del sonar hacia las cajas laterales (0° derecha, 90° frente, 180° izquierda). `moverServoPitch()` y `apagarCabeza()` no tienen efecto. Se ha verificado la capacidad virtual, **pero no se ha repetido íntegramente la sesión S07**. Por ello la calificación histórica de S07 no se cambia.
+
+### S08: dos soluciones independientes para el inicio publicado
+
+- **Referencia docente corregida:** [`tests/head/fixtures/s08_cabeza_docente.template.ino`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/tests/head/fixtures/s08_cabeza_docente.template.ino).
+- **Ejemplo NNJ simplificado:** [`examples/s08_nnj_simplificado.ino`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/s08_nnj_simplificado.ino).
+
+Ambas usan la pose inicial publicada de S08, después de la barra inferior: el programa **no** debe comenzar con `salirDeLaBase()`. Las pruebas nuevas `tests/head/s08-real-start.cjs` informan **40/40 casos conformes por programa**: 38 llegadas correctas a base, un caso sin cajas y una espera indefinida esperada por un IR anticipado. Se comprobaron conteo/LCD, activación exclusiva nueva del IR, cabeza lateral con cuerpo inmóvil y **cero colisiones o cajas desplazadas**. La matriz histórica con pose dentro de la zona roja se conserva aparte: 68 casos, 67 plenamente verificables y una espera esperada.
+
+**Puntaje Base 2:** la matriz histórica mantiene 90/90 verificables; la nueva matriz desde la posición real muestra 80/80 al excluir los diez puntos de salida de la zona roja que ya no corresponden. Otros **diez puntos para distinguir A/B siguen pendientes** porque ambas rutas comparten el tronco. El caso de cero cajas no tiene significado curricular confirmado y el plotter no identifica inequívocamente A/B. La sesión S08 conserva por ello su estado **parcial**.
+
+**Evidencia manual:** el usuario informó el funcionamiento de ambos programas en producción el 12-10-2026, un escenario por solución. No equivale a la matriz automatizada ni a verificación en el robot real.
+
+Referencias: [informe HEAD-CANVAS y límites](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/sesiones-s01-s08.md) · [pruebas y ejemplos](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md) · [identidad de producción](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md).
