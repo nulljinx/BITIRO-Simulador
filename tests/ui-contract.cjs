@@ -19,17 +19,20 @@ test('Todos los ids que usan los scripts existen en el HTML',()=>{
   const src=fs.readFileSync(path.join(root,f),'utf8');
   for(const m of src.matchAll(/(?:\$app|\$|getElementById)\('([A-Za-z0-9_-]+)'\)/g))used.add(m[1]);
  }
- // Ids construidos dinámicamente en los scripts: 'val'+S, 'bar'+S, 'state'+S (S∈L,C,R), 'ir'+k, 'white'+k, 'black'+k (k∈0..2)
- for(const s of ['L','C','R'])for(const p of ['val'])used.add(p+s);   // «Más datos» retirado: ya no hay bar*/state*
+ // Ids construidos dinámicamente en los scripts: 'val'+S, 'val'+S (S∈L,C,R; bar/state retirados en UI-GUIDE-1), 'ir'+k, 'white'+k, 'black'+k (k∈0..2)
+ for(const s of ['L','C','R'])for(const p of ['val'])used.add(p+s);
  for(const k of [0,1])used.add('ir'+k);
  for(const k of [0,1,2]){used.add('white'+k);used.add('black'+k);}
- const missing=[...used].filter(id=>!ids.includes(id));
+ // SIM-MENU-CLEANUP-1: controles retirados de «Más»; su lógica sigue en simulator.js con enlaces opcionales (?.) y no deben volver al HTML.
+ const retiredMenu=['demo','reference','clawLeft','clawCenter','clawRight'];
+ for(const id of retiredMenu)assert.ok(!ids.includes(id),id+' retirado del HTML: no debe reaparecer');
+ const missing=[...used].filter(id=>!ids.includes(id)&&!retiredMenu.includes(id));
  assert.deepEqual(missing,[],'Ids usados por los scripts y ausentes del HTML: '+missing.join(', '));
  console.log('   ids comprobados: '+used.size);
 });
-test('Clases que consultan los scripts existen (.cam con data-view, .threshold-marker)',()=>{
+test('Clases que consultan los scripts existen (.cam con data-view)',()=>{
  for(const v of ['perspective','top','follow','robot'])assert.match(html,new RegExp(`class="cam[^"]*" data-view="${v}"`));
- assert.equal((html.match(/class="threshold-marker"/g)||[]).length,0,'los marcadores vivían solo en «Más datos»; simulator.js los consulta con querySelectorAll (no-op sin elementos)');
+ assert.ok(!/threshold-marker/.test(html),'marcadores de umbral retirados con el panel de telemetría detallada');
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
@@ -47,18 +50,21 @@ test('Los cinco nodos legacy están dentro de un contenedor oculto (hidden + ari
  for(const id of ['calibrate','calibrationSummary','lessonTitle','lessonGoal','lessonQuestion'])assert.match(wrapper[1],new RegExp(`id="${id}"`),id);
  assert.match(wrapper[1],/<button id="calibrate" type="button" tabindex="-1">/);
 });
-test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetría compacta y datos avanzados en «Más datos»',()=>{
+test('PILOT-2: sin fila de título; controles secundarios en «Más»; telemetría compacta sin panel de datos detallados (UI-GUIDE-1)',()=>{
  assert.ok(!/workspace-heading/.test(html),'la fila de título redundante debe estar eliminada');
  assert.match(html,/<h1 class="sr-only">/,'conserva un h1 accesible');
  const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s);assert.ok(menu,'menú Más');
- for(const id of ['codeToggle','speed','quality','showTrail','demo','clawLeft','clawCenter','clawRight','reference'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ for(const id of ['codeToggle','speed','quality','showTrail','editScenario'])assert.match(menu[1],new RegExp(`id="${id}"`),id+' debe estar en «Más»');
+ // SIM-MENU-CLEANUP-1: exactamente cinco opciones, en este orden, sin elementos retirados.
+ assert.deepEqual([...menu[1].matchAll(/id="(codeToggle|speed|quality|showTrail|editScenario|demo|clawLeft|clawCenter|clawRight|reference)"/g)].map(m=>m[1]),['codeToggle','speed','quality','showTrail','editScenario']);
+ for(const txt of ['Demostración guiada','Garra manual','Ver plotter original','Sin conexión','menu-note','claw-'])assert.ok(!menu[1].includes(txt),txt+' retirado de «Más»');
+ assert.ok(!/<div class="menu-divider"><\/div>\s*<\/div>\s*$/.test(menu[1]),'sin separador final sobrante');
  for(const id of ['ir0','ir1','pulsador'])assert.ok(!menu[1].includes(`id="${id}"`),id+' ya NO va en «Más»: es una entrada siempre visible');
- const strip=html.match(/<div class="telemetry-strip".*?<\/details>/s);assert.ok(strip,'franja de telemetría');
+ const strip=html.match(/<div class="telemetry-strip".*?<div class="inputs-strip"/s);assert.ok(strip,'franja de telemetría');
  for(const id of ['valL','valC','valR','sonar','motors','strikerStatus','lcd'])assert.match(strip[0],new RegExp(`id="${id}"`),id+' debe estar en la vista principal');
  for(const id of ['barL','barC','barR','stateL','stateC','stateR'])assert.ok(!strip[0].includes(`id="${id}"`),id+' no debe estar en la vista principal');
- assert.ok(!/more-data/.test(html),'«Más datos» retirado del HTML');
- for(const id of ['position','movedObjects','decision','runEvidence'])assert.ok(!ids.includes(id),id+' pertenecía a «Más datos» y ya no existe');
- for(const f of ['simulator.js','ui-shell.js','calibration-mode.js','scenario-editor.js'])assert.ok(!/\$app\('(?:position|movedObjects|decision|runEvidence)'\)/.test(fs.readFileSync(path.join(root,f),'utf8')),f+' no debe referenciar elementos retirados');
+ assert.ok(!/id="moreData"|more-data|Más datos|pop-panel/.test(html),'sin botón «…» ni panel de telemetría detallada');
+ for(const id of ['barL','barC','barR','stateL','stateC','stateR','position','movedObjects','decision','runEvidence'])assert.ok(!html.includes(`id="${id}"`),id+' retirado de la UI');
  assert.ok(!/1000 \/ 1000/.test(html),'no debe haber texto «1000 / 1000» estático');
 });
 test('PILOT-2: el editor documenta la salida con teclado y el canvas no depende de una columna lateral',()=>{
@@ -85,10 +91,10 @@ test('PILOT-4: tokens de sintaxis = tema «bitiro-night» del Lab y LCD con bise
  assert.match(html,/<div class="lcd-bezel"><pre id="lcd"/);
  assert.ok(fs.existsSync(path.join(root,'syntax-highlight.js')));
 });
-test('Micro-pulido: cabecera sin «Local · Sin conexión» (pasa a «Más»), selector de pista de ancho fijo y deshabilitados claros',()=>{
+test('Micro-pulido: cabecera y «Más» sin «Local · Sin conexión», selector de pista de ancho fijo y deshabilitados claros',()=>{
  const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
  assert.ok(!/Sin conexión|top-note/.test(header),'la cabecera solo lleva la marca');
- const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s)[1];assert.match(menu,/<p class="menu-note">Local · Sin conexión<\/p>/);
+ const menu=html.match(/<details class="menu pop" id="moreMenu">(.*?)<\/details>/s)[1];assert.ok(!/Sin conexión/.test(menu),'el indicador visual «Local · Sin conexión» ya no se muestra en «Más»');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
  // El selector no puede crecer con nombres largos: ancho y máximo fijos (184 px; 150 px entre 1024 y 1279) y la <select> al 100 %.
  assert.match(css,/\.track-field\{[^}]*flex:0 1 184px;width:184px;max-width:184px\}/);assert.match(css,/\.track-field\{flex-basis:150px;width:150px;max-width:150px\}/);
@@ -110,8 +116,27 @@ test('PILOT-5: S01–S08 sin selector de soluciones; «Restaurar código inicial
  assert.match(html,/<button type="button" id="restoreStarter" class="restore-button">Restaurar código inicial<\/button>/);
  const dlg=html.match(/<dialog id="restoreDialog"[^>]*>(.*?)<\/dialog>/s);assert.ok(dlg);assert.match(dlg[1],/id="restoreConfirm"/);assert.match(dlg[1],/id="restoreCancel"/);assert.ok(!/<form/.test(dlg[1]),'sin <form> (CSP form-action none)');
  assert.ok(fs.existsSync(path.join(root,'starters.js')));
- const help=html.match(/<dialog id="guideDialog".*?<\/dialog>/s)[0];   // la ayuda «Funciones y límites» pasó a la Guía (SIM-UI-RELEASE)
- assert.match(help,/leerBoton\(\)/);assert.match(help,/leerSensorObstaculoIzquierdo\(\)/);
+ assert.ok(!/Funciones y límites/.test(html),'sin acordeón inline de funciones y límites');
+ const bar=html.match(/<div class="file-bar">.*?<\/div>/s)[0];
+ assert.match(bar,/<button type="button" id="guideOpen"[^>]*aria-haspopup="dialog"[^>]*>Guía<\/button>/);assert.ok(bar.indexOf('id="guideOpen"')<bar.indexOf('id="codeClose"'),'Guía antes de cerrar');
+ const gd=html.match(/<dialog id="guideDialog"[^>]*>(.*?)<\/dialog>/s);assert.ok(gd,'dialog Guía');
+ assert.match(gd[1],/Guía de programación IROH/);assert.match(gd[1],/id="guideClose"/);assert.ok(!/<form/.test(gd[1]));
+ // SIM-GUIDE-NNJ-1: ocho temas de aprendizaje, desplegables y en este orden; buscador y avisos accesibles.
+ const topics=[...gd[1].matchAll(/<details class="guide-topic" id="([^"]+)"[^>]*>\s*<summary>.*?<strong>(.*?)<\/strong>/gs)].map(m=>m[2]);
+ assert.deepEqual(topics,['Primeros pasos','¡Vamos a movernos!','Siguiendo la línea','Detectando obstáculos','La pantalla de IROH','Moviendo sus mecanismos','Aprende a programar','Para seguir aprendiendo']);
+ assert.equal((gd[1].match(/<details class="guide-topic"[^>]*\sopen/g)||[]).length,1,'solo el primer tema empieza abierto');
+ assert.match(gd[1],/<input type="search" id="guideSearch"/);assert.match(gd[1],/<label class="sr-only" for="guideSearch">/);
+ assert.match(gd[1],/id="guideSearchStatus"[^>]*role="status"/);assert.ok(!/guide-card/.test(gd[1]));
+ for(const b of gd[1].matchAll(/<button type="button" class="guide-copy"[^>]*>/g))assert.match(b[0],/aria-label="Copiar el programa «[^»]+»"/);
+ // cada función de la guía existe en el runtime (fuente de verdad) y cada función del runtime está en la guía
+ const rt=fs.readFileSync(path.join(root,'iroh-runtime.js'),'utf8');const FN=rt.slice(rt.indexOf('const FN={'),rt.indexOf('function find(n,ln)'));
+ const real=[...FN.matchAll(/(?:^|[\s,{])([a-zA-Z]+):\[\[/g)].map(m=>m[1]);assert.ok(real.length>=33,'funciones del runtime: '+real.length);
+ const text=gd[1].replace(/<[^>]+>/g,' ');
+ for(const f of real)assert.ok(new RegExp('\\b'+f+'\\b').test(text),'la guía documenta '+f);
+ const used=new Set([...text.matchAll(/\b((?:avanzar|retroceder|girar|detener|pausa|finPrograma|boton|leer|linea|escribir|borrar|apagar|prender|inicializar|mover)[A-Za-z]*)\(/g)].map(m=>m[1]));
+ for(const f of used)assert.ok(real.includes(f),'la guía menciona una función inexistente: '+f);
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,'sin ids duplicados');
+ assert.ok(!/(src|href)="https?:/.test(gd[1]),'sin recursos externos en la guía');
 });
 test('Fuentes locales referenciadas existen y no se cargan recursos externos (el único enlace absoluto es la marca hacia el Lab)',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
@@ -130,14 +155,5 @@ test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la
  assert.ok(!/>\s*Inicio\s*</.test(header));
  assert.ok(!/bitiro-piloto/.test(html),'sin referencias a BITIRO Lab');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);
-});
-test('Guía: botón y diálogo integrados (ids, aria, cierre) y cableados en ui-shell.js',()=>{
- assert.match(html,/<button[^>]*id="guideOpen"[^>]*aria-haspopup="dialog"[^>]*aria-controls="guideDialog"/);
- assert.match(html,/<dialog id="guideDialog"[^>]*aria-labelledby="guideTitle"[^>]*aria-describedby="guideSub"/);
- for(const id of ['guideTitle','guideSub','guideClose'])assert.ok(ids.includes(id),id);
- assert.equal(ids.filter(i=>i==='guideDialog').length,1);
- const shell=fs.readFileSync(path.join(root,'ui-shell.js'),'utf8');
- for(const w of ["guideOpen.addEventListener('click'","guideClose?.addEventListener('click'","e.target===guideDialog"])assert.ok(shell.includes(w),w);
- assert.ok(!/<script[^>]*src="https?:/.test(html));
 });
 console.log(`\n${checks} comprobaciones de contrato de interfaz superadas.`);
