@@ -114,7 +114,7 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 ## Estado de las sesiones
 
-Última validación funcional integral: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios), sobre un runtime que ya está desplegado en producción.
+Última validación funcional integral de las sesiones: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios). La cabeza virtual (HEAD-CANVAS) se validó aparte, ver [`docs/release-sim-head-canvas.md`](docs/release-sim-head-canvas.md).
 
 | Sesión | Estado |
 |---|---|
@@ -130,9 +130,9 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 - **S04** quedó validada completa tras `RUNTIME-FUNCTIONS-1`: gaps, intersecciones y meta con funciones propias reales.
 - **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
 - **S07** conserva su estado hasta una nueva validación formal: el giro yaw de la cabeza y el sonar orientable existen ya como **modelo virtual** (HEAD-CANVAS), pero el pitch no está modelado y ningún parámetro de la cabeza está medido en el robot real.
-- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor. S08 cuenta además con una solución de referencia **experimental** que mira con la cabeza sin girar el cuerpo (validada solo en simulación; no es código inicial del estudiante). **Base 2 se conserva en 90/90 puntos verificables; los diez puntos de selección A/B siguen pendientes.**
+- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor. S08 cuenta además con dos soluciones docentes independientes que miran con la cabeza sin girar el cuerpo (una referencia docente parametrizada y una solución pedagógica NNJ simplificada), validadas en simulación con la posición inicial publicada; ninguna es código inicial del estudiante ni se ejecuta sola. Ver [`examples/README.md`](examples/README.md). **Base 2 se conserva en 90/90 puntos verificables; los diez puntos de selección A/B siguen pendientes.** No se declara S07 completa ni S08 universalmente completa, y nada está comprobado en el robot físico.
 
-Producción pública (`simulador.nulljinx.com`) está desplegada con `RUNTIME-FUNCTIONS-1` y verificada en escritorio, tablet y móvil. Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
+**Producción pública** (`simulador.nulljinx.com`): HEAD-CANVAS (cabeza virtual) publicado el 2026-10-12 sobre `SIM-NNJ-101d19f`; ver [`docs/release-sim-head-canvas.md`](docs/release-sim-head-canvas.md) y [`docs/release-sim-nnj-101d19f.md`](docs/release-sim-nnj-101d19f.md) (historia). **`main` no representa necesariamente los bytes desplegados:** no deduzcas la versión publicada de HEAD de `main`. Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
 
 ## Lenguaje soportado
 
@@ -168,6 +168,8 @@ syntax-highlight.js   resaltado del editor
 iroh-runtime.js       parser, intérprete y API educativa
 simulator.js          estado, reloj y ciclo de simulación
 strike-physics.js     contacto de garra/cajas
+head-sonar.js         cabeza virtual: estado, giro progresivo y geometría del haz del sonar
+head-config.js        parámetros virtuales provisionales de la cabeza (no medidos)
 renderer3d.js         renderer procedural sobre Canvas
 calibration.js        modelo simulado de sensores de línea + light field
 tracks.js             pistas base
@@ -175,6 +177,7 @@ extra-tracks.js       pistas adicionales
 scenario-props.js     modelo y persistencia de cajas
 scenario-editor.js    editor accesible de escenario
 starters.js           código inicial por sesión
+examples/             soluciones docentes de S08 (no son código inicial)
 tests/                pruebas deterministas y regresiones
 ```
 
@@ -196,7 +199,7 @@ No requiere base de datos, cuenta, credenciales ni servicios externos para ejecu
 
 ## Pruebas
 
-La baseline actual tiene 14 suites principales (más la de interfaz en navegador):
+La baseline actual tiene 14 suites principales, más las de la cabeza virtual y las de interfaz en navegador:
 
 ```bash
 node tests/track-digitize.cjs
@@ -213,8 +216,20 @@ node tests/runtime-start.cjs
 node tests/runtime-servo.cjs
 node tests/runtime-functions.cjs
 node tests/calibration.cjs
+node tests/head-sonar.cjs       # cabeza virtual: estado, movimiento y geometría del haz
 node tests/calibration-ui.mjs   # navegador real (Chrome por CDP); se omite sin Chrome
+node tests/head-ui.mjs          # navegador real: cabeza móvil
+node tests/head-compat-ui.mjs   # navegador real: orden de carga y caché
 ```
+
+Regresiones de S08 con cabeza (soluciones docentes; ver [`examples/README.md`](examples/README.md)):
+
+```bash
+node tests/head/s08-matrix.cjs        # HISTÓRICA: pose dentro de la zona roja, fixture histórico
+node tests/head/s08-real-start.cjs    # NUEVA: pose real de track.start; referencia docente y solución NNJ
+```
+
+Las pruebas de navegador usan tiempo real y pueden fallar de forma intermitente en máquinas lentas (p. ej. `head-ui` U3, `calibration-ui`); repetir antes de concluir.
 
 Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs/calibration-mode.md).
 
@@ -228,6 +243,8 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Arquitectura](docs/architecture.md)
 - [Modelo de pistas y escenarios](docs/track-model.md)
 - [Baseline actual](docs/current-baseline.md)
+- [Release HEAD-CANVAS (publicada)](docs/release-sim-head-canvas.md) y [SIM-NNJ-101d19f (anterior)](docs/release-sim-nnj-101d19f.md)
+- [Soluciones docentes de S08](examples/README.md)
 - [Limitaciones conocidas](docs/known-limitations.md)
 - [Baseline v4 histórica](docs/sim-v4-baseline.md)
 - [Historia de decisiones de UI](docs/pilot-ui-reference.md)

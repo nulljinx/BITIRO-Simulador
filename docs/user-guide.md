@@ -102,6 +102,8 @@ int d = leerDistanciaSonar();
 
 El sonar mira hacia donde apunta la cabeza (al frente por omisión) con un cono geométrico estrecho. Una caja fuera del cono no se detecta aunque esté cerca lateralmente. Con `moverServoYaw(angulo)` (0 = derecha, 90 = frente, 180 = izquierda; admite ángulos intermedios) puedes girar la cabeza sin mover el robot; el giro es progresivo, así que espera con `pausa()` antes de leer.
 
+**S08 y la posición inicial.** Al cargar S08 el robot ya está después de la barra inicial (fuera de la zona roja): el programa debe empezar a seguir la línea desde el primer instante, sin un tramo previo de «salir de la base». Existen soluciones docentes de S08 que miran con la cabeza (referencia docente y versión NNJ simplificada) en [`../examples/README.md`](../examples/README.md); son material para el docente, no se cargan solas y no resuelven el desafío por el estudiante.
+
 ## 8. Garra
 
 ```cpp
@@ -176,4 +178,4 @@ Ese comportamiento forma parte del aprendizaje.
 
 ## 13. Limitaciones actuales
 
-La cabeza móvil modela solo el giro yaw (valores virtuales, no medidos); el pitch no está modelado; `millis()` y varias construcciones Arduino/C++ tampoco. Consulta `known-limitations.md` antes de portar código del robot físico o del Lab literalmente.
+La cabeza móvil modela solo el giro yaw (valores virtuales, no medidos: velocidad, espera, alturas); el pitch no está modelado; `millis()` y varias construcciones Arduino/C++ tampoco. Consulta `known-limitations.md` antes de portar código del robot físico o del Lab literalmente.

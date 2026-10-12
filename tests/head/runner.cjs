@@ -5,7 +5,7 @@ const { evaluate } = require('./eval2.cjs');
 const P2 = require('./s08-geometry.cjs');
 const START = { x: 37.853, y: 171.7, th: 0 };          // dentro de la zona roja (cuerpo completo), como POC-2
 const CAL = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 's08-calibracion.json')));
-function program(version, o = {}, template = 's08_cabeza_docente.template.ino') {
+function program(version, o = {}, template = 's08_cabeza_docente_historico.template.ino') {
   let src = fs.readFileSync(path.join(__dirname, 'fixtures', template), 'utf8');
   const c = CAL[version];
   const val = { V: c.V, ACERCAR: c.acercar, CENTRAR: c.centrar, ENTRAR: c.entrar, ESPERA: 1200, LIMITE: 20, ...o };
@@ -62,7 +62,7 @@ function runCase({ version, slots, ir, pose = START, code = null, maxSeconds = 1
   const res = evaluate({ world: w, exec: ex, trueCount });
   return { version, tree, slots, ir, label, start: pose, res, log: ex.log, msg: w.msg(), globals };
 }
-module.exports = { START, CAL, program, runCase, IRPLANS };
+module.exports = { START, CAL, program, runCase, IRPLANS, runPlan: run };
 if (require.main === module) {
   const [version = 'main', slotsArg = '0,1,2,3', ir = 'L'] = process.argv.slice(2);
   const slots = slotsArg === '-' ? [] : slotsArg.split(',').map(Number);

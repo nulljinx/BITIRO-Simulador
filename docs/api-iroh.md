@@ -167,6 +167,10 @@ Algunas construcciones no soportadas tienen mensajes específicos; otras siguen 
 - `moverServoPitch()` y `apagarCabeza()` siguen sin efecto.
 - La cabeza vuelve a 90° al reiniciar y al cambiar de pista.
 
+### Ejemplos de uso en S08
+
+Dos programas docentes independientes usan estas funciones para contar cajas con la cabeza y el cuerpo detenido: la referencia parametrizada y la versión NNJ simplificada ([`../examples/README.md`](../examples/README.md)). Ambas esperan con `pausa(1200)` tras `moverServoYaw(...)` y leen `leerDistanciaSonar()` con la cabeza de lado; los 1200 ms son un valor virtual provisional, no una medición. Son material didáctico: no forman parte de la API ni del código inicial.
+
 ### Valores virtuales provisionales (NO medidos en el robot real)
 
 | Valor | Uso | Estado |

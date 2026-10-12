@@ -7,7 +7,7 @@ Este documento recoge dos auditorías funcionales con programas reales, recorrid
 - **`SESSION-VALIDATION-1`**, sobre la baseline `5b548f2`, anterior a las funciones propias del estudiante;
 - **`SESSION-VALIDATION-2`**, sobre `61aba25` (que incluye `b5683f0`, `RUNTIME-FUNCTIONS-1`), ejecutada localmente. Los programas de S01–S08 se reescribieron con funciones propias reales (`void` con y sin parámetros, `int` con `return`, funciones que llaman a funciones, `pausa()` y `botonInicio()` dentro de funciones).
 
-`RUNTIME-FUNCTIONS-1` no cambió física, pistas ni goldens. Producción pública (`simulador.nulljinx.com`) fue desplegada con ese runtime y verificada el 2026-10-06; ver [`current-baseline.md`](current-baseline.md).
+`RUNTIME-FUNCTIONS-1` no cambió física, pistas ni goldens. Producción pública (`simulador.nulljinx.com`) fue desplegada con ese runtime y verificada el 2026-10-06 (dato histórico; la producción vigente es HEAD-CANVAS, 2026-10-12: ver [`release-sim-head-canvas.md`](release-sim-head-canvas.md) y [`current-baseline.md`](current-baseline.md)).
 
 La regla de lectura: **los hallazgos físicos de la validación 1 siguen vigentes**; lo que cambió es el bloqueo de lenguaje.
 
@@ -180,7 +180,7 @@ Con 1, 2, 3 y 4 cajas agregadas por escenario (los `boxSlots` son metadata, no c
 
 La solución funcional validada en SESSION-VALIDATION-2 **gira el cuerpo** para mirar lateralmente con el sonar. Eso demuestra que la física y la ruta son viables, pero no reproduce la intención de usar servomotores de cabeza.
 
-**Actualización HEAD-CANVAS:** existe además una solución de referencia **experimental** que mira con la cabeza virtual sin mover el cuerpo (ver «Actualización HEAD-CANVAS»). Solo está validada en simulación, no es código inicial del estudiante y no demuestra nada sobre el robot físico. La estimación de la espera de la cabeza (`esperaCabeza = 1200 ms`) es una referencia virtual provisional, no una medición.
+**Actualización HEAD-CANVAS:** existen además dos soluciones docentes **independientes** que miran con la cabeza virtual sin mover el cuerpo (ver «Actualización HEAD-CANVAS» y «Corrección S08-PRODUCTION-FIX-1»). Solo están validadas en simulación, no son código inicial del estudiante, no se ejecutan solas y no demuestran nada sobre el robot físico. La estimación de la espera de la cabeza (`esperaCabeza = 1200 ms`) es una referencia virtual provisional, no una medición.
 
 Limitaciones:
 
@@ -225,6 +225,24 @@ Fecha: 2026-10-12. Distingue tres niveles que no deben confundirse.
 | animación | piezas del robot procedural; no representa el montaje real elevado; `?robot=iroh` no gira la cabeza | limitación visual |
 
 **No se afirma que S07 ni S08 estén validadas sobre hardware real.**
+
+## Corrección S08-PRODUCTION-FIX-1 (posición inicial)
+
+Fecha: 2026-10-12. Tras publicar HEAD-CANVAS se detectó que el programa docente de S08 comenzaba con `salirDeLaBase()`, escrito para un robot **dentro de la zona roja**. La posición inicial publicada de S08 (`track.start`: 37,853 · 152,8 · −π/2) ya está **después** de la barra inicial (y = 161,69; zona roja y 161,7–181,7). El simulador no cambió: se corrigió el **programa de ejemplo**.
+
+Se mantienen **dos soluciones independientes** (ver [`../examples/README.md`](../examples/README.md)): la referencia docente parametrizada (`tests/head/fixtures/s08_cabeza_docente.template.ino`, corregida) y la solución pedagógica NNJ simplificada (`examples/s08_nnj_simplificado.ino`, tal como la entregó el usuario). `starters.js` no se modifica.
+
+Tres niveles de evidencia, que no se mezclan:
+
+| Nivel | Qué es | Resultado |
+|---|---|---|
+| **Histórico** (sin cambios) | `tests/head/s08-matrix.cjs`: pose dentro de la zona roja, fixture `s08_cabeza_docente_historico.template.ino` (con `salirDeLaBase()`) | 68 ejecuciones, 67 con todo lo verificable; la restante es la espera indefinida esperada; 0 colisiones; 0 cajas movidas; Base 2 = 90/90 verificables |
+| **Automatizado nuevo** | `tests/head/s08-real-start.cjs`: pose real de `track.start` (no copiada a mano), referencia docente corregida **y** solución NNJ | 40/40 casos por programa: 0, 1 (4 posiciones), 2, 3 y 4 cajas; rutas A y B; señales IR especiales; lecturas laterales con el cuerpo detenido; IR nuevo y exclusivo; base y LCD correctas; 0 colisiones; 0 cajas desplazadas. «Salir de la base» (10 pts) no aplica y se excluye. Base 2: 80/80 (= 90/90 menos esos 10 pts); A/B pendiente |
+| **Manual del usuario** (producción, 2026-10-12) | referencia docente corregida y solución NNJ ejecutadas en el escenario probado | funcionaron: giro de cabeza, conteo de cajas, navegación y base correcta. Un escenario; sin registro en el repositorio |
+
+Diferencias respecto del histórico: (1) el robot parte 19 cm más adelante y no hay tramo de salida; (2) no se exige `salirDeLaBase()`; (3) con la pose publicada la plantilla histórica **falla** («SIN CAJAS») y con la pose en zona roja la solución NNJ **no cuenta bien** (3 cajas → «Base: 2», control informativo): cada solución es válida solo para su pose de partida.
+
+**Límites:** son pruebas de simulación determinista, sin ruido ni zona muerta del sonar real; S07 **no** se declara completa y S08 **no** se declara universalmente completa (A/B de línea sin identificar en el plotter, 0 cajas sin significado curricular confirmado, diez puntos A/B de Base 2 pendientes). Nada se probó en el robot físico.
 
 ## Próximas validaciones
 

@@ -1,4 +1,5 @@
 // BITIRO · S08 «Clasificatoria» · solución de REFERENCIA PARA DOCENTES con cabeza móvil (HEAD-SONAR-POC-1)
+// Corregida para la posición inicial publicada (track.start de S08): no llama a salirDeLaBase().
 // Usa moverServoYaw() de la cabeza EXPERIMENTAL: el cuerpo NO gira para mirar las cajas.
 // Los nombres de las funciones son una propuesta de lo que escribe el estudiante; el simulador no los conoce.
 // Los números marcados con (*) se calibran UNA VEZ por versión del robot/simulador (ver CALIBRACION.md).
@@ -51,13 +52,6 @@ void salirDeLaBarra() {
   while (barra()) {
     seguirLinea();
   }
-}
-
-void salirDeLaBase() {               // la zona roja se lee como blanco: avanza recto hasta la barra negra
-  avanzar(v);
-  while (!barra()) {
-  }
-  salirDeLaBarra();
 }
 
 // ---------- Cajas: el robot NO se mueve, solo la cabeza ----------
@@ -186,7 +180,7 @@ void setup() {
 }
 
 void loop() {
-  salirDeLaBase();
+  // La posición inicial publicada ya está DESPUÉS de la barra inicial: el robot sigue la línea desde el primer instante.
   hastaLaBarra();                    // pasa los dos gaps (cuenta las cajas) y llega a la primera intersección
   detenerse();
   base = cajas;

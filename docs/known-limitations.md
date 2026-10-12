@@ -2,12 +2,12 @@
 
 Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepancias que necesitan medición física antes de modificarse.
 
-## Prioridades actuales (tras SESSION-VALIDATION-2)
+## Prioridades actuales (tras SESSION-VALIDATION-2; HEAD-SERVO actualizado con HEAD-CANVAS, 2026-10-12)
 
 | Prioridad | Elemento |
 |---|---|
 | **P0** | ninguno |
-| **P1** | HEAD-SERVO (cabeza yaw/pitch + sonar orientable); elementos de línea/intersección temporales para S03/S06 |
+| **P1** | HEAD-SERVO restante: **pitch** y **validación física** de la cabeza (el yaw virtual y el sonar orientable ya están implementados en HEAD-CANVAS); elementos de línea/intersección temporales para S03/S06 |
 | **P2** | diferencias de velocidad, sensores y sonar entre standalone y Lab; acoplamiento garra-sonar; IR/Pulsador sin rebote; `millis()` |
 | **P3** | `const`; aliases `*Robot`; starts prácticos; documentación y medición física |
 
@@ -15,13 +15,21 @@ Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepa
 
 ## Cabeza y sonar orientable
 
+**Estado:** el yaw virtual está implementado; el pitch y la validación física siguen pendientes.
+
 `inicializarCabeza()` y `moverServoYaw()` mueven una cabeza **virtual**: ángulos intermedios, movimiento progresivo (180 °/s provisional) y sonar orientado según el ángulo real. `moverServoPitch()` y `apagarCabeza()` siguen sin efecto. Nada de esto está medido en el robot real: velocidad, alcance mecánico, tiempo de asentamiento, altura del sonar (15,1 cm en el simulador; 18,1–19,7 cm según el modelo 3D) y altura de las cajas (15,6 cm, supuesto) son incertidumbres abiertas.
 
-La animación usa las piezas del robot procedural; no representa el montaje real elevado. El modelo `?robot=iroh` no gira la cabeza. La solución de referencia de S08 con cabeza móvil es experimental y no se publica como código inicial; S08 mantiene Base 2 en 90/90 verificables (diez puntos de selección A/B pendientes).
+La animación usa las piezas del robot procedural; no representa el montaje real elevado. El modelo `?robot=iroh` no gira la cabeza. Las soluciones docentes de S08 con cabeza móvil (referencia docente y solución NNJ simplificada, ver [`../examples/README.md`](../examples/README.md)) son experimentales, no se publican como código inicial y solo están validadas en simulación; S08 mantiene Base 2 en 90/90 verificables (diez puntos de selección A/B pendientes). Cada una depende de la pose inicial para la que se escribió: con la pose publicada (después de la barra inicial) no debe llamarse `salirDeLaBase()`; la solución NNJ no cuenta bien si el robot parte dentro de la zona roja.
+
+## Evidencia de S08 con cabeza
+
+- La evidencia manual (producción, 2026-10-12) cubre **un** escenario por solución; las matrices son de simulación determinista.
+- La referencia docente y la NNJ comparten supuestos virtuales: espera de la cabeza `1200 ms`, giro 180 °/s, sonar a 15,1 cm y cajas de 15,6 cm, ninguno medido.
+- No se declara S07 completa ni S08 universalmente completa.
 
 ## Sonar
 
-Modelo actual:
+Modelo actual (el origen y la dirección de los rayos giran con el yaw de la cabeza; con la cabeza al frente, que es el caso de los programas sin cabeza, son los siguientes):
 
 - origen: 9,83 cm delante del centro;
 - tres rayos: −6°, 0°, +6°;
@@ -33,7 +41,7 @@ El Lab histórico usa un modelo distinto (más rayos y cono mayor). No debe alin
 
 ## Garra vs sonar
 
-Con garra centrada, la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 9,83 cm. En determinadas aproximaciones una caja puede entrar en contacto con la barra cuando el sonar está cerca de 12 cm.
+Con garra centrada (y la cabeza al frente), la punta queda aproximadamente a 21,8 cm del centro del robot, mientras el sonar nace a 9,83 cm. En determinadas aproximaciones una caja puede entrar en contacto con la barra cuando el sonar está cerca de 12 cm.
 
 Este acoplamiento afecta S03/S06 y requiere validación física antes de cambiar geometría o umbrales.
 

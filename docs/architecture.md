@@ -10,11 +10,29 @@ UI / editor
 iroh-runtime.js
     ↓
 simulator.js ───────── scenario-props.js
-    ↓                        ↓
-strike-physics.js        active world
+    ↓     ↘                  ↓
+strike-physics.js  head-sonar.js ← head-config.js   active world
     ↓
-renderer3d.js
+renderer3d.js (lee HEAD_SONAR.state solo para dibujar)
 ```
+
+### Inventario de módulos de runtime
+
+| Archivo | Rol |
+|---|---|
+| `index.html`, `styles.css`, `tokens.css` | interfaz y estilos |
+| `ui-shell.js`, `syntax-highlight.js`, `scenario-editor.js`, `calibration-mode.js` | interacción de UI |
+| `iroh-runtime.js` | parser, intérprete y API educativa |
+| `simulator.js` | estado, reloj y ciclo de simulación |
+| `strike-physics.js` | contacto garra/cajas |
+| `head-sonar.js` | **cabeza virtual**: estado, giro progresivo (yaw) y geometría del haz (`HEAD_SONAR`) |
+| `head-config.js` | **parámetros virtuales provisionales** de la cabeza (velocidad de giro, alcance); valores no medidos |
+| `calibration.js` | modelo simulado de sensores de línea |
+| `tracks.js`, `extra-tracks.js`, `scenario-props.js` | pistas y escenario |
+| `renderer3d.js` | renderer procedural sobre Canvas |
+| `starters.js` | código inicial por sesión (**no** contiene las soluciones docentes de S08, que viven en `examples/` y `tests/head/fixtures/`) |
+
+Orden de carga relevante en `index.html`: `head-sonar.js` → `head-config.js` → `simulator.js`. Si faltan los módulos de cabeza, los programas anteriores funcionan igual y las funciones de cabeza avisan sin lanzar error. El número exacto de archivos servidos en producción no se recuenta aquí.
 
 Las pistas (`tracks.js`, `extra-tracks.js`) describen suelo/geometría. El escenario (`scenario-props.js`) describe objetos físicos configurables. El currículo no forma parte del motor.
 

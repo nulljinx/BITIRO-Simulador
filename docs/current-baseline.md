@@ -2,7 +2,9 @@
 
 ## Identidad
 
-> **Actualización 2026-10-12:** producción sirve **SIM-NNJ-101d19f** (ver [`release-sim-nnj-101d19f.md`](release-sim-nnj-101d19f.md)). Lo que sigue describe el baseline anterior `SIM-UI-RELEASE-4`, sobre el que se construyó.
+> **Actualización 2026-10-12 (vigente):** producción sirve **HEAD-CANVAS** (cabeza virtual: `head-sonar.js`, `head-config.js` y cuatro archivos modificados; seis archivos en total, verificación HTTPS 8/8), publicado sobre **SIM-NNJ-101d19f**. Ver [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (respaldo previo: `/home/nulljinx/deploy-backups/SIM-HEAD-20261012-123256-356406`). La release anterior [`release-sim-nnj-101d19f.md`](release-sim-nnj-101d19f.md) se conserva como historia. **`main` (HEAD `101d19f`) no contiene HEAD-CANVAS ni representa los bytes desplegados**; el trabajo vive en `feature/head-canvas`. Los SHA-256 de los seis archivos publicados están registrados en [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (coinciden con `c56799b`; no comparados con el servidor). **Estado de la cabeza:** el yaw virtual está implementado; el pitch (`moverServoPitch()`) y la validación en el robot físico siguen pendientes.
+>
+> Todo lo que sigue desde aquí describe baselines **anteriores** (`SIM-UI-RELEASE-4` y previos), sobre los que se construyó, y se conserva como historia: cuando diga «producción actual» o «publicado», se refiere a ese momento, no al estado vigente descrito arriba.
 
 Baseline funcional de `RUNTIME-FUNCTIONS-1` (último cambio del lenguaje y del intérprete):
 
@@ -11,7 +13,7 @@ b5683f0fcb25b06057ddcb87502a6acca3b75ccf
 feat(runtime): support student-defined functions
 ```
 
-**Producción actual** (`https://simulador.nulljinx.com`): `SIM-UI-RELEASE-4`, desplegada y verificada el 2026-10-08 (`DEPLOY_OK`). Es una **release selectiva de cuatro archivos sobre el baseline `954c37c`** y se registra en la rama `release/sim-ui-release-4` (tag `sim-ui-release-4-deployed`), **no en `main`**: la producción no coincide con HEAD de `main`. No debe deducirse la versión publicada a partir de HEAD de `main`; la identidad válida son los SHA-256 de abajo.
+**Producción en ese momento (histórico, 2026-10-08; sustituida por HEAD-CANVAS el 2026-10-12)** (`https://simulador.nulljinx.com`): `SIM-UI-RELEASE-4`, desplegada y verificada el 2026-10-08 (`DEPLOY_OK`). Es una **release selectiva de cuatro archivos sobre el baseline `954c37c`** y se registra en la rama `release/sim-ui-release-4` (tag `sim-ui-release-4-deployed`), **no en `main`**: la producción no coincidía con HEAD de `main`. No debe deducirse la versión publicada a partir de HEAD de `main`; la identidad válida de **esa** release son los SHA-256 de abajo (`index.html` y `simulator.js` fueron sustituidos después por los de HEAD-CANVAS).
 
 ```text
 BASELINE ANTERIOR (sin la release):
@@ -39,13 +41,15 @@ Producción coincide byte a byte con ese commit. La documentación y los tests n
 
 Despliegue anterior: `61aba2555a59d0e41920caa10904932231010725` (2026-10-06) con `RUNTIME-FUNCTIONS-1`; desde `b5683f0` hasta ese commit, y hasta `a7631bd`, el runtime público era idéntico.
 
-### Inventario runtime de producción
+### Inventario runtime de producción (histórico; antes de HEAD-CANVAS)
 
 ```text
 16 archivos raíz  (13 JS + 2 CSS + index.html)
 14 assets         (1 símbolo + 5 fuentes + 1 licencia OFL + 7 plotters)
 30 archivos runtime en total
 ```
+
+HEAD-CANVAS añade dos archivos raíz (`head-sonar.js`, `head-config.js`): el árbol de `feature/head-canvas` tiene 18 archivos raíz (15 JS + 2 CSS + `index.html`) y los mismos 14 assets, es decir **32 archivos runtime**. Es una cuenta del repositorio; no se ha verificado el inventario del servidor.
 
 `calibration-mode.js` es un **asset runtime requerido**, desplegado y verificado. Si `index.html` llega a producción sin él, el botón «Calibración» queda visible pero inerte y el navegador registra un 404. El inventario anterior era de 29 archivos (15 raíz + 14 assets).
 
@@ -129,6 +133,13 @@ El runtime soporta funciones del estudiante con:
 
 Las 21 builtins `void` no pueden usarse como valores; las 12 funciones de lectura sí retornan número.
 
+### Cabeza virtual (HEAD-CANVAS)
+
+- `inicializarCabeza()` y `moverServoYaw(angulo)` mueven una cabeza **virtual**: ángulos intermedios, giro progresivo (180 °/s, provisional) y sonar orientado según el ángulo real;
+- `moverServoPitch()` y `apagarCabeza()` siguen sin efecto: el **pitch no tiene modelo**;
+- velocidad, espera (`1200 ms`), alturas y alcance son supuestos de simulación, **no medidos** en el robot real;
+- no cambian pistas, geometría, calibración ni goldens de movimiento. Detalle en [`release-sim-head-canvas.md`](release-sim-head-canvas.md) y [`known-limitations.md`](known-limitations.md).
+
 ### Modo calibración y modelo de sensor simulado
 
 `SIM-CALIBRATION-1` (detalle en [`calibration-mode.md`](calibration-mode.md)):
@@ -176,7 +187,7 @@ Los goldens no cambiaron durante `RUNTIME-FUNCTIONS-1`. `SIM-CALIBRATION-1` rege
 
 ## Siguiente trabajo recomendado
 
-1. HEAD-SERVO: yaw/pitch + sonar orientable (S07 y solución fiel de S08);
+1. HEAD-SERVO restante: pitch y validación física de la cabeza (el yaw virtual ya está implementado en HEAD-CANVAS; S07 sigue sin re-validarse y S08 sin declararse universalmente completa);
 2. props de línea/intersección para actividades que usan cinta temporal (S03/S06);
 3. compatibilidad pequeña de runtime (`millis`, `const`, aliases) según necesidad curricular;
 4. medición física antes de alterar wheelbase, cono sonar, geometría de garra o curva de velocidad;

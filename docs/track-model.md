@@ -28,7 +28,9 @@ S07 es **Repaso · sin pista propia**: superficie neutra sin líneas, zonas u ob
 | S04 | (50,002, 157,6), −π/2 | práctica; evita solape con zona roja |
 | S05 | (49,566, 163,2), −π/2 | práctica; evita solape con zona roja |
 | S06 | (49,349, 153,5), −π/2 | provisional/práctica |
-| S08 | (37,853, 152,8), −π/2 | provisional/práctica |
+| S08 | (37,853, 152,8), −π/2 | provisional/práctica; **después de la barra inicial** (y 161,69) y fuera de la zona roja (y 161,7–181,7): un programa no necesita «salir de la base» |
+
+Las pruebas S08 «de pose real» (`tests/head/s08-real-start.cjs`) leen esta pose de `track.start`; las históricas (`tests/head/s08-matrix.cjs`) parten de y = 171,7 dentro de la zona roja. Ver [`../examples/README.md`](../examples/README.md).
 
 Un `DEFAULT START` no se presenta como coordenada oficial del plotter cuando la fuente no la define.
 
