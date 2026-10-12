@@ -1,5 +1,7 @@
 # Baseline actual
 
+> **Actualización de estado 2026-10-12:** la producción actual **ya no es** `SIM-UI-RELEASE-4`. Sucesivamente se publicaron `SIM-NNJ-101d19f` (4 archivos; Guía por temas y menú «Más» simplificado, sobre la base de ruedas de 12 cm y sonar a 9,83 cm) y **HEAD-CANVAS** (cabeza virtual, 6 archivos, 2026-10-12). Estas releases se registran en `release/sim-nnj-101d19f` y `feature/head-canvas` (ver `docs/versioning-and-releases.md`); **`main` no contiene HEAD-CANVAS ni representa los bytes desplegados**, y producción no incluye la geometría IROH medida ni el modelo IROH 3D de `main`. Los SHA-256 de los seis archivos modificados y la referencia a la release base constan en [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (en `feature/head-canvas`). El texto siguiente se conserva como historia de `SIM-UI-RELEASE-4`.
+
 ## Identidad
 
 Baseline funcional de `RUNTIME-FUNCTIONS-1` (último cambio del lenguaje y del intérprete):
@@ -9,7 +11,7 @@ b5683f0fcb25b06057ddcb87502a6acca3b75ccf
 feat(runtime): support student-defined functions
 ```
 
-**Producción actual** (`https://simulador.nulljinx.com`): `SIM-UI-RELEASE-4`, desplegada y verificada el 2026-10-08 (`DEPLOY_OK`). Es una **release selectiva de cuatro archivos sobre el baseline `954c37c`** y está registrada en la rama `release/sim-ui-release-4` (commit `1a555ea`, tag `sim-ui-release-4-deployed`). **Producción no coincide con ningún commit de `main`.** No debe deducirse la versión publicada a partir de HEAD de `main`; la identidad válida son los SHA-256 de abajo.
+**Producción en ese momento (histórico, 2026-10-08; sustituida por HEAD-CANVAS el 2026-10-12)** (`https://simulador.nulljinx.com`): `SIM-UI-RELEASE-4`, desplegada y verificada el 2026-10-08 (`DEPLOY_OK`). Es una **release selectiva de cuatro archivos sobre el baseline `954c37c`** y está registrada en la rama `release/sim-ui-release-4` (commit `1a555ea`, tag `sim-ui-release-4-deployed`). **Producción no coincide con ningún commit de `main`.** No debe deducirse la versión publicada a partir de HEAD de `main`; la identidad válida son los SHA-256 de abajo.
 
 ```text
 BASELINE ANTERIOR (sin la release):
@@ -142,9 +144,9 @@ Las 21 builtins `void` no pueden usarse como valores; las 12 funciones de lectur
 
 Nota de rendimiento: el modo calibración es mediblemente más pesado que el renderizado normal. En un smoke de 20 s con dos repeticiones, P1 normal ≈ 49,7 FPS y P1 en calibración ≈ 40,4 FPS. No se ha demostrado la causa. Synthetic CPU throttling is not a substitute for validation on actual school hardware.
 
-## Cambios locales pendientes (no desplegados)
+## Cambios de desarrollo respecto de la release histórica (algunos ya llegaron a producción por otra vía)
 
-Hay cambios **solo en el árbol de trabajo**, sin commit y **sin desplegar**: producción sigue en `SIM-UI-RELEASE-4`. Esperan auditoría visual y funcional.
+**Registro histórico de esa etapa:** los cambios enumerados a continuación figuraban entonces como trabajo local sin commit y sin desplegar frente a `SIM-UI-RELEASE-4`. No describe el estado actual de `main` ni de producción; algunos se integraron o publicaron después por otras vías.
 
 | Tarea | Alcance | Archivos |
 |---|---|---|
@@ -183,7 +185,7 @@ calibration 26      (Node: modelo de sensor, light field, pose manual, runtime, 
 calibration-ui 13   (navegador real: entrar/salir, arrastre, rotación, teclado, táctil sintético, 1366/1024/390 px)
 ```
 
-Suites añadidas por los cambios locales pendientes (ver arriba; no desplegados):
+Suites añadidas por los cambios de desarrollo descritos arriba (no equiparar su presencia en `main` con su publicación):
 
 ```text
 guide-content 21   (Node: la Guía contra el intérprete real: llamadas, ejemplos cortos, seis programas, rangos y lo no disponible, orden de «Primeros pasos», metadatos de búsqueda, legibilidad en móvil)
@@ -196,7 +198,7 @@ Los goldens no cambiaron durante `RUNTIME-FUNCTIONS-1`. `SIM-CALIBRATION-1` rege
 
 ## Siguiente trabajo recomendado
 
-1. HEAD-SERVO: yaw/pitch + sonar orientable (S07 y solución fiel de S08);
+1. HEAD-SERVO en `main`: yaw/pitch + sonar orientable pendientes de integración en esa línea; el yaw virtual ya existe en producción HEAD-CANVAS y debe reconciliarse sin mezclar geometrías;
 2. props de línea/intersección para actividades que usan cinta temporal (S03/S06);
 3. compatibilidad pequeña de runtime (`millis`, `const`, aliases) según necesidad curricular;
 4. medición física antes de alterar wheelbase, cono sonar, geometría de garra o curva de velocidad;
