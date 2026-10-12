@@ -6,11 +6,19 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 **Repositorio:** https://github.com/nulljinx/BITIRO-Simulador  
 
 
-**Última versión etiquetada:** `v0.9.0-rc.1`
+## Estado de versiones (léelo primero)
 
-> Estado: **Release Candidate / beta avanzada**. No es una versión v1.0 estable: el proyecto sigue en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
+Hay tres conceptos distintos que **no** deben confundirse:
+
+| Concepto | Qué es | Referencia |
+|---|---|---|
+| **Versión etiquetada** | Última etiqueta semántica en Git | `v0.9.0-rc.1` (Release Candidate; solo tag, sin GitHub Release) |
+| **Desarrollo (`main`)** | Integración de desarrollo: geometría IROH medida + modelo visual IROH 3D experimental + Guía de programación | `main` (9 commits posteriores a `v0.9.0-rc.1` al 2026-10-12); **no está desplegado íntegramente** |
+| **Producción** | Lo que sirve `simulador.nulljinx.com` | **HEAD-CANVAS**, publicado el 2026-10-12 como despliegue selectivo de seis archivos sobre `SIM-NNJ-101d19f` |
+
+> Estado general: **Release Candidate / beta avanzada**. No es una versión v1.0 estable: el proyecto sigue en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
 >
-> La rama `main` puede contener cambios posteriores a la última versión etiquetada y también puede ir por delante del despliegue público. No todo lo presente en `main` está necesariamente desplegado en `simulador.nulljinx.com` (ver [Producción vs. main](#producción-vs-main)).
+> **Producción no coincide con `main` ni con `v0.9.0-rc.1`.** La publicación se identifica por el manifiesto SHA-256 de los archivos modificados **y la cadena de baselines heredadas**; no por HEAD de `main` ni por una etiqueta semántica. Ver [Producción vs. main](#producción-vs-main) y [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
 
 ## Qué es
 
@@ -28,7 +36,7 @@ programa + física + sensores + actuadores + escenario + entradas manuales
 
 Si el código está mal, el robot puede salirse de la línea, elegir otra base, chocar o quedarse detenido. Eso es intencional: el objetivo es **probar, observar, equivocarse, modificar y volver a intentar**.
 
-## Capacidades actuales
+## Capacidades de desarrollo (`main`)
 
 - movimiento diferencial con paso fijo determinista;
 - dinámica de motores con aceleración y frenado simétricos;
@@ -37,7 +45,7 @@ Si el código está mal, el robot puede salirse de la línea, elegir otra base, 
 - modelo visual IROH 3D medido (experimental, mediante `?robot=iroh`), con renderer Canvas2D, sin Three.js/WebGL por ahora;
 - pruebas específicas de geometría y de visual IROH;
 - tres sensores de línea;
-- sonar frontal geométrico;
+- sonar frontal geométrico (fijo al eje frontal en `main`; la cabeza virtual orientable solo existe en producción/HEAD-CANVAS, ver [Producción vs. main](#producción-vs-main));
 - IR izquierdo y derecho como entradas manuales;
 - Pulsador y `botonInicio()` como barrera real de ejecución;
 - LCD 16×2;
@@ -138,16 +146,31 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 - **S04** quedó validada completa con funciones propias en el runtime: gaps, intersecciones y meta con funciones propias reales.
 - **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
-- **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable).
+- **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable) **en `main`**. En producción (HEAD-CANVAS) existe un yaw virtual y sonar orientable, pero S07 no se declara completa: no fue re-validada formalmente y el pitch no está modelado.
 - **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor.
 
 Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
 
 ### Producción vs. main
 
-- `main`: contiene `v0.9.0-rc.1` (última versión etiquetada) y puede incluir cambios posteriores.
-- El despliegue público estable (`simulador.nulljinx.com`) puede ir por detrás de `main`.
-- La integración IROH 3D y la geometría más reciente no deben darse por desplegadas mientras no exista un deploy confirmado.
+Son dos líneas de desarrollo con historias divergentes (no se han fusionado):
+
+| | `main` (desarrollo) | Producción (HEAD-CANVAS) |
+|---|---|---|
+| Fuente | `main` (`101d19f`) | rama `feature/head-canvas` (despliegue selectivo de seis archivos) |
+| Geometría física medida (wheelbase 10 cm, origen del sonar 7,40 cm) | **sí** | **no** (conserva base de 12 cm y sonar a 9,83 cm de la release anterior) |
+| Modelo visual IROH 3D medido (`?robot=iroh`, experimental) | **sí** | **no** |
+| Cabeza virtual (`moverServoYaw`, sonar orientable) | **no** (reconocida, sin efecto) | **sí** (yaw virtual; el pitch no tiene modelo) |
+| Guía de programación IROH por temas | sí | sí |
+| Soluciones docentes S08 con cabeza (`examples/`) | no | sí, en `feature/head-canvas` |
+| Tags | `v0.9.0-rc.1` es ancestro | `sim-nnj-101d19f-deployed` (base); sin tag propio de HEAD-CANVAS |
+
+- Ninguno de los componentes exclusivos de `main` (geometría medida, modelo IROH 3D, origen del sonar) está desplegado en producción.
+- Ninguna capacidad de la cabeza virtual existe en `main`.
+- La cabeza virtual es un **modelo virtual**: velocidad, espera, alcance, alturas y zona muerta son provisionales y no están medidos en el robot físico.
+- La identidad de los seis archivos modificados (SHA-256, junto con la referencia a la release base) está en [`docs/release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (enlace a un commit fijo de `feature/head-canvas`).
+- Soluciones y pruebas de S08: [`examples/README.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md), [`tests/head/`](https://github.com/nulljinx/BITIRO-Simulador/tree/563aa923fb9622214eaec9775f6e27f4a514a617/tests/head) y `tests/head-sonar.cjs` (todas en `feature/head-canvas`, no en `main`).
+- Reconciliar ambas líneas es una decisión pendiente y requiere aprobación explícita; no se fusionan automáticamente.
 
 ## Geometría física del IROH
 
@@ -263,7 +286,7 @@ No requiere base de datos, cuenta, credenciales ni servicios externos para ejecu
 
 ## Pruebas
 
-La validación integral ejecuta actualmente 17 suites Node `tests/*.cjs`, además de pruebas específicas en Chrome. No se enumeran todas; algunas relevantes:
+La validación integral ejecuta las suites Node `tests/*.cjs`, además de pruebas específicas en Chrome. No se enumeran todas; algunas relevantes:
 
 ```bash
 node tests/physical-geometry.cjs   # geometría física medida
@@ -289,6 +312,9 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Integración del modelo IROH 3D](docs/iroh-3d-integration.md)
 - [Modo calibración](docs/calibration-mode.md)
 - [Baseline actual](docs/current-baseline.md)
+- [Versionado y releases](docs/versioning-and-releases.md)
+- [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
+- Release HEAD-CANVAS (producción): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
 - [Limitaciones conocidas](docs/known-limitations.md)
 - [Baseline v4 histórica](docs/sim-v4-baseline.md)
 - [Historia de decisiones de UI](docs/pilot-ui-reference.md)
@@ -318,6 +344,8 @@ Será resuelto en `SONAR-PHYSICAL-ORIGIN-1`. Los umbrales del sonar usados en ma
 | v0.9.0-rc.1 | integración IROH 3D medida |
 
 `v0.9.0-rc.1` es un Release Candidate. Por ahora son tags Git, no Releases de GitHub.
+
+Además existen tags de **despliegue** (no son versiones de producto): `sim-ui-release-4-deployed` y `sim-nnj-101d19f-deployed`. HEAD-CANVAS, publicado el 2026-10-12, no tenía tag propio al momento de esta auditoría; un tag posterior debe registrarse por separado. Ver [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
 
 ## Roadmap inmediato
 

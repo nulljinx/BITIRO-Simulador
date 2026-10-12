@@ -141,6 +141,8 @@ apagarCabeza();
 
 son reconocidas por la API, pero todavía no tienen efecto físico. El sonar permanece fijo al eje frontal del robot. Esto bloquea la reproducción fiel de S07 y limita S08.
 
+> **Producción vs. `main`:** esto describe `main`. El despliegue público (HEAD-CANVAS, 2026-10-12) sí implementa un yaw virtual: `inicializarCabeza()` y `moverServoYaw(angulo)` (0° derecha · 90° frente · 180° izquierda) con movimiento progresivo y sonar orientable; `moverServoPitch()` y `apagarCabeza()` siguen sin efecto y ningún parámetro de la cabeza está medido en el robot real. Ese código vive en la rama `feature/head-canvas`, no en `main`. Ver `docs/versioning-and-releases.md`.
+
 ## Geometría de sesiones
 
 - S01–S06 y S08: geometrías reconstruidas desde referencias vectoriales oficiales.
@@ -151,7 +153,7 @@ Las zonas pintadas no evalúan misiones y los gaps son ausencia real de línea.
 
 ## Verificación
 
-La baseline actual mantiene 14 suites (más `tests/calibration-ui.mjs`, interfaz en navegador real; se omite sin Chrome):
+La lista siguiente corresponde a la baseline `SIM-CALIBRATION-1` (14 suites, más `tests/calibration-ui.mjs`, interfaz en navegador real; se omite sin Chrome). `main` incorpora además `motor-dynamics`, `physical-geometry`, `iroh-visual`, `guide-content` y varias pruebas de navegador; ver `README.md`:
 
 ```text
 track-digitize
@@ -188,4 +190,4 @@ Los goldens se comparan de forma determinista y no deben regenerarse sin revisi�
 - `starters.js`: código inicial por sesión.
 - `tests/`: pruebas reproducibles.
 
-Consulta también `docs/current-baseline.md`, `docs/architecture.md` y `docs/known-limitations.md`.
+Consulta también `docs/current-baseline.md`, `docs/architecture.md`, `docs/known-limitations.md` y `docs/versioning-and-releases.md` (qué es versión etiquetada, desarrollo y producción).

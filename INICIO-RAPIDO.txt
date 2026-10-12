@@ -41,3 +41,7 @@ docs/user-guide.md
 docs/api-iroh.md
 docs/sesiones-s01-s08.md
 docs/known-limitations.md
+docs/versioning-and-releases.md
+
+NOTA: el simulador en línea puede diferir de la rama main. La versión
+publicada se identifica por sus archivos, no por HEAD de main (ver README.md).
