@@ -37,6 +37,7 @@ function syncWaiting(){
 }
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
+ if(window.HEAD_SONAR)HEAD_SONAR.reset();
  // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
  activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
@@ -93,17 +94,17 @@ function nearbyObstacle(reach=200){
 }
 // Sonar didáctico: haz central y dos rayos ±6°, desde la cara del transductor.
 window.readSonarDistance=function(){
- const origin=MECH.worldPoint(R,9.83,0);let nearest=200;
+ const hs=window.HEAD_SONAR?HEAD_SONAR.frame(R,MECH):null;const origin=hs?hs.origin:MECH.worldPoint(R,9.83,0);const yawRel=hs?hs.yawRel:0;const coneK=window.HEAD_SONAR?HEAD_SONAR.coneScale():1;let nearest=200;
  for(const offset of [-Math.PI/30,0,Math.PI/30]){
-  const direction={x:Math.sin(R.th+offset),y:-Math.cos(R.th+offset)};
+  const direction={x:Math.sin(R.th+yawRel+offset*coneK),y:-Math.cos(R.th+yawRel+offset*coneK)};
   for(const ob of activeObstacles){
-   if((ob.visualHeightCm??15.6)<HIT.sonarHeight)continue;
+   if(!(window.HEAD_SONAR&&HEAD_SONAR.heightModel)&&(ob.visualHeightCm??15.6)<HIT.sonarHeight)continue;
    let lo=0,hi=200;
    for(const [p,d,min,max] of [[origin.x,direction.x,ob.x,ob.x+ob.width],[origin.y,direction.y,ob.y,ob.y+ob.height]]){
     if(Math.abs(d)<1e-9){if(p<min||p>max){hi=-1;break;}continue;}
     let a=(min-p)/d,b=(max-p)/d;if(a>b)[a,b]=[b,a];lo=Math.max(lo,a);hi=Math.min(hi,b);
    }
-   if(hi>=lo)nearest=Math.min(nearest,lo);
+   if(hi>=lo&&(!(window.HEAD_SONAR&&HEAD_SONAR.heightModel)||HEAD_SONAR.heightOk(ob.visualHeightCm??15.6,lo)))nearest=Math.min(nearest,lo);
   }
  }
  return Math.round(nearest);
@@ -227,6 +228,7 @@ function demoDrive(){
 }
 function update(dt){
  if(paused)return;
+ if(window.HEAD_SONAR)HEAD_SONAR.step(dt);
  previousPose={x:R.x,y:R.y,th:R.th,angle:striker.angle};
  // La garra gira de forma continua entre −75° (izquierda), 0° (centro) y +75° (derecha). La orden del alumno (o el
  // control manual) fija la posición objetivo; solo la demostración guiada usa un ciclo con retorno automático.
@@ -295,7 +297,7 @@ function render(){
  // A 3D scene rendered by a local software rasterizer, not WebGL/Three.js.
  const a=paused||mode==='idle'?1:Math.min(1,acc/FIXED_DT),p=previousPose||{...R,angle:striker.angle};
  const robot={x:p.x+(R.x-p.x)*a,y:p.y+(R.y-p.y)*a,heading:p.th+(R.th-p.th)*a-Math.PI/2,lineCenter:readLine(1),lineActive:window.BITIRO_MANUAL.calibration?[false,false,false]:[0,1,2].map(k=>LINE_SENSOR.detected(readLine(k),k)),   // en calibración el LED de detección no revela lecturas
-  strikerAngle:p.angle+(striker.angle-p.angle)*a,trail:$app('showTrail').checked?trail:[]};
+  strikerAngle:p.angle+(striker.angle-p.angle)*a,headYaw:window.HEAD_SONAR?HEAD_SONAR.frame(R,MECH).yawRel:0,trail:$app('showTrail').checked?trail:[]};
  renderScene3D(worldCv,sceneTrack,robot,activeObstacles,camera);
 }
 function draw(){if(sceneTrack)render();}
