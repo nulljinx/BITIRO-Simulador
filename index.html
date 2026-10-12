@@ -307,7 +307,7 @@ void loop() {
             <article class="guide-item guide-cmd" data-cmd="leerDistanciaSonar" data-sig="leerDistanciaSonar()" data-keywords="sonar distancia centimetros ultrasonido obstaculo caja cm">
               <h4>Medir la distancia con el sonar</h4>
               <pre class="guide-sig"><code>int distancia = leerDistanciaSonar();</code></pre>
-              <p>Devuelve la distancia en centímetros hasta la caja más cercana que está justo delante. Si no hay ninguna al alcance, devuelve 200.</p>
+              <p>Devuelve la distancia en centímetros hasta la caja más cercana en la dirección en que mira la cabeza (justo delante, si no la giras con <code>moverServoYaw()</code>). Si no hay ninguna al alcance, devuelve 200.</p>
               <p class="guide-try"><b>Prueba:</b> con <b>Editar escenario</b> acerca una caja y observa cómo cambia el valor en «Sonar».</p>
             </article>
             <article class="guide-item guide-cmd" data-cmd="leerSensorObstaculoIzquierdo leerSensorObstaculoDerecho" data-sig="leerSensorObstaculoIzquierdo() leerSensorObstaculoDerecho()" data-keywords="infrarrojo ir obstaculo sensor izquierdo derecho">
@@ -422,7 +422,7 @@ void loop() {
 moverServoYaw(30);
 moverServoPitch(30);
 apagarCabeza();</code></pre>
-              <p>La cabeza tiene dos servomotores: <code>moverServoYaw()</code> la gira a los lados y <code>moverServoPitch()</code> la inclina. El simulador reconoce estas instrucciones, pero todavía no modela la cabeza: no verás movimiento y aparecerá un aviso ⚠.</p>
+              <p>La cabeza tiene dos servomotores: <code>moverServoYaw()</code> la gira a los lados y <code>moverServoPitch()</code> la inclina. <code>moverServoYaw(grados)</code> funciona en el simulador: 0 es derecha, 90 es frente y 180 es izquierda, y acepta cualquier ángulo intermedio. El giro es progresivo, no instantáneo: espera con <code>pausa()</code> antes de leer el sonar. Llama a <code>inicializarCabeza()</code> en <code>setup()</code> antes de moverla. <code>leerDistanciaSonar()</code> mide hacia donde apunta la cabeza en ese momento. <code>moverServoPitch()</code> y <code>apagarCabeza()</code> se reconocen, pero el simulador no los modela: no tienen efecto y muestran un aviso ⚠. La velocidad y el alcance de la cabeza son valores virtuales del simulador, todavía sin medir en el robot real.</p>
             </article>
             <article class="guide-item guide-program-card" data-cmd="" data-sig="" data-keywords="programa completo ejemplo garra servo golpe">
               <div class="guide-program-head"><h4>La garra se mueve sola</h4><button type="button" class="guide-copy" data-copy="garra" aria-label="Copiar el programa «La garra se mueve sola»">Copiar</button></div>
@@ -508,16 +508,16 @@ detenerse();</code></pre>
         <details class="guide-topic" id="guide-avanzado">
           <summary><span class="guide-num" aria-hidden="true">8</span><span class="guide-topic-title"><strong>Para seguir aprendiendo</strong><small>Conceptos y límites técnicos del simulador</small></span></summary>
           <div class="guide-topic-body">
-            <article class="guide-item guide-note" data-cmd="apagarPantalla prenderPantalla inicializarCabeza apagarCabeza moverServoYaw moverServoPitch" data-sig="" data-keywords="sin efecto reconocidas aviso cabeza lcd limitaciones">
+            <article class="guide-item guide-note" data-cmd="apagarPantalla prenderPantalla apagarCabeza moverServoPitch" data-sig="" data-keywords="sin efecto reconocidas aviso cabeza lcd limitaciones">
               <h4>Instrucciones que se reconocen pero no hacen nada visible</h4>
-              <p><code>apagarPantalla()</code>, <code>prenderPantalla()</code>, <code>inicializarCabeza()</code>, <code>apagarCabeza()</code>, <code>moverServoYaw()</code> y <code>moverServoPitch()</code> se aceptan, pero no tienen efecto en este modelo y muestran un aviso ⚠. <code>inicializarPantalla()</code> se acepta sin aviso y la LCD funciona aunque no la llames.</p>
+              <p><code>apagarPantalla()</code>, <code>prenderPantalla()</code>, <code>apagarCabeza()</code> y <code>moverServoPitch()</code> se aceptan, pero no tienen efecto en este modelo y muestran un aviso ⚠. <code>inicializarPantalla()</code> se acepta sin aviso y la LCD funciona aunque no la llames.</p>
             </article>
             <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="rango unidades limite velocidad 100 1023 1000 sonar 200 centimetros milisegundos pantalla columnas">
               <h4>Rangos y unidades</h4>
               <ul>
                 <li>Velocidad de las ruedas: de 0 a 100. Un valor mayor se limita a 100 y aparece un aviso ⚠.</li>
                 <li>Línea sin ajustar: de 0 a 1023. Línea normalizada: de 0 a 1000. El negro da valores altos.</li>
-                <li>Sonar: centímetros, número entero de 0 a 200. El valor 200 significa «nada al alcance». Solo ve cajas altas que estén justo delante, en un haz estrecho.</li>
+                <li>Sonar: centímetros, número entero de 0 a 200. El valor 200 significa «nada al alcance». Solo ve cajas altas que estén justo donde apunta la cabeza, en un haz estrecho.</li>
                 <li><code>pausa()</code>: milisegundos de tiempo del simulador.</li>
                 <li>Pantalla: columnas 0–15 y filas 0–1. Lo que no cabe en 16 columnas se corta.</li>
                 <li>Garra: solo <code>-1</code>, <code>0</code> y <code>1</code>.</li>
@@ -529,7 +529,7 @@ detenerse();</code></pre>
             </article>
             <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="entradas manuales infrarrojo pulsador franja sensores simulados linea sonar">
               <h4>Entradas manuales y sensores simulados</h4>
-              <p>La línea y el sonar se calculan a partir de la posición de IROH en la pista. Los dos infrarrojos y el Pulsador son entradas que tú activas y desactivas con los botones de la franja «Entradas».</p>
+              <p>La línea y el sonar se calculan a partir de la posición de IROH en la pista (y, en el sonar, de hacia dónde mira la cabeza). Los dos infrarrojos y el Pulsador son entradas que tú activas y desactivas con los botones de la franja «Entradas».</p>
             </article>
             <article class="guide-item guide-note" data-cmd="" data-sig="" data-keywords="tipos int long float bool byte operadores division entera true false high low nombres tildes recursion">
               <h4>Tipos y operaciones</h4>
