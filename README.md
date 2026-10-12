@@ -129,27 +129,33 @@ moverServoGolpe(1);   // derecha del robot
 
 El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y las cajas interactúan por contacto: no hay fuerza a distancia ni atravesado de objetos. Una caja movible puede ser desplazada por el giro de la garra o por la traslación del robot cuando la barra la empuja y existe espacio.
 
-## Estado de las sesiones
+## Estado de las sesiones S01–S08
 
-Última validación funcional integral de sesiones: `SESSION-VALIDATION-2` (programas reales con funciones propias, recorridos físicos y escenarios). Es anterior a la geometría medida y a la integración IROH 3D de `v0.9.0-rc.1`.
+**Referencia curricular:** `SESSION-VALIDATION-2` es la última evaluación integral de las ocho sesiones con programas, sensores y recorridos en el simulador. Es anterior a la geometría medida y al modelo IROH 3D de `main`. Los estados de esa evaluación se conservan **como resultado histórico**, no como una revalidación posterior.
 
-| Sesión | Estado |
-|---|---|
-| S01 | ✅ completa |
-| S02 | ✅ completa |
-| S03 | 🟡 parcial |
-| S04 | ✅ completa |
-| S05 | 🟡 parcial |
-| S06 | 🟡 parcial |
-| S07 | 🔴 no realizable completa |
-| S08 | 🟡 parcial |
+**Avances posteriores (12-10-2026):** HEAD-CANVAS incorporó el yaw virtual y el sonar orientable en producción; S08 recibió dos soluciones independientes probadas. Estas pruebas son adicionales y no equivalen a una evaluación curricular integral ni a pruebas del robot físico.
 
-- **S04** quedó validada completa con funciones propias en el runtime: gaps, intersecciones y meta con funciones propias reales.
-- **S06** ya ejecuta `int velocidad(int)`, `void seguidor(...)`, `return` y su flujo físico principal (velocidad normal/reducida, detención, golpe y continuación). Sigue parcial porque la intersección que exige el material no está impresa en el plotter oficial. `millis()` afecta solo a un bonus opcional; no es el bloqueo principal.
-- **S07** sigue bloqueada por HEAD-SERVO (cabeza yaw/pitch y sonar orientable) **en `main`**. En producción (HEAD-CANVAS) existe un yaw virtual y sonar orientable, pero S07 no se declara completa: no fue re-validada formalmente y el pitch no está modelado.
-- **S03, S05 y S08** mantienen limitaciones de pista, entradas o modelo del sensor.
+| Sesión | Resultado de `SESSION-VALIDATION-2` | Avance posterior o limitación vigente |
+|---|---|---|
+| S01 | ✅ Completa | Programa y actividades comprobados en la evaluación integral histórica. |
+| S02 | ✅ Completa | Tres bases alcanzadas según IR en la evaluación integral histórica. |
+| S03 | 🟡 Parcial | Faltan intersecciones configurables y resolver diferencias del material. |
+| S04 | ✅ Completa | Seguimiento, gaps, intersecciones y meta con funciones propias. |
+| S05 | 🟡 Parcial | Rutas comprobadas; el IR manual no reproduce el rebote físico. |
+| S06 | 🟡 Parcial | Funciones y secuencia principal comprobadas; falta una intersección ausente del plotter. |
+| S07 | 🔴 No completa | **Nuevo:** yaw virtual y sonar lateral operativos en HEAD-CANVAS. Falta validación integral de S07 y pitch. |
+| S08 | 🟡 Parcial | **Nuevo:** dos soluciones con cabeza móvil verificadas en el simulador; persisten criterios curriculares pendientes. |
 
-Consulta [`docs/sesiones-s01-s08.md`](docs/sesiones-s01-s08.md) para la evidencia y las limitaciones por sesión.
+### Evidencia posterior: S07 y S08
+
+- **S07:** `inicializarCabeza()` y `moverServoYaw(angulo)` funcionan en producción, y `leerDistanciaSonar()` mide en la dirección de la cabeza. La sesión S07 **no fue revalidada completa**; `moverServoPitch()` sigue sin modelo. Estas capacidades **no están integradas en `main`**.
+- **S08, posición inicial publicada:** la referencia docente corregida y la solución pedagógica NNJ superaron **40/40 casos automatizados cada una**: 38 llegadas a base, un caso de cero cajas (sin base) y una espera indefinida esperada ante IR anticipado. En esas pruebas no hubo colisiones ni cajas desplazadas y las lecturas laterales se realizaron con el cuerpo detenido.
+- **Prueba manual:** ambas soluciones funcionaron en el escenario comunicado desde producción el 12-10-2026; esa observación cubre un escenario por solución, no todos los casos.
+- **Base 2:** la matriz histórica conserva **90/90 puntos verificables**; con la posición inicial publicada son **80/80** porque los 10 puntos de salida de la zona roja no aplican. En ambas evaluaciones permanecen **10 puntos de selección A/B sin verificación independiente**. La identificación de A/B en el plotter y el significado curricular de cero cajas también siguen pendientes.
+
+**Nota sobre versiones:** `main` contiene geometría y modelo visual IROH distintos de HEAD-CANVAS. Los resultados de HEAD-CANVAS corresponden al simulador publicado, **no** constituyen una revalidación de S08 con la física de `main` ni una comprobación con hardware real.
+
+Informes: [evaluación integral histórica](docs/sesiones-s01-s08.md) · [actualización y pruebas HEAD-CANVAS](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/sesiones-s01-s08.md) · [dos soluciones docentes S08](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md).
 
 ### Producción vs. main
 
