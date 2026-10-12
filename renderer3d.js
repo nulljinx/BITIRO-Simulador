@@ -98,7 +98,9 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  // sobre montura AZUL, 3 sensores bajos y servo con un palo de golpe recto y articulado.
  // No se utiliza ninguna fotografía como textura ni se añaden pestañas o boca.
  const heading=robot.heading,f2=[Math.cos(heading),Math.sin(heading)],r2=[-Math.sin(heading),Math.cos(heading)];
- const local=(f,r,y)=>V(X(robot.x)+f*f2[0]+r*r2[0],y,Z(robot.y)+f*f2[1]+r*r2[1]);
+ // HEAD-CANVAS: giro de la cabeza (rad, derecha positiva) alrededor del eje PAN (HEAD_SONAR.params.axisForward)
+ let headYaw=0;const HEAD_AXIS=window.HEAD_SONAR?HEAD_SONAR.params.axisForward.value:3.95;
+ const local=(f,r,y)=>{if(headYaw){const df=f-HEAD_AXIS,c=Math.cos(headYaw),sn=Math.sin(headYaw);const nf=HEAD_AXIS+df*c-r*sn;r=df*sn+r*c;f=nf;}return V(X(robot.x)+f*f2[0]+r*r2[0],y,Z(robot.y)+f*f2[1]+r*r2[1]);};
  const localBox=(f,r,y,len,wide,tall,palette,layer=4)=>{
   const base=[local(f-len/2,r-wide/2,y),local(f+len/2,r-wide/2,y),local(f+len/2,r+wide/2,y),local(f-len/2,r+wide/2,y)];
   const top=base.map(q=>V(q.x,q.y+tall,q.z));
@@ -167,6 +169,7 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  }
  // Bisagra frontal con cuello inclinado y cabezal AZUL poligonal (no ojos decorativos).
  localBox(5.8,0,8.2,3.3,4.8,3.2,['#172F5D','#10264D','#16325E']);
+ headYaw=robot.headYaw||0;
  localBox(6.9,0,10.8,3.3,5.7,2.4,['#1E49AA','#17388D','#15347B']);
  slab([[5.1,-4.0],[6.0,-5.2],[8.5,-5.0],[9.3,-3.4],[9.3,3.4],[8.5,5.0],[6.0,5.2],[5.1,4.0]],12.85,4.6,['#1A46B5','#183C98','#133079']);
  // Transductores HC-SR04: aros cilíndricos, gris plata con cámara negra, vistos desde el frente.
@@ -186,6 +189,7 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
   const dark=[];for(let j=0;j<N;j++){const t=j*2*Math.PI/N;dark.push(local(forward+.5,r+Math.cos(t)*.72,cy+Math.sin(t)*.72))}face(faces,dark,'#0C141C',4);
  };
  sonar(9.48,-2.45,15.15);sonar(9.48,2.45,15.15);
+ headYaw=0;
  // Dos pequeñas placas IR laterales con emisor y fotodiodo, sin adornos de cara.
  for(const side of [-1,1]){
   localBox(5.8,side*6.6,7.85,3.5,1.55,.33,['#236CC0','#134A95','#16438C']);
