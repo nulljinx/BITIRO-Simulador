@@ -69,7 +69,12 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  for(let i=10;i<tw;i+=10)faces.push(band(V(x0+i,-.89,z0),V(x0+i,-.89,z0+th),.07,'#D8DCD8',1));
  for(let i=10;i<th;i+=10)faces.push(band(V(x0,-.89,z0+i),V(x0+tw,-.89,z0+i),.07,'#D8DCD8',1));
  // Líneas del plotter: muchos tramos pequeños para mantener curvas suaves.
- for(const path of track.paths){for(let i=1;i<path.points.length;i++){
+ for(const path of track.paths){
+  if(track.capStyle==='butt'){   // misma geometría que lee el sensor (line-geometry.js)
+   for(const poly of BITIRO_LINE_GEOMETRY.polygons({w:path.widthCm,p:path.points.map(q=>[q.x,q.y])}))faces.push({points:poly.map(q=>V(X(q[0]),-.78,Z(q[1]))),fill:'#1E242A',layer:2,alpha:1});
+   continue;
+  }
+  for(let i=1;i<path.points.length;i++){
   const a=path.points[i-1],b=path.points[i];faces.push(band(V(X(a.x),-.78,Z(a.y)),V(X(b.x),-.78,Z(b.y)),path.widthCm,'#1E242A',2));
  }}
  // Bases físicas: pintadas encima de la lámina, con pequeña franja de marco.
@@ -77,6 +82,11 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
   floor(faces,X(zone.x)-.38,Z(zone.y)-.38,zone.width+.76,zone.height+.76,-.72,'#4B5052',2);
   floor(faces,X(zone.x),Z(zone.y),zone.width,zone.height,-.69,zone.kind==='finish-green'?'#91C5A8':'#D8978D',2);
   labels.push({at:V(X(zone.x+zone.width/2),-.58,Z(zone.y+zone.height/2)),text:zone.label||'BASE'});
+ }
+ for(const ref of track.references||[]){   // referencias planas del plano (FIRVI): flecha INICIO y ficha de checkpoint; no son sensables
+  if(ref.kind==='checkpoint'){const poly=[];for(let k=0;k<24;k++){const t=Math.PI*2*k/24;poly.push(V(X(ref.x+3.75*Math.cos(t)),-.8,Z(ref.y+3.75*Math.sin(t))));}faces.push({points:poly,fill:'#E08A2B',layer:2,alpha:1,bias:5});continue;}
+  const dx=Math.cos(ref.heading),dy=Math.sin(ref.heading),bx=ref.x-dx*10,by=ref.y-dy*10;   // punta en el inicio de la línea, base 10 cm atrás, 10 cm de ancho
+  faces.push({points:[V(X(ref.x),-.8,Z(ref.y)),V(X(bx-dy*5),-.8,Z(by+dx*5)),V(X(bx+dy*5),-.8,Z(by-dx*5))],fill:ref.kind==='start'?'#C0392B':'#B9A9A4',layer:2,alpha:1,bias:5});
  }
  for(const m of track.markers||[])floor(faces,X(m.x),Z(m.y),m.width,m.height,-.68,'#D57C69',2);
  // Pequeño borde del recinto en cuatro lados, no tapa la superficie.
@@ -90,6 +100,14 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  for(let i=stride;i<trace.length;i+=stride){const a=trace[i-stride],b=trace[i];faces.push(band(V(X(a.x),-.75,Z(a.y)),V(X(b.x),-.75,Z(b.y)),.24,'#5FABA0',2));}
  // Obstáculos reales en 3D, con sombra y caras diferenciadas.
  for(const ob of obstacles){
+  if(Array.isArray(ob.poly)&&ob.poly.length>=3){   // prisma de base poligonal (FIRVI 2025): sombra, caras laterales y tapa
+   const cx=ob.poly.reduce((a,q)=>a+q[0],0)/ob.poly.length,cy=ob.poly.reduce((a,q)=>a+q[1],0)/ob.poly.length,top=-.45+(ob.visualHeightCm ?? HARDWARE.sonarHeight+.5);
+   face(faces,ob.poly.map(q=>V(X(cx+(q[0]-cx)*1.18),-.66,Z(cy+(q[1]-cy)*1.18))),'#B2B4AF',3);
+   ob.poly.forEach((a,i)=>{const b=ob.poly[(i+1)%ob.poly.length];
+    face(faces,[V(X(a[0]),-.45,Z(a[1])),V(X(b[0]),-.45,Z(b[1])),V(X(b[0]),top,Z(b[1])),V(X(a[0]),top,Z(a[1]))],['#BA8653','#94603B','#A8723F'][i%3],3);});
+   face(faces,ob.poly.map(q=>V(X(q[0]),top,Z(q[1]))),'#D9B17B',3);
+   continue;
+  }
   floor(faces,X(ob.x)-.95,Z(ob.y)-.95,ob.width+1.9,ob.height+1.9,-.66,'#B2B4AF',3);
   box(faces,X(ob.x),-.45,Z(ob.y),ob.width,ob.visualHeightCm ?? HARDWARE.sonarHeight+.5,ob.height,['#D9B17B','#BA8653','#94603B'],3);
  }

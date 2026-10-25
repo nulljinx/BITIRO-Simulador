@@ -35,7 +35,18 @@
  const camReady=()=>typeof camera!=='undefined'&&camera&&typeof track!=='undefined'&&track;
  const canvasEl=$('scene');
  // La distancia siempre se calcula desde la distancia BASE del preset (nunca desde el valor ya ajustado).
+ /* Ajuste automático (solo pistas con `autoFit`, hoy FIRVI 2025): la mayor distancia de cámara con la que las cuatro esquinas del mundo caben en el
+    lienzo con margen. Cambia únicamente el zoom de la cámara; la escala física (cm) y las demás pistas no se tocan. */
+ function fitDistance(){
+  const r=canvasEl.getBoundingClientRect();if(!(r.width>20)||!(r.height>20)||typeof BITIRO_SCENE_VIEW==='undefined'||typeof sceneTrack==='undefined')return null;
+  const m=Math.max(14,.05*Math.min(r.width,r.height)),keep=camera.distance;
+  const fits=d=>{camera.distance=d;return [[0,0],[track.w,0],[track.w,track.h],[0,track.h]].every(([x,y])=>{const p=BITIRO_SCENE_VIEW.projectGround(canvasEl,sceneTrack,camera,{x:R.x,y:R.y},x,y);return p&&p.x>=m&&p.x<=r.width-m&&p.y>=m&&p.y<=r.height-m;});};
+  let lo=.24,hi=3.4;if(!fits(hi)){camera.distance=keep;return null;}
+  for(let i=0;i<28;i++){const mid=(lo+hi)/2;if(fits(mid))hi=mid;else lo=mid;}
+  camera.distance=keep;return hi;
+ }
  function applyFit(){
+  if(camReady()&&track.autoFit&&!view.touched&&canvasEl&&(view.name==='perspective'||view.name==='top')){const d=fitDistance();if(d){camera.distance=d;if(typeof updateZoom==='function')updateZoom();}return;}
   if(!camReady()||view.name!=='perspective'||view.touched||view.base===null||!canvasEl)return;
   const r=canvasEl.getBoundingClientRect();
   camera.distance=view.base*getPerspectiveFitFactor(r.width,r.height,track.h);

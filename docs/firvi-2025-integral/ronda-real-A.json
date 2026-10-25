@@ -1,0 +1,286 @@
+{
+ "route": "A",
+ "track": "firvi-2025",
+ "wallClockS": 169.246,
+ "calibrationMs": 15258,
+ "finishedBy": "captain",
+ "overcome": {
+  "1": {
+   "clockMs": 78226,
+   "simTime": 62.708333333330415,
+   "attempt": 1,
+   "scoringEligible": true,
+   "pose": {
+    "x": 135.02553664582354,
+    "y": 29.324516128165282
+   }
+  },
+  "2": {
+   "clockMs": 117458,
+   "simTime": 101.93333333336052,
+   "attempt": 1,
+   "scoringEligible": true,
+   "pose": {
+    "x": 255.0093041525077,
+    "y": 120.51134317526596
+   }
+  }
+ },
+ "endReached": {
+  "clockMs": 168556,
+  "simTime": 153.0416666666918,
+  "attempt": 1
+ },
+ "faults": [],
+ "repositions": [],
+ "checkpoint": {
+  "enabled": true,
+  "room": 1,
+  "clockMs": 78226,
+  "tile": {
+   "x": 140,
+   "y": 30,
+   "heading": 0
+  },
+  "token": {
+   "x": 140.25,
+   "y": 20.625
+  }
+ },
+ "events": [
+  {
+   "type": "round-start",
+   "clockMs": 0,
+   "simTime": 0,
+   "state": "calibration"
+  },
+  {
+   "type": "run-begin",
+   "clockMs": 15263,
+   "simTime": 0,
+   "state": "running"
+  },
+  {
+   "type": "program-started",
+   "clockMs": 15526,
+   "simTime": 0,
+   "state": "running"
+  },
+  {
+   "type": "room-overcome",
+   "clockMs": 78226,
+   "simTime": 62.708333333330415,
+   "state": "running"
+  },
+  {
+   "type": "checkpoint-enabled",
+   "clockMs": 78226,
+   "simTime": 62.708333333330415,
+   "state": "running"
+  },
+  {
+   "type": "room-overcome",
+   "clockMs": 117458,
+   "simTime": 101.93333333336052,
+   "state": "running"
+  },
+  {
+   "type": "end-reached",
+   "clockMs": 168556,
+   "simTime": 153.0416666666918,
+   "state": "running"
+  },
+  {
+   "type": "round-finish",
+   "clockMs": 169246,
+   "simTime": 153.72500000002452,
+   "state": "running"
+  }
+ ],
+ "physics": [
+  {
+   "kind": "sweep",
+   "id": "obstacle-room1",
+   "t": 21.44166666666609,
+   "steps": 52,
+   "servo": -69,
+   "servoTo": 12,
+   "from": {
+    "x": 52.869447,
+    "y": 83.5
+   },
+   "to": {
+    "x": 54.2712011560007,
+    "y": 66.27467749834167
+   }
+  },
+  {
+   "kind": "sweep",
+   "id": "obstacle-room3",
+   "t": 126.30000000004658,
+   "steps": 47,
+   "servo": -3,
+   "servoTo": -75,
+   "from": {
+    "x": 292.494447,
+    "y": 53.5
+   },
+   "to": {
+    "x": 293.6579335100753,
+    "y": 69.02052509230532
+   }
+  }
+ ],
+ "obstacles": [
+  {
+   "id": "obstacle-room1",
+   "from": [
+    52.869447,
+    83.5
+   ],
+   "to": [
+    54.2712011560007,
+    66.27467749834167
+   ]
+  },
+  {
+   "id": "obstacle-room3",
+   "from": [
+    292.494447,
+    53.5
+   ],
+   "to": [
+    293.6579335100753,
+    69.02052509230532
+   ]
+  }
+ ],
+ "traceSamples": 3074,
+ "evaluation": {
+  "total": 220,
+  "pendingPotential": 80,
+  "maxPossible": 300,
+  "timeMs": 169246.1000000015,
+  "lastPointClockMsApprox": 168556,
+  "integrity": {
+   "unauthorizedJumps": 0,
+   "traceGaps": 0,
+   "unverifiedStarts": 0
+  },
+  "pendingCriteria": [
+   {
+    "id": "line-following",
+    "label": "Seguimiento de línea con tres sensores",
+    "reason": "Los tres sensores fueron consultados y el robot avanzó 99.2 % de la línea, pero eso no prueba que el seguimiento se base en ellos: lo valida el juez (V.F.8 / V.G.1)."
+   },
+   {
+    "id": "final-task",
+    "label": "Detención y baile final",
+    "reason": "La «intersección» de la tarea final no está identificada en las bases: lo valida el juez."
+   }
+  ],
+  "milestones": [
+   {
+    "id": "touch-start",
+    "status": "validated-auto",
+    "points": 10,
+    "max": 10,
+    "source": "auto",
+    "attempt": null,
+    "judgeRequired": false,
+    "reason": "El programa esperó el Pulsador (botonInicio()), se activó y solo entonces continuó; el robot no se movió antes."
+   },
+   {
+    "id": "line-following",
+    "status": "pending",
+    "points": 0,
+    "max": 50,
+    "source": "none",
+    "attempt": null,
+    "judgeRequired": true,
+    "reason": "Los tres sensores fueron consultados y el robot avanzó 99.2 % de la línea, pero eso no prueba que el seguimiento se base en ellos: lo valida el juez (V.F.8 / V.G.1)."
+   },
+   {
+    "id": "obstacle:obstacle-room1",
+    "status": "validated-auto",
+    "points": 30,
+    "max": 30,
+    "source": "auto",
+    "attempt": null,
+    "judgeRequired": false,
+    "reason": "Abanico del servo (-69° → 12°) desplazó el prisma 17.3 cm y la trayectoria quedó libre (a 10.7 cm de la línea)."
+   },
+   {
+    "id": "obstacle:obstacle-room3",
+    "status": "validated-auto",
+    "points": 30,
+    "max": 30,
+    "source": "auto",
+    "attempt": null,
+    "judgeRequired": false,
+    "reason": "Abanico del servo (-3° → -75°) desplazó el prisma 15.6 cm y la trayectoria quedó libre (a 9 cm de la línea)."
+   },
+   {
+    "id": "room-initial",
+    "status": "validated-auto",
+    "points": 60,
+    "max": 60,
+    "source": "auto",
+    "attempt": 1,
+    "judgeRequired": false,
+    "reason": "Progresión continua con lectura física de la línea, mando que responde al lado de la línea (Δ 10) y salida del cuarto en el intento 1 (60 pts)."
+   },
+   {
+    "id": "gaps",
+    "status": "validated-auto",
+    "points": 30,
+    "max": 30,
+    "source": "auto",
+    "attempt": null,
+    "judgeRequired": false,
+    "reason": "Los 3 gaps se recorrieron en un mismo intento: línea leída antes, tramo recto sin cinta y línea leída después."
+   },
+   {
+    "id": "final-task",
+    "status": "pending",
+    "points": 0,
+    "max": 30,
+    "source": "none",
+    "attempt": null,
+    "judgeRequired": true,
+    "reason": "La «intersección» de la tarea final no está identificada en las bases: lo valida el juez."
+   },
+   {
+    "id": "room-final",
+    "status": "validated-auto",
+    "points": 60,
+    "max": 60,
+    "source": "auto",
+    "attempt": 1,
+    "judgeRequired": false,
+    "reason": "Progresión continua con lectura física de la línea, mando que responde al lado de la línea (Δ 7.5) y salida del cuarto en el intento 1 (60 pts)."
+   }
+  ]
+ },
+ "summary": {
+  "bestRound": {
+   "round": 1,
+   "total": 220,
+   "timeMs": 169246.1000000015
+  },
+  "sumOfRounds": 220,
+  "officialWinner": null,
+  "notes": [
+   "VI.A.2 (mejor ronda) contradice VI.B.1 (suma de rondas): se informan ambos y NO se declara ganador.",
+   "Tiempo de la ronda = duración (parada voluntaria u 8:00). También se informa el tiempo estimado del último punto; las bases (V.F.15) no dicen cuál de los dos desempata.",
+   "Hay 2 criterio(s) pendiente(s) de validación del juez: los totales son provisionales."
+  ]
+ },
+ "ui": {
+  "headline": "Ronda 1: 220 pts · Ronda 2: — pts",
+  "totals": "Ronda 1: 220 pts confirmados de 300 (+80 pendientes del juez) · tiempo 02:49 (voluntaria)"
+ },
+ "clockAtCalibrationEnd": "07:45",
+ "clockAtEnd": "05:12",
+ "wallElapsedS": 169
+}

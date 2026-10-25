@@ -306,7 +306,7 @@ function mov(l,r){
   R.L=Math.max(-100,Math.min(100,l));R.R=Math.max(-100,Math.min(100,r));
 }
 function sens(k){if(strict&&!ini.s){warn('Leíste un sensor sin llamar antes a inicializarSensores(): el robot real no entregaría lecturas válidas.');return 0}return k<3?lect(k):ir[k-3]}
-function lineDetected(k){if(strict&&!ini.s){sens(k);return 0;}return +LINE_SENSOR.detected(lect(k),k);}
+function lineDetected(k){if(strict&&!ini.s){sens(k);return 0;}if(window.noteInteraction)window.noteInteraction('sensor-read',k);return +LINE_SENSOR.detected(lect(k),k);}
 function lcdW(c,f,v){f=Math.max(0,Math.min(1,f|0));c=Math.max(0,c|0);v=String(v);const s=lcd[f].padEnd(16);lcd[f]=(s.slice(0,c)+v+s.slice(c+v.length)).slice(0,16)}
 const NOP=()=>0;
 const unavailable=name=>()=>{warn(name+'() no tiene efecto en este modelo virtual.');return 0;};
@@ -324,7 +324,7 @@ const FN={
  leerSensorLineaIzquierdo:[[0],()=>sens(0)],
  leerSensorLineaCentral:[[0],()=>sens(1)],
  leerSensorLineaDerecho:[[0],()=>sens(2)],
- leerBoton:[[0],()=>btn],
+ leerBoton:[[0],()=>{if(window.noteInteraction)window.noteInteraction('button-read',btn);return btn;}],
  leerDistanciaSonar:[[0],()=>{if(strict&&!ini.s){warn('Inicializa los sensores antes de leer el sonar.');return 200;}return window.readSonarDistance?window.readSonarDistance():200;}],
  leerLineaNormalizada:[[1],a=>{const k=a[0];if(!Number.isInteger(k)||k<0||k>2)throw{m:'El sensor debe ser 0 (izquierdo), 1 (central) o 2 (derecho)',ln:0};if(strict&&!ini.s){sens(k);return 0;}return LINE_SENSOR.normalized(lect(k),k);}],
  leerUmbralLinea:[[0],()=>LINE_SENSOR.profile.threshold],
@@ -387,7 +387,7 @@ function* ev(e){
       if(u)return yield* callUser(u,args,e.ln);
       if(e.n==='pausa'){const ms=args[0];if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:e.ln};yield ms;return 0}
       // botonInicio(): barrera cooperativa de NIVEL (como la librería real: espera hasta leerBoton()==1). No consume ni libera el Pulsador.
-      if(e.n==='botonInicio'){while(!btn){waitingButton=1;yield 0;}waitingButton=0;return 0}
+      if(e.n==='botonInicio'){if(window.noteInteraction&&!btn)window.noteInteraction('gate-wait',0);while(!btn){waitingButton=1;yield 0;}waitingButton=0;if(window.noteInteraction)window.noteInteraction('gate-pass',0);return 0}
       return FN[e.n][1](args)||0;
     }
     case'b':{
@@ -430,6 +430,7 @@ function* main(){
 function fail(e){running=0;waitingButton=0;R.L=R.R=0;if(window.onCodeStopped)window.onCodeStopped();$('msg').innerHTML+='\n<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>'}
 function start(){
   let P;
+  if(window.BITIRO_COMPETITION){const ok=BITIRO_COMPETITION.mayStartProgram($('src').value);if(!ok.ok){$('msg').innerHTML='<span class=err>✖ '+esc(ok.reason)+'</span>';return}}
   try{P=parse(lex($('src').value))}
   catch(e){reset();$('msg').innerHTML='<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>';return}
   const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;UF=P.fns;callDepth=0;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict,h:!strict};warns=new Set();

@@ -9,7 +9,7 @@ const root=path.resolve(__dirname,'..','..');
 const FILES=['tracks.js','extra-tracks.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','head-sonar.js','head-config.js','simulator.js'];
 const FIXED_DT=1/120;
 
-function load({patches=[],storage={},blocked=false,files=null}={}){   // files: lista explícita y ordenada (pruebas de carga parcial/antigua)
+function load({patches=[],storage={},blocked=false,files=null,extraFiles=[]}={}){   // files: lista explícita y ordenada (pruebas de carga parcial/antigua); extraFiles: módulos FIRVI tras extra-tracks.js
  const saved=new Map(Object.entries(storage)),nodes=new Map();
  const behavior={blocked:!!blocked};
  function el(id){
@@ -33,7 +33,8 @@ function load({patches=[],storage={},blocked=false,files=null}={}){   // files: 
   devicePixelRatio:1,clamp:(n,a,b)=>Math.max(a,Math.min(n,b)),requestAnimationFrame(){},renderScene3D(){}};
  ctx.window=ctx;vm.createContext(ctx);
  const pending=patches.map(p=>({...p,hit:0}));
- for(const file of (files||FILES)){
+// extraFiles (p. ej. firvi-2025.js) se cargan tras extra-tracks.js; sin ellos la lista es la de siempre.
+ for(const file of (files||[...FILES.slice(0,2),...extraFiles,...FILES.slice(2)])){
   let src=fs.readFileSync(path.join(root,file),'utf8');
   for(const p of pending)if(p.file===file){
    const count=src.split(p.from).length-1;

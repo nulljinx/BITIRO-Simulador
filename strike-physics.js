@@ -24,12 +24,74 @@ window.IROH_MECHANICS = (() => {
   const a=sweepAngle(angleDeg),p=worldPoint(pose,spec.pivotForward,spec.pivotRight);
   return [p,worldPoint(pose,spec.pivotForward+spec.length*Math.cos(a),spec.pivotRight+spec.length*Math.sin(a))];
  }
+ /* FIRVI-2025-A · Obstáculo opcional de base poligonal convexa (prisma triangular). Un obstáculo con `poly` (vértices absolutos en cm) usa
+    estas pruebas exactas; los que no lo tienen (cajas AABB de S01–S08) siguen por el camino anterior sin cambio alguno. `x,y,width,height`
+    siguen siendo la caja envolvente (límites del arena, renderizado, pruebas rápidas). El prisma se traslada, no rota al ser empujado. */
+ const polyOf=ob=>Array.isArray(ob.poly)&&ob.poly.length>=3?ob.poly:null;
+ /* Prisma triangular equilátero de lado `side` con centroide (cx,cy). rotationDeg=0 → un vértice apunta a +x. */
+ function prism(cx,cy,rotationDeg=0,side=13){
+  const r=side/Math.sqrt(3),a0=rotationDeg*Math.PI/180;
+  const poly=[0,1,2].map(i=>{const a=a0+i*2*Math.PI/3;return [Math.round((cx+r*Math.cos(a))*1e6)/1e6,Math.round((cy+r*Math.sin(a))*1e6)/1e6];});
+  const xs=poly.map(q=>q[0]),ys=poly.map(q=>q[1]),x=Math.min(...xs),y=Math.min(...ys);
+  return {x,y,width:Math.max(...xs)-x,height:Math.max(...ys)-y,poly};
+ }
+ const isPrism=ob=>!!polyOf(ob);   // los mensajes nombran el objeto real: «prisma triangular» en FIRVI, «caja» en S01–S08 (texto de las cajas sin cambio)
+ const moved=(ob,x,y)=>polyOf(ob)?{...ob,x,y,poly:ob.poly.map(q=>[q[0]+x-ob.x,q[1]+y-ob.y])}:{...ob,x,y};
+ function pointSegDist2(px,py,ax,ay,bx,by){
+  const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy,t=den?clamp(((px-ax)*vx+(py-ay)*vy)/den,0,1):0;
+  return (px-ax-t*vx)**2+(py-ay-t*vy)**2;
+ }
+ function pointInPoly(px,py,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+   const [xi,yi]=poly[i],[xj,yj]=poly[j];
+   if((yi>py)!==(yj>py)&&px<(xj-xi)*(py-yi)/(yj-yi)+xi)inside=!inside;
+  }
+  return inside;
+ }
+ const cross2=(ax,ay,bx,by)=>ax*by-ay*bx;
+ function segmentsCross(a,b,c,d){
+  const d1=cross2(b.x-a.x,b.y-a.y,c[0]-a.x,c[1]-a.y),d2=cross2(b.x-a.x,b.y-a.y,d[0]-a.x,d[1]-a.y);
+  const d3=cross2(d[0]-c[0],d[1]-c[1],a.x-c[0],a.y-c[1]),d4=cross2(d[0]-c[0],d[1]-c[1],b.x-c[0],b.y-c[1]);
+  return d1*d2<0&&d3*d4<0;
+ }
+ const distPointPoly=(px,py,poly)=>{
+  if(pointInPoly(px,py,poly))return 0;
+  let best=Infinity;
+  for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];best=Math.min(best,pointSegDist2(px,py,a[0],a[1],b[0],b[1]));}
+  return Math.sqrt(best);
+ };
+ function distSegPoly(a,b,poly){
+  if(pointInPoly(a.x,a.y,poly)||pointInPoly(b.x,b.y,poly))return 0;
+  let best=Infinity;
+  for(let i=0;i<poly.length;i++){
+   const c=poly[i],d=poly[(i+1)%poly.length];
+   if(segmentsCross(a,b,c,d))return 0;
+   best=Math.min(best,pointSegDist2(a.x,a.y,c[0],c[1],d[0],d[1]),pointSegDist2(b.x,b.y,c[0],c[1],d[0],d[1]),
+    pointSegDist2(c[0],c[1],a.x,a.y,b.x,b.y),pointSegDist2(d[0],d[1],a.x,a.y,b.x,b.y));
+  }
+  return Math.sqrt(best);
+ }
+ /* Distancia del rayo (origen, dirección unitaria) al polígono convexo; 0 si el origen está dentro; Infinity si no lo toca. */
+ function rayPoly(ox,oy,dx,dy,poly){
+  if(pointInPoly(ox,oy,poly))return 0;
+  let best=Infinity;
+  for(let i=0;i<poly.length;i++){
+   const c=poly[i],d=poly[(i+1)%poly.length],ex=d[0]-c[0],ey=d[1]-c[1],den=cross2(dx,dy,ex,ey);
+   if(Math.abs(den)<1e-12)continue;
+   const t=cross2(c[0]-ox,c[1]-oy,ex,ey)/den,u=cross2(c[0]-ox,c[1]-oy,dx,dy)/den;
+   if(t>=0&&u>=0&&u<=1)best=Math.min(best,t);
+  }
+  return best;
+ }
  // Liang–Barsky: centro de la barra barrido frente a AABB expandida por el
  // grosor del palo. Usamos < y EPS para no tratar las superficies tangentes
  // como penetración. El contacto se detecta asimismo con la separación real.
  function barOverlapsBox(pose,angleDeg,ob,pad=spec.halfWidth){
   const height=ob.visualHeightCm??15.6;
   if(height < spec.bottomHeight+1e-6 || spec.topHeight < -.45)return false;
+  const poly=polyOf(ob);
+  if(poly){const [pa,pb]=segment(pose,angleDeg);return distSegPoly(pa,pb,poly)<pad-1e-7;}
   const [a,b]=segment(pose,angleDeg),loX=ob.x-pad,hiX=ob.x+ob.width+pad,loY=ob.y-pad,hiY=ob.y+ob.height+pad;
   let lo=0,hi=1;
   for(const [p,d,min,max] of [[a.x,b.x-a.x,loX,hiX],[a.y,b.y-a.y,loY,hiY]]){
@@ -40,6 +102,8 @@ window.IROH_MECHANICS = (() => {
   return true;
  }
  function bodyOverlapsBox(pose,ob,radius=spec.bodyRadius){
+  const poly=polyOf(ob);
+  if(poly)return distPointPoly(pose.x,pose.y,poly)<radius-1e-5;
   const xx=clamp(pose.x,ob.x,ob.x+ob.width),yy=clamp(pose.y,ob.y,ob.y+ob.height);
   return (pose.x-xx)**2+(pose.y-yy)**2<(radius-1e-5)**2;
  }
@@ -72,13 +136,13 @@ function advance(pose,oldAngle,newAngle,obstacles,track){
     for(let ifwd=-8;ifwd<=8;ifwd++)for(let iside=-10;iside<=10;iside++){
      const forward=ifwd*.075,side=iside*.065;
      if(Math.hypot(forward,side)>maxDrift+1e-8)continue;
-     const trial={...now,x:now.x+b.f.x*forward+b.r.x*side,y:now.y+b.f.y*forward+b.r.y*side};
+     const trial=moved(now,now.x+b.f.x*forward+b.r.x*side,now.y+b.f.y*forward+b.r.y*side);
      if(!insideArena(trial,track)||bodyOverlapsBox(pose,trial)||barOverlapsBox(pose,next,trial))continue;
      if(obstacles.some(other=>other.id!==ob.id&&boxBox(trial,changes.get(other.id)||other)))continue;
      const cost=(forward-tipForward)**2+(side-tipRight)**2 + (.015)*(forward**2+side**2);
      if(cost<bestCost){bestCost=cost;best=trial;}
     }
-    if(!best)return {angle:current,changes,hits,blocked:'El golpe se detuvo: falta espacio para mover la caja sin atravesarla.'};
+    if(!best)return {angle:current,changes,hits,blocked:isPrism(ob)?'El golpe se detuvo: falta espacio para mover el prisma triangular sin atravesarlo.':'El golpe se detuvo: falta espacio para mover la caja sin atravesarla.'};
     changes.set(now.id,best);
     if(Math.hypot(best.x-ob.x,best.y-ob.y)>.02&&!hits.includes(now.id))hits.push(now.id);
    }
@@ -103,14 +167,14 @@ function advance(pose,oldAngle,newAngle,obstacles,track){
    const now=changes.get(ob.id)||ob;
    if(!barOverlapsBox(newPose,angleDeg,now))continue;
    if(!now.movable)return stop('fixed','La garra tocó un obstáculo fijo: el robot se detuvo.');
-   if(rotates)return stop('rotation','La garra tocó una caja durante un giro: el robot se detuvo.');
-   const trial={...now,x:now.x+dx,y:now.y+dy};
+   if(rotates)return stop('rotation',isPrism(now)?'La garra tocó un prisma triangular durante un giro: el robot se detuvo.':'La garra tocó una caja durante un giro: el robot se detuvo.');
+   const trial=moved(now,now.x+dx,now.y+dy);
    if(!insideArena(trial,track)||bodyOverlapsBox(newPose,trial)||barOverlapsBox(newPose,angleDeg,trial)||
       obstacles.some(other=>other.id!==ob.id&&boxBox(trial,changes.get(other.id)||other)))
-    return stop('no-space','La caja no tiene espacio para desplazarse: el robot se detuvo.');
+    return stop('no-space',isPrism(now)?'El prisma triangular no tiene espacio para desplazarse: el robot se detuvo.':'La caja no tiene espacio para desplazarse: el robot se detuvo.');
    changes.set(ob.id,trial);if(!hits.includes(ob.id))hits.push(ob.id);
   }
   return {pose:{x:newPose.x,y:newPose.y,th:newPose.th},changes,hits,blocked:null};
  }
- return {spec,commandAngle,clamp,basis,worldPoint,sweepAngle,segment,barOverlapsBox,bodyOverlapsBox,insideArena,boxBox,advance,advanceRobotPose};
+ return {spec,commandAngle,clamp,basis,worldPoint,sweepAngle,segment,barOverlapsBox,bodyOverlapsBox,insideArena,boxBox,advance,advanceRobotPose,prism,polyOf,rayPoly};
 })();

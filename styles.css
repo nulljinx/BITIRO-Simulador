@@ -411,3 +411,67 @@ dialog::backdrop{background:rgba(7,20,38,.42)}
 .guide-search-status,.guide-empty{overflow-wrap:anywhere}
 @media(max-width:700px){.guide-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 24px)}.guide-dialog .reference-title{padding-left:var(--space-4)}.guide-tools{padding:var(--space-2) var(--space-3)}.guide-search{min-height:44px}.guide-body{padding:var(--space-3) var(--space-3) var(--space-4)}.guide-topic>summary{min-height:60px;padding:var(--space-2) var(--space-3)}.guide-topic-body{padding:var(--space-3);grid-template-columns:minmax(0,1fr)}.guide-copy{min-height:44px}.guide-item{padding:var(--space-2) var(--space-3)}.guide-sig,.guide-program{font-size:12px;padding:var(--space-2)}}
 @media(min-width:1024px) and (max-height:700px){.guide-dialog{max-height:calc(100dvh - 32px)}}
+
+/* FIRVI 2025 · barra de competencia (Etapa B). Solo aparece en las pistas FIRVI con el modo competencia activo. */
+.competition-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 10px;margin:0 0 6px;border:1px solid var(--border-default);border-radius:var(--radius-panel);background:var(--surface-panel);font-size:var(--text-label)}
+.competition-bar[hidden]{display:none}
+.comp-status{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0}
+.comp-badge{padding:2px 8px;border-radius:999px;border:1px solid var(--border-default);font-weight:600;font-size:12px;white-space:nowrap}
+.comp-badge[data-state=calibration]{background:#fff6dc;border-color:#e3c36a}.comp-badge[data-state=running]{background:#e2f4ea;border-color:#79c49a}
+.comp-badge[data-state=no-progress],.comp-badge[data-state=reposition-authorized]{background:#fde8e4;border-color:#e69a8c}.comp-badge[data-state=finished]{background:#eceef2}
+.comp-clock{font-family:var(--font-mono,ui-monospace,monospace);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}.comp-clock.warn{color:#b3261e}
+.comp-info,.comp-note{color:var(--text-secondary);font-size:12px}
+.comp-note{flex:1 1 100%;margin:0}
+.comp-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-left:auto}
+.comp-actions [hidden]{display:none}
+.comp-obstacles{display:inline-flex;align-items:center;gap:6px}.comp-obstacles select{min-height:28px}
+@media (max-width:640px){.comp-actions{margin-left:0;width:100%}.comp-actions .button{flex:1 1 auto}}
+/* FIRVI 2025 · Etapa C · panel de evaluación (compacto, dentro de la barra de competencia) */
+.comp-eval{flex:1 1 100%;min-width:0;max-width:100%;border-top:1px solid var(--border-default);padding-top:4px;font-size:12px}
+.comp-eval[hidden]{display:none}
+.comp-eval>summary{display:flex;gap:10px;align-items:baseline;cursor:pointer;font-weight:600}.comp-eval>summary output{font-weight:400;color:var(--text-secondary)}
+.eval-tabs{display:flex;gap:6px;margin:6px 0}.eval-tabs .button{min-height:26px;padding:0 10px}.eval-tabs .button[aria-pressed=true]{font-weight:700;text-decoration:underline}
+.eval-table-wrap{overflow-x:auto;max-width:100%}
+.eval-table{border-collapse:collapse;width:100%;min-width:560px}.eval-table th,.eval-table td{border-bottom:1px solid var(--border-default);padding:3px 6px;text-align:left;vertical-align:top}
+.eval-table td.pts{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.eval-st{display:inline-block;padding:1px 7px;border-radius:999px;border:1px solid var(--border-default);font-weight:600;white-space:nowrap}
+.eval-st[data-st=validated-auto]{background:#e2f4ea;border-color:#79c49a}.eval-st[data-st=validated-judge]{background:#e4ecfb;border-color:#8aa8e6}
+.eval-st[data-st=pending]{background:#fff6dc;border-color:#e3c36a}.eval-st[data-st=not-achieved]{background:#fde8e4;border-color:#e69a8c}.eval-st[data-st=not-applicable]{background:#eceef2}
+.eval-why{display:block;color:var(--text-secondary)}.eval-prov{color:var(--text-secondary);font-size:11px}
+.eval-judge{display:flex;gap:4px;flex-wrap:wrap;align-items:center}.eval-judge .button{min-height:28px;padding:0 8px}.eval-judge select{min-height:28px}
+.eval-totals{margin:6px 0 2px;font-weight:600}.eval-note{margin:0;color:var(--text-secondary)}
+/* FIRVI 2025 · ajustes de interfaz finales. Solo presentación: ni la pista, ni la física, ni el motor, ni la puntuación cambian. */
+.eval-table-wrap:focus-visible{outline-offset:-2px}
+#compExecute{display:none}
+@media(min-width:1024px){
+ /* Escritorio: el panel de evaluación desplaza su propia tabla y deja siempre a la vista una escena útil. */
+ .comp-eval[open] .eval-table-wrap{max-height:clamp(120px,20dvh,220px);overflow:auto}
+ .eval-table thead th{position:sticky;top:0;z-index:1;background:var(--surface-panel)}
+ .competition-on .scene-wrap{min-height:300px}
+}
+@media(max-width:1023px){
+ /* Apilado: Ejecutar junto a las órdenes de la ronda y objetivos táctiles de 44 px en el panel del juez. */
+ #compExecute:not([hidden]){display:inline-flex;order:-1}
+ .comp-eval .eval-tabs .button,.eval-judge .button,.eval-judge select,.comp-eval>summary{min-height:44px}
+ .comp-eval>summary{align-items:center}
+}
+@media(max-width:767px){
+ /* La pista FIRVI lleva el botón Competencia: el selector ocupa su propia fila para que se lea «FIRVI 2025 · A/B» completo. */
+ .simulator-toolbar:has(#competitionToggle:not([hidden])) .track-field{flex:1 1 100%}
+ .simulator-toolbar:has(#competitionToggle:not([hidden])) #competitionToggle{flex:1 1 0}
+ .comp-actions .button{min-height:44px}
+ /* Panel del juez: una tarjeta por hito en lugar de una tabla de 560 px. */
+ .eval-table,.eval-table tbody{display:block;min-width:0;width:100%}
+ .eval-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+ .eval-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:10px 2px;border-bottom:1px solid var(--border-default)}
+ .eval-table tbody td{display:block;border:0;padding:0;min-width:0}
+ .eval-table td.eval-hito{grid-column:1;font-weight:600;font-size:13px}
+ .eval-table td.pts{grid-column:2;font-weight:600}
+ .eval-table td.eval-state{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+ .eval-table td.eval-evidence,.eval-table td.eval-judge-cell{grid-column:1/-1}
+ .eval-table td.eval-evidence .eval-prov{display:block;overflow-wrap:anywhere}
+ .eval-judge{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .eval-judge select{grid-column:1/-1;width:100%}
+ .eval-judge .button{width:100%;white-space:normal;line-height:1.2}
+ .eval-judge .button[aria-label^=Quitar]{grid-column:1/-1}
+}
