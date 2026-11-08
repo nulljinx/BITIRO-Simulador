@@ -2,9 +2,38 @@
 
 ## Identidad
 
-> **Actualización 2026-10-12 (vigente):** producción sirve **HEAD-CANVAS** (cabeza virtual: `head-sonar.js`, `head-config.js` y cuatro archivos modificados; seis archivos en total, verificación HTTPS 8/8), publicado sobre **SIM-NNJ-101d19f**. Ver [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (respaldo previo: `/home/nulljinx/deploy-backups/SIM-HEAD-20261012-123256-356406`). La release anterior [`release-sim-nnj-101d19f.md`](release-sim-nnj-101d19f.md) se conserva como historia. **`main` (HEAD `101d19f`) no contiene HEAD-CANVAS ni representa los bytes desplegados**; el trabajo vive en `feature/head-canvas`. Los SHA-256 de los seis archivos publicados están registrados en [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (coinciden con `c56799b`; no comparados con el servidor). **Estado de la cabeza:** el yaw virtual está implementado; el pitch (`moverServoPitch()`) y la validación en el robot físico siguen pendientes.
+> **Producción vigente (actualización 2026-11-08): SIM-UX-V1.** `https://simulador.nulljinx.com` sirve los archivos runtime del commit de referencia **`5f427d6ee46113b4af1bda69f2cb3d1780ce32f0`** (`fix(ui): clarify obstacle contact and movement feedback`), etiqueta local `sim-ux-v1-deployed`.
 >
-> Todo lo que sigue desde aquí describe baselines **anteriores** (`SIM-UI-RELEASE-4` y previos), sobre los que se construyó, y se conserva como historia: cuando diga «producción actual» o «publicado», se refiere a ese momento, no al estado vigente descrito arriba.
+> | Campo | Valor |
+> |---|---|
+> | Despliegue actual | SIM-UX-V1, 2026-11-08, 00:01:01 (-03), resultado `DESPLEGADO_Y_VERIFICADO` |
+> | Despliegue anterior | `b06052b` (FIRVI 2025 integrado con HEAD-CANVAS), publicado el 2026-10-25; etiqueta local `sim-prod-20261025-firvi` |
+> | Archivos actualizados | solo `index.html` y `simulator.js` |
+> | Verificación | HTTPS público: 30/30 archivos runtime coinciden con `5f427d6`; los otros 28 son idénticos a `b06052b` |
+> | Servidor | Debian 13, hostname `nulljinx`; webroot `/var/www/bitiro-simulador`; nginx en `127.0.0.1:8086` detrás de `cloudflared`/Cloudflare |
+> | Respaldo (versión anterior de los dos archivos) | `/home/nulljinx/deploy-backups/SIM-UX-V1-20261108-000101-78703/` |
+> | Staging conservado | `/home/nulljinx/deploy-staging/SIM-UX-V1-20261108-000051/` |
+>
+> ```text
+> 50599c2d26afde3e553ec6ce034437d0552ef49bbd1b04172faa948ba590b716  index.html
+> 8a5824d38c14e63811a3ceb043b884d9350dfa790acc72ef491e907ae077f5bc  simulator.js
+> ```
+>
+> Hashes anteriores de esos dos archivos (`b06052b`): `index.html` `e4c1e415b402f917b961a4cb7515bce10a9e6ebe08dffd079f07aa3bcefda2a8`, `simulator.js` `54c591ef98a6f829213f0dba9a884948182fe1bbc5111965102b20a4cf86739c`.
+>
+> **Contenido de SIM-UX-V1:** los avisos de contacto de la interfaz retiran el mensaje cuando deja de ser cierto, y el resumen de un desplazamiento distingue «mover» de «despejar»; además, tarjeta «Apartar un obstáculo con la garra» en la Guía. **El motor físico no cambió** (física, geometría, puntuación, contadores y registros), comprobado con `tests/ux-engine-unchanged.cjs` contra `b06052b`. Detalle en [`ux-mensajes-colision.md`](ux-mensajes-colision.md).
+>
+> **FIRVI 2025 A y B ya están publicados** (desde el 2026-10-25, junto con HEAD-CANVAS). Los experimentos de programa de referencia FIRVI siguen **locales y sin publicar**.
+>
+> **El despliegue fue manual** (copia selectiva por SSH con `ux-deploy.sh` (guardado fuera del repositorio, en `~/audits/SIM-UX-V1-DEPLOY/` de la estación de trabajo), respaldo y rollback verificados): **no implicó un push ni una sincronización con GitHub**. Producción contiene los archivos runtime correspondientes a `5f427d6`, pero ese commit y `b06052b` no se han empujado a GitHub (no consta en las referencias locales; el remoto no se consultó); no se debe deducir la versión publicada a partir de `main`. La identidad válida son los SHA-256 de arriba.
+>
+> **Rollback:** restaurar los dos archivos de `<respaldo>/files/` y verificar con `SHA256SUMS.before` (`e4c1e415…`, `54c591ef…`); el script `ux-deploy.sh rollback <respaldo>` lo hace y comprueba que nginx sirve los hashes restaurados.
+>
+> Lo que sigue a continuación en este bloque y en el resto del documento describe versiones **anteriores** y se conserva como historia.
+>
+> **Actualización 2026-10-12 (histórica; sustituida el 2026-10-25 por FIRVI/`b06052b` y el 2026-11-08 por SIM-UX-V1):** producción servía **HEAD-CANVAS** (cabeza virtual: `head-sonar.js`, `head-config.js` y cuatro archivos modificados; seis archivos en total, verificación HTTPS 8/8), publicado sobre **SIM-NNJ-101d19f**. Ver [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (respaldo previo: `/home/nulljinx/deploy-backups/SIM-HEAD-20261012-123256-356406`). La release anterior [`release-sim-nnj-101d19f.md`](release-sim-nnj-101d19f.md) se conserva como historia. **`main` (HEAD `101d19f`) no contiene HEAD-CANVAS ni representa los bytes desplegados**; el trabajo vive en `feature/head-canvas`. Los SHA-256 de los seis archivos publicados están registrados en [`release-sim-head-canvas.md`](release-sim-head-canvas.md) (coinciden con `c56799b`; no comparados con el servidor). **Estado de la cabeza:** el yaw virtual está implementado; el pitch (`moverServoPitch()`) y la validación en el robot físico siguen pendientes.
+>
+> Todo lo que sigue desde aquí describe baselines **anteriores** (`SIM-UI-RELEASE-4` y previos), sobre los que se construyó, y se conserva como historia: cuando diga «producción actual» o «publicado», se refiere a ese momento, no al estado vigente descrito arriba (SIM-UX-V1, `5f427d6`). Esto incluye frases como «Producción coincide byte a byte con ese commit», «no está en producción» o «no desplegado»: son históricas y no describen la producción actual.
 
 Baseline funcional de `RUNTIME-FUNCTIONS-1` (último cambio del lenguaje y del intérprete):
 

@@ -1,6 +1,13 @@
 # Mejora UX de colisiones para NNJ: avisos de contacto y guía
 
-Estado: **commit local de la mejora UX, sin publicación.** Rama `integrate/firvi-2025-head-canvas`, base `b06052b`.
+Estado: **DESPLEGADO_Y_VERIFICADO en producción (SIM-UX-V1).**
+- Commit UX: `5f427d6ee46113b4af1bda69f2cb3d1780ce32f0` (rama local `integrate/firvi-2025-head-canvas`, base `b06052b`).
+- Despliegue: SIM-UX-V1, manual, 2026-11-08 00:01:01 (-03); solo se publicaron `index.html` y `simulator.js`.
+- Verificación: 30/30 archivos runtime por HTTPS coinciden con `5f427d6`. Registro completo en [`current-baseline.md`](current-baseline.md).
+- El despliegue no implicó push ni merge a GitHub.
+
+(Lo que sigue es el informe original de la mejora, escrito antes de la publicación; se conserva sin cambios.)
+
 **No se modificó la física** (`strike-physics.js`, geometría, radios, puntuación, contadores internos ni registros): solo el texto de `ui.feedback` y la guía.
 Contexto: el bloqueo observado por un NNJ en el simulador público es una colisión válida con la caja todavía en la trayectoria (diagnóstico previo, documentado aparte); lo que sí fallaba era un mensaje obsoleto en pantalla.
 
