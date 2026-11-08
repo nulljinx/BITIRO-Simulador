@@ -1,11 +1,11 @@
 # Baseline actual
 
-> **Producción vigente (actualización 2026-11-08): SIM-UX-V1.** `https://simulador.nulljinx.com` sirve los archivos runtime del commit de referencia **`5f427d6ee46113b4af1bda69f2cb3d1780ce32f0`** (`fix(ui): clarify obstacle contact and movement feedback`), etiqueta local `sim-ux-v1-deployed`.
+> **Producción vigente (actualización 2026-11-08): SIM-UX-V1.** `https://simulador.nulljinx.com` sirve los archivos runtime del commit de referencia **`5f427d6ee46113b4af1bda69f2cb3d1780ce32f0`** (`fix(ui): clarify obstacle contact and movement feedback`), etiqueta `sim-ux-v1-deployed` (publicada en GitHub; apunta a `149a1aa`, punta de la rama `release/sim-ux-v1`, cuyo runtime corresponde a `5f427d6`).
 >
 > | Campo | Valor |
 > |---|---|
 > | Despliegue actual | SIM-UX-V1, 2026-11-08, 00:01:01 (-03), resultado `DESPLEGADO_Y_VERIFICADO` |
-> | Despliegue anterior | `b06052b` (FIRVI 2025 integrado con HEAD-CANVAS), publicado el 2026-10-25; etiqueta local `sim-prod-20261025-firvi` |
+> | Despliegue anterior | `b06052b` (FIRVI 2025 integrado con HEAD-CANVAS), publicado el 2026-10-25; etiqueta `sim-prod-20261025-firvi` (publicada en GitHub; apunta a `b06052b`) |
 > | Archivos actualizados | solo `index.html` y `simulator.js` |
 > | Verificación | HTTPS público: 30/30 archivos runtime coinciden con `5f427d6`; los otros 28 son idénticos a `b06052b` |
 > | Servidor | Debian 13, hostname `nulljinx`; webroot `/var/www/bitiro-simulador`; nginx en `127.0.0.1:8086` detrás de `cloudflared`/Cloudflare |
@@ -23,7 +23,7 @@
 >
 > **FIRVI 2025 A y B ya están publicados** (desde el 2026-10-25, junto con HEAD-CANVAS). Los experimentos de programa de referencia FIRVI siguen **locales y sin publicar**.
 >
-> **El despliegue fue manual** (copia selectiva por SSH con `ux-deploy.sh` (guardado fuera del repositorio, en `~/audits/SIM-UX-V1-DEPLOY/` de la estación de trabajo), respaldo y rollback verificados): **no implicó un push ni una sincronización con GitHub**. Producción contiene los archivos runtime correspondientes a `5f427d6`, pero ese commit y `b06052b` no se han empujado a GitHub (no consta en las referencias locales; el remoto no se consultó); no se debe deducir la versión publicada a partir de `main`. La identidad válida son los SHA-256 de arriba.
+> **El despliegue fue manual** (copia selectiva por SSH con `ux-deploy.sh` (guardado fuera del repositorio, en `~/audits/SIM-UX-V1-DEPLOY/` de la estación de trabajo), respaldo y rollback verificados): **no implicó un push ni una sincronización con GitHub**. Posteriormente (2026-11-08) se publicó la rama `release/sim-ux-v1` (`149a1aa`) junto con las etiquetas `sim-prod-20261025-firvi`, `sim-ux-v1-candidate` y `sim-ux-v1-deployed`; los commits de producción `b06052b` y `5f427d6` ya son accesibles desde esa rama en GitHub. `main` sigue **sin** contener ese runtime, por lo que no se debe deducir la versión publicada a partir de `main`. La identidad válida son los SHA-256 de arriba.
 >
 > **Rollback:** restaurar los dos archivos de `<respaldo>/files/` y verificar con `SHA256SUMS.before` (`e4c1e415…`, `54c591ef…`); el script `ux-deploy.sh rollback <respaldo>` lo hace y comprueba que nginx sirve los hashes restaurados.
 >

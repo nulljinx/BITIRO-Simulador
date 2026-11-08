@@ -116,8 +116,8 @@ El repositorio **no declara licencia de software propia**. Se mantiene como deci
 | `sim-ui-release-4-deployed` | despliegue | `1a555ea` | histórico, sustituida |
 | `sim-nnj-101d19f-deployed` | despliegue | `93396ba` | base de HEAD-CANVAS; sustituida |
 | (sin tag) HEAD-CANVAS | despliegue | `feature/head-canvas` | histórico; publicado el 2026-10-12, incluido en la producción actual |
-| `sim-prod-20261025-firvi` | despliegue | `b06052b` | FIRVI 2025 + HEAD-CANVAS, publicado el 2026-10-25; sustituida (etiqueta local hasta publicarse) |
-| `sim-ux-v1-deployed` | despliegue | `149a1aa` (rama `release/sim-ux-v1`; runtime `5f427d6`) | **producción actual** (SIM-UX-V1, 2026-11-08 00:01:01 -03); etiqueta local hasta publicarse |
+| `sim-prod-20261025-firvi` | despliegue | `b06052b` | FIRVI 2025 + HEAD-CANVAS, publicado el 2026-10-25; sustituida; etiqueta anotada publicada en GitHub (→ `b06052b`) |
+| `sim-ux-v1-deployed` | despliegue | `149a1aa` (rama `release/sim-ux-v1`; runtime `5f427d6`) | **producción actual** (SIM-UX-V1, 2026-11-08 00:01:01 -03); etiqueta anotada publicada en GitHub (→ `149a1aa`) |
 
 **Estado vigente (2026-11-08):** producción es **SIM-UX-V1**, despliegue manual de `index.html` y `simulator.js` sobre FIRVI; su identidad (SHA-256 de los 30 archivos runtime) está en `docs/release-sim-ux-v1.md` de la rama `release/sim-ux-v1`. FIRVI A y B están publicados y HEAD-CANVAS sigue presente como funcionalidad. `main` conserva una geometría de desarrollo distinta (base de ruedas 10 cm, sonar 7,40 cm, modelo IROH 3D) y **no equivale al runtime desplegado**. Las líneas siguen divergentes; reconciliarlas requiere un plan aprobado (§8).
 

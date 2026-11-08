@@ -176,7 +176,7 @@ Son dos líneas de desarrollo con historias divergentes (no se han fusionado):
 - Ninguno de los componentes exclusivos de `main` (geometría medida, modelo IROH 3D, origen del sonar) está desplegado en producción.
 - Ninguna capacidad de la cabeza virtual existe en `main`; tampoco FIRVI 2025 ni los avisos de contacto de SIM-UX-V1. **`main` no equivale al runtime desplegado.**
 - La cabeza virtual es un **modelo virtual**: velocidad, espera, alcance, alturas y zona muerta son provisionales y no están medidos en el robot físico.
-- **Identidad exacta de producción (SIM-UX-V1):** SHA-256 de los 30 archivos runtime, procedencia, pruebas, respaldo y rollback en [`docs/release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (rama `release/sim-ux-v1`; el enlace funciona una vez publicada esa rama).
+- **Identidad exacta de producción (SIM-UX-V1):** SHA-256 de los 30 archivos runtime, procedencia, pruebas, respaldo y rollback en [`docs/release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (rama `release/sim-ux-v1`, publicada en GitHub).
 - Identidad histórica de los seis archivos de HEAD-CANVAS (SHA-256, junto con la referencia a la release base): [`docs/release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (enlace a un commit fijo de `feature/head-canvas`).
 - Soluciones y pruebas de S08: [`examples/README.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md), [`tests/head/`](https://github.com/nulljinx/BITIRO-Simulador/tree/563aa923fb9622214eaec9775f6e27f4a514a617/tests/head) y `tests/head-sonar.cjs` (todas en `feature/head-canvas`, no en `main`).
 - Reconciliar ambas líneas es una decisión pendiente y requiere aprobación explícita; no se fusionan automáticamente.
@@ -355,7 +355,7 @@ Será resuelto en `SONAR-PHYSICAL-ORIGIN-1`. Los umbrales del sonar usados en ma
 
 `v0.9.0-rc.1` es un Release Candidate. Por ahora son tags Git, no Releases de GitHub.
 
-Además existen tags de **despliegue** (no son versiones de producto): `sim-ui-release-4-deployed` y `sim-nnj-101d19f-deployed`. HEAD-CANVAS, publicado el 2026-10-12, no tenía tag propio al momento de esta auditoría. Posteriormente se registraron FIRVI (2026-10-25, `sim-prod-20261025-firvi` → `b06052b`) y SIM-UX-V1 (2026-11-08, `sim-ux-v1-deployed`, en la rama `release/sim-ux-v1`); esas etiquetas se publican junto con la rama de release. Ver [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
+Además existen tags de **despliegue** (no son versiones de producto): `sim-ui-release-4-deployed` y `sim-nnj-101d19f-deployed`. HEAD-CANVAS, publicado el 2026-10-12, no tenía tag propio al momento de esta auditoría. Posteriormente se registraron FIRVI (2026-10-25, `sim-prod-20261025-firvi` → `b06052b`) y SIM-UX-V1 (2026-11-08, `sim-ux-v1-deployed`, en la rama `release/sim-ux-v1`); esas etiquetas y la rama de release ya están publicadas en GitHub (`sim-ux-v1-deployed` → `149a1aa`; `sim-ux-v1-candidate` → `5f427d6`). Ver [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
 
 ## Roadmap inmediato
 
