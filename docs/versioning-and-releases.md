@@ -107,7 +107,7 @@ Pendiente de aprobación; **no aplicada**.
 
 El repositorio **no declara licencia de software propia**. Se mantiene como decisión pendiente del responsable; este documento no agrega una.
 
-## 11. Estado inicial de versiones
+## 11. Estado de versiones (inicial, actualizado el 2026-11-08)
 
 | Referencia | Tipo | Apunta a | Nota |
 |---|---|---|---|
@@ -115,10 +115,14 @@ El repositorio **no declara licencia de software propia**. Se mantiene como deci
 | `v0.9.0-rc.1` | producto (RC) | `8062379` | ancestro de `main`; **no coincide con producción** |
 | `sim-ui-release-4-deployed` | despliegue | `1a555ea` | histórico, sustituida |
 | `sim-nnj-101d19f-deployed` | despliegue | `93396ba` | base de HEAD-CANVAS; sustituida |
-| (sin tag) HEAD-CANVAS | despliegue | `feature/head-canvas` | **producción actual** (2026-10-12) |
+| (sin tag) HEAD-CANVAS | despliegue | `feature/head-canvas` | histórico; publicado el 2026-10-12, incluido en la producción actual |
+| `sim-prod-20261025-firvi` | despliegue | `b06052b` | FIRVI 2025 + HEAD-CANVAS, publicado el 2026-10-25; sustituida (etiqueta local hasta publicarse) |
+| `sim-ux-v1-deployed` | despliegue | `149a1aa` (rama `release/sim-ux-v1`; runtime `5f427d6`) | **producción actual** (SIM-UX-V1, 2026-11-08 00:01:01 -03); etiqueta local hasta publicarse |
+
+**Estado vigente (2026-11-08):** producción es **SIM-UX-V1**, despliegue manual de `index.html` y `simulator.js` sobre FIRVI; su identidad (SHA-256 de los 30 archivos runtime) está en `docs/release-sim-ux-v1.md` de la rama `release/sim-ux-v1`. FIRVI A y B están publicados y HEAD-CANVAS sigue presente como funcionalidad. `main` conserva una geometría de desarrollo distinta (base de ruedas 10 cm, sonar 7,40 cm, modelo IROH 3D) y **no equivale al runtime desplegado**. Las líneas siguen divergentes; reconciliarlas requiere un plan aprobado (§8).
 
 ## 12. Evaluación futura (no ejecutada)
 
-- **`release/sim-head-canvas`:** crear desde el commit fuente de producción, igual que `release/sim-nnj-101d19f`, para fijar la historia de HEAD-CANVAS independientemente de la vida de `feature/head-canvas`. Candidato: `563aa92` (contiene el documento de identidad y las pruebas; los seis archivos coinciden con el manifiesto, comprobado localmente). Alternativa: `c56799b` (referencia citada en el documento). Decisión pendiente.
+- **`release/sim-head-canvas`** (enfoque superado para la producción actual: la línea de producción se registra en `release/sim-ux-v1`, que incluye la historia de HEAD-CANVAS; se conserva como referencia): crear desde el commit fuente de producción, igual que `release/sim-nnj-101d19f`, para fijar la historia de HEAD-CANVAS independientemente de la vida de `feature/head-canvas`. Candidato: `563aa92` (contiene el documento de identidad y las pruebas; los seis archivos coinciden con el manifiesto, comprobado localmente). Alternativa: `c56799b` (referencia citada en el documento). Decisión pendiente.
 - **`sim-head-canvas-20261012-deployed`:** tag de despliegue anotado sobre el commit fuente elegido, con mensaje que cite la verificación HTTPS comunicada y el manifiesto del documento de release. Se crearía solo tras aprobar el commit fuente.
-- **Versión semántica:** no se asigna aquí. Producción (HEAD-CANVAS) no contiene el contenido de `v0.9.0-rc.1` (geometría medida, modelo IROH 3D), así que etiquetarla con un número cercano a `v0.9.0-rc.N` sería engañoso; decidirlo requiere resolver primero cómo se reconcilian las dos líneas.
+- **Versión semántica:** no se asigna aquí. Producción (hoy SIM-UX-V1, que incluye HEAD-CANVAS y FIRVI) no contiene el contenido de `v0.9.0-rc.1` (geometría medida, modelo IROH 3D), así que etiquetarla con un número cercano a `v0.9.0-rc.N` sería engañoso; decidirlo requiere resolver primero cómo se reconcilian las dos líneas.

@@ -141,7 +141,7 @@ apagarCabeza();
 
 son reconocidas por la API, pero todavía no tienen efecto físico. El sonar permanece fijo al eje frontal del robot. Esto bloquea la reproducción fiel de S07 y limita S08.
 
-> **Producción vs. `main`:** esto describe `main`. El despliegue público (HEAD-CANVAS, 2026-10-12) sí implementa un yaw virtual: `inicializarCabeza()` y `moverServoYaw(angulo)` (0° derecha · 90° frente · 180° izquierda) con movimiento progresivo y sonar orientable; `moverServoPitch()` y `apagarCabeza()` siguen sin efecto y ningún parámetro de la cabeza está medido en el robot real. Ese código vive en la rama `feature/head-canvas`, no en `main`. Ver `docs/versioning-and-releases.md`.
+> **Producción vs. `main`:** esto describe `main`. El despliegue público (SIM-UX-V1, 2026-11-08; incluye HEAD-CANVAS desde el 2026-10-12 y FIRVI 2025 desde el 2026-10-25) sí implementa un yaw virtual: `inicializarCabeza()` y `moverServoYaw(angulo)` (0° derecha · 90° frente · 180° izquierda) con movimiento progresivo y sonar orientable; `moverServoPitch()` y `apagarCabeza()` siguen sin efecto y ningún parámetro de la cabeza está medido en el robot real. Ese código vive en la rama `feature/head-canvas` y, con el runtime exacto de producción, en `release/sim-ux-v1`; no en `main`. Ver `docs/versioning-and-releases.md`.
 
 ## Geometría de sesiones
 

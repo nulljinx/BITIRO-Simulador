@@ -14,7 +14,7 @@ Hay tres conceptos distintos que **no** deben confundirse:
 |---|---|---|
 | **Versión etiquetada** | Última etiqueta semántica en Git | `v0.9.0-rc.1` (Release Candidate; solo tag, sin GitHub Release) |
 | **Desarrollo (`main`)** | Integración de desarrollo: geometría IROH medida + modelo visual IROH 3D experimental + Guía de programación | `main` (9 commits posteriores a `v0.9.0-rc.1` al 2026-10-12); **no está desplegado íntegramente** |
-| **Producción** | Lo que sirve `simulador.nulljinx.com` | **HEAD-CANVAS**, publicado el 2026-10-12 como despliegue selectivo de seis archivos sobre `SIM-NNJ-101d19f` |
+| **Producción** | Lo que sirve `simulador.nulljinx.com` | **SIM-UX-V1** (2026-11-08, despliegue manual de 2 archivos sobre FIRVI `b06052b`); fuente runtime `5f427d6`; línea exacta en la rama `release/sim-ux-v1` ([identidad y manifiesto](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md)). Incluye FIRVI 2025 A y B (publicado el 2026-10-25) y HEAD-CANVAS (2026-10-12) |
 
 > Estado general: **Release Candidate / beta avanzada**. No es una versión v1.0 estable: el proyecto sigue en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
 >
@@ -153,7 +153,7 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 - **Prueba manual:** ambas soluciones funcionaron en el escenario comunicado desde producción el 12-10-2026; esa observación cubre un escenario por solución, no todos los casos.
 - **Base 2:** la matriz histórica conserva **90/90 puntos verificables**; con la posición inicial publicada son **80/80** porque los 10 puntos de salida de la zona roja no aplican. En ambas evaluaciones permanecen **10 puntos de selección A/B sin verificación independiente**. La identificación de A/B en el plotter y el significado curricular de cero cajas también siguen pendientes.
 
-**Nota sobre versiones:** `main` contiene geometría y modelo visual IROH distintos de HEAD-CANVAS. Los resultados de HEAD-CANVAS corresponden al simulador publicado, **no** constituyen una revalidación de S08 con la física de `main` ni una comprobación con hardware real.
+**Nota sobre versiones:** `main` contiene geometría y modelo visual IROH distintos de la producción. Los resultados de HEAD-CANVAS corresponden al simulador publicado el 12-10-2026 (la producción actual, SIM-UX-V1, lo incluye, pero esas pruebas no se han repetido sobre SIM-UX-V1), **no** constituyen una revalidación de S08 con la física de `main` ni una comprobación con hardware real.
 
 Informes: [evaluación integral histórica](docs/sesiones-s01-s08.md) · [actualización y pruebas HEAD-CANVAS](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/sesiones-s01-s08.md) · [dos soluciones docentes S08](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md).
 
@@ -161,20 +161,23 @@ Informes: [evaluación integral histórica](docs/sesiones-s01-s08.md) · [actual
 
 Son dos líneas de desarrollo con historias divergentes (no se han fusionado):
 
-| | `main` (desarrollo) | Producción (HEAD-CANVAS) |
+| | `main` (desarrollo) | Producción (SIM-UX-V1, incluye FIRVI y HEAD-CANVAS) |
 |---|---|---|
-| Fuente | `main` (`101d19f`) | rama `feature/head-canvas` (despliegue selectivo de seis archivos) |
+| Fuente | rama `main` | rama `release/sim-ux-v1` (runtime `5f427d6`; línea `954c37c` → SIM-NNJ → HEAD-CANVAS → FIRVI `b06052b` → SIM-UX-V1) |
 | Geometría física medida (wheelbase 10 cm, origen del sonar 7,40 cm) | **sí** | **no** (conserva base de 12 cm y sonar a 9,83 cm de la release anterior) |
 | Modelo visual IROH 3D medido (`?robot=iroh`, experimental) | **sí** | **no** |
 | Cabeza virtual (`moverServoYaw`, sonar orientable) | **no** (reconocida, sin efecto) | **sí** (yaw virtual; el pitch no tiene modelo) |
+| FIRVI 2025 (pistas A y B, competencia y puntuación) | **no** | **sí** (publicado el 2026-10-25) |
+| Avisos de contacto actualizados y tarjeta «Apartar un obstáculo» de la Guía | **no** | **sí** (SIM-UX-V1, 2026-11-08) |
 | Guía de programación IROH por temas | sí | sí |
 | Soluciones docentes S08 con cabeza (`examples/`) | no | sí, en `feature/head-canvas` |
-| Tags | `v0.9.0-rc.1` es ancestro | `sim-nnj-101d19f-deployed` (base); sin tag propio de HEAD-CANVAS |
+| Tags | `v0.9.0-rc.1` es ancestro | `sim-ux-v1-deployed` (SIM-UX-V1); anteriores: `sim-prod-20261025-firvi` (FIRVI) y `sim-nnj-101d19f-deployed` (base); sin tag propio de HEAD-CANVAS |
 
 - Ninguno de los componentes exclusivos de `main` (geometría medida, modelo IROH 3D, origen del sonar) está desplegado en producción.
-- Ninguna capacidad de la cabeza virtual existe en `main`.
+- Ninguna capacidad de la cabeza virtual existe en `main`; tampoco FIRVI 2025 ni los avisos de contacto de SIM-UX-V1. **`main` no equivale al runtime desplegado.**
 - La cabeza virtual es un **modelo virtual**: velocidad, espera, alcance, alturas y zona muerta son provisionales y no están medidos en el robot físico.
-- La identidad de los seis archivos modificados (SHA-256, junto con la referencia a la release base) está en [`docs/release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (enlace a un commit fijo de `feature/head-canvas`).
+- **Identidad exacta de producción (SIM-UX-V1):** SHA-256 de los 30 archivos runtime, procedencia, pruebas, respaldo y rollback en [`docs/release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (rama `release/sim-ux-v1`; el enlace funciona una vez publicada esa rama).
+- Identidad histórica de los seis archivos de HEAD-CANVAS (SHA-256, junto con la referencia a la release base): [`docs/release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (enlace a un commit fijo de `feature/head-canvas`).
 - Soluciones y pruebas de S08: [`examples/README.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md), [`tests/head/`](https://github.com/nulljinx/BITIRO-Simulador/tree/563aa923fb9622214eaec9775f6e27f4a514a617/tests/head) y `tests/head-sonar.cjs` (todas en `feature/head-canvas`, no en `main`).
 - Reconciliar ambas líneas es una decisión pendiente y requiere aprobación explícita; no se fusionan automáticamente.
 
@@ -320,7 +323,8 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Baseline actual](docs/current-baseline.md)
 - [Versionado y releases](docs/versioning-and-releases.md)
 - [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
-- Release HEAD-CANVAS (producción): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
+- Release SIM-UX-V1 (**producción actual**): [`release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (en `release/sim-ux-v1`)
+- Release HEAD-CANVAS (histórica; incluida en la producción actual): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
 - [Limitaciones conocidas](docs/known-limitations.md)
 - [Baseline v4 histórica](docs/sim-v4-baseline.md)
 - [Historia de decisiones de UI](docs/pilot-ui-reference.md)
@@ -351,7 +355,7 @@ Será resuelto en `SONAR-PHYSICAL-ORIGIN-1`. Los umbrales del sonar usados en ma
 
 `v0.9.0-rc.1` es un Release Candidate. Por ahora son tags Git, no Releases de GitHub.
 
-Además existen tags de **despliegue** (no son versiones de producto): `sim-ui-release-4-deployed` y `sim-nnj-101d19f-deployed`. HEAD-CANVAS, publicado el 2026-10-12, no tenía tag propio al momento de esta auditoría; un tag posterior debe registrarse por separado. Ver [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
+Además existen tags de **despliegue** (no son versiones de producto): `sim-ui-release-4-deployed` y `sim-nnj-101d19f-deployed`. HEAD-CANVAS, publicado el 2026-10-12, no tenía tag propio al momento de esta auditoría. Posteriormente se registraron FIRVI (2026-10-25, `sim-prod-20261025-firvi` → `b06052b`) y SIM-UX-V1 (2026-11-08, `sim-ux-v1-deployed`, en la rama `release/sim-ux-v1`); esas etiquetas se publican junto con la rama de release. Ver [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
 
 ## Roadmap inmediato
 
