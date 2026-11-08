@@ -459,6 +459,20 @@ void loop() {
 }</code></pre>
               <p>Programa completo: la garra va a la izquierda, a la derecha y al centro, y repite.</p>
             </article>
+            <article class="guide-item guide-note" data-cmd="leerDistanciaSonar moverServoGolpe detenerse pausa retroceder girarDerecha" data-sig="" data-keywords="apartar obstaculo caja prisma garra barrido sonar distancia acercar despejar mover empujar girar giro bloqueado bloquea contacto trayectoria linea 10 12 cm">
+              <h4>Apartar un obstáculo con la garra</h4>
+              <ol class="guide-steps">
+                <li><b>Detéctalo:</b> lee <code>leerDistanciaSonar()</code>. Un 200 significa que no ve nada.</li>
+                <li><b>Acércate despacio</b> hasta una distancia adecuada y detente con <code>detenerse()</code>.</li>
+                <li><b>Haz un barrido:</b> con la garra en un lado, llévala al lado contrario con <code>moverServoGolpe()</code> y espera con <code>pausa()</code>.</li>
+                <li><b>Comprueba:</b> vuelve la garra al centro y lee el sonar otra vez. Si todavía ve la caja delante, no se despejó.</li>
+                <li><b>Recupera la línea</b> y sigue. Si la caja no se despejó, retrocede un poco con <code>retroceder()</code> e inténtalo de nuevo.</li>
+              </ol>
+              <p><b>Mover no es despejar.</b> Una caja puede moverse un poco y seguir en tu camino. Despejar es dejarla fuera de la trayectoria del robot.</p>
+              <p><b>La distancia importa.</b> La garra llega a unos 22 cm del centro del robot y el sonar está más adelante. En S01, con un barrido que empieza al leer 10 cm, la caja se movió unos 19 cm y el robot siguió su camino. Con 12 cm la garra ya estaba tocando la caja y solo la movió 1 cm: siguió en el camino y el robot la empujó hasta el borde de la pista. La distancia adecuada depende de cómo llega el robot y de la forma del obstáculo: prueba y comprueba con el sonar.</p>
+              <p><b>¿Por qué se bloquea un giro?</b> Si la garra toca una caja mientras el robot gira, el robot se detiene: no puede empujar una caja girando. Retrocede un poco o mueve la garra a un lado antes de girar con <code>girarDerecha()</code>.</p>
+              <p class="guide-try"><b>Prueba:</b> haz el barrido al leer 10 cm y luego al leer 12 cm. Mira dónde queda la caja cada vez.</p>
+            </article>
           </div>
         </details>
 

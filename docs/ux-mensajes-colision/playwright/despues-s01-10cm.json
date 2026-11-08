@@ -1,0 +1,47 @@
+{
+ "arbol": "despues",
+ "caso": "s01-10cm",
+ "descripcion": "S01 · barrido al leer ≤ 10 cm: la caja se despeja",
+ "mensajes": [
+  {
+   "simTime": 0,
+   "texto": "Ejecutando el programa didáctico del editor."
+  },
+  {
+   "simTime": 0.07,
+   "texto": "Garra: izquierda. Solo mueve objetos por contacto."
+  },
+  {
+   "simTime": 2.12,
+   "texto": "Garra: derecha. Solo mueve objetos por contacto."
+  },
+  {
+   "simTime": 2.4,
+   "texto": "Garra: contactó una caja y la está desplazando."
+  },
+  {
+   "simTime": 2.92,
+   "texto": "La caja está a 19 cm de su posición inicial. Comprueba que el camino esté despejado."
+  }
+ ],
+ "episodiosDeContacto": [],
+ "tras1_5sDelUltimoContacto": null,
+ "final": {
+  "fb": "La caja está a 19 cm de su posición inicial. Comprueba que el camino esté despejado.",
+  "enContacto": false,
+  "bloqueoGarra": false,
+  "col": 0,
+  "mov": 1,
+  "caja": [
+   63.29000000000008,
+   101.8750000000003
+  ]
+ },
+ "problemas": {
+  "js": [],
+  "console": [],
+  "requestFailed": [],
+  "bad": [],
+  "csp": []
+ }
+}

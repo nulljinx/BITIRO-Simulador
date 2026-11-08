@@ -1,0 +1,116 @@
+{
+ "arbol": "despues",
+ "caso": "retroceso",
+ "descripcion": "S01 · igual que 12 cm, y tras la detención el programa retrocede y gira (órdenes válidas): el contacto termina",
+ "mensajes": [
+  {
+   "simTime": 0,
+   "texto": "Ejecutando el programa didáctico del editor."
+  },
+  {
+   "simTime": 0.06,
+   "texto": "Garra: izquierda. Solo mueve objetos por contacto."
+  },
+  {
+   "simTime": 1.8,
+   "texto": "Garra: derecha. Solo mueve objetos por contacto."
+  },
+  {
+   "simTime": 2.13,
+   "texto": "Garra: contactó una caja y la está desplazando."
+  },
+  {
+   "simTime": 2.33,
+   "texto": "La caja está a 1 cm de su posición inicial. Comprueba que el camino esté despejado."
+  },
+  {
+   "simTime": 3.47,
+   "texto": "Garra: empuja una caja por contacto."
+  },
+  {
+   "simTime": 9.99,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "simTime": 10.06,
+   "texto": "Garra: empuja una caja por contacto."
+  },
+  {
+   "simTime": 18.59,
+   "texto": "La caja no tiene espacio para desplazarse: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "simTime": 20.79,
+   "texto": "Contacto liberado. Comprueba que el camino esté despejado antes de avanzar."
+  },
+  {
+   "simTime": 34.28,
+   "texto": "IROH salió del área de práctica. Pulsa Reiniciar."
+  }
+ ],
+ "episodiosDeContacto": [
+  {
+   "inicio": 9.94,
+   "fin": 9.95,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "inicio": 9.99,
+   "fin": 10,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "inicio": 10.04,
+   "fin": 10.05,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "inicio": 18.51,
+   "fin": 18.52,
+   "texto": "La caja no tiene espacio para desplazarse: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  },
+  {
+   "inicio": 18.54,
+   "fin": 19.96,
+   "texto": "La caja no tiene espacio para desplazarse: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo.",
+   "tras": {
+    "simTime": 21.47,
+    "texto": "Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.",
+    "enContacto": false,
+    "bloqueoGarra": false,
+    "pose": [
+     50,
+     37.3
+    ]
+   }
+  }
+ ],
+ "tras1_5sDelUltimoContacto": {
+  "simTime": 21.47,
+  "texto": "Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.",
+  "enContacto": false,
+  "bloqueoGarra": false,
+  "pose": [
+   50,
+   37.3
+  ]
+ },
+ "final": {
+  "fb": "IROH salió del área de práctica. Pulsa Reiniciar.",
+  "enContacto": false,
+  "bloqueoGarra": false,
+  "col": 5,
+  "mov": 1,
+  "caja": [
+   47.17,
+   0.3520833333308353
+  ]
+ },
+ "problemas": {
+  "js": [],
+  "console": [],
+  "requestFailed": [],
+  "bad": [],
+  "csp": []
+ }
+}

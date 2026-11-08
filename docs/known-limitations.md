@@ -127,3 +127,7 @@ La escena es procedural sobre Canvas. No representa aún un modelo CAD medido ni
 ## Licencia
 
 El repositorio es público pero actualmente no declara licencia de software propia. Los materiales educativos y recursos de terceros mantienen sus derechos y condiciones.
+
+## Interfaz · avisos de contacto
+
+- **Mensaje obsoleto tras un contacto (interfaz):** corregido en esta rama (pendiente de publicación): el aviso se retira cuando el contacto termina («Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.») y se conserva mientras siga vigente; además hay un resumen que dice a cuántos cm de su posición inicial está la caja tocada y pide comprobar el camino (distingue «caja movida» de «camino despejado»). Detalle y pruebas: [`ux-mensajes-colision.md`](ux-mensajes-colision.md). Hasta publicarse, el simulador público conserva el comportamiento anterior.

@@ -37,6 +37,7 @@ let activeObstacles=[],striker={angle:0,target:0,pulse:0,returning:false,hitIds:
 window.BITIRO_RENDER_QUALITY='standard';
 const worldCv=$app('scene');
 const ui={track:$app('track'),name:$app('trackName'),size:$app('trackSize'),badge:$app('statusBadge'),stage:$app('stageLabel'),origin:$app('sceneSource'), feedback:$app('feedback')};
+let contactNote=null;   // último aviso de contacto escrito en ui.feedback por noteContact() (ver settleContactNote)
 const shorten=(str,n=35)=>str.length>n?str.slice(0,n-1)+'…':str;
 // sceneTrack = solo geometría del suelo. Los objetos físicos viven en el escenario (scenario-props.js) y en activeObstacles (mundo activo).
 let scenarioList=[];
@@ -69,7 +70,7 @@ window.resetRobot=function(){
  if(window.BITIRO_COMPETITION&&BITIRO_COMPETITION.softReset()){haltProgramState();return;}
  if(window.HEAD_SONAR)HEAD_SONAR.reset();
  // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
- activeObstacles=(obstaclesRemoved?[]:scenarioList).map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));physicsEvents=[];interactionEvents=[];traceSamples=[];sensorReadMask=0;traceStep=0;movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
+ activeObstacles=(obstaclesRemoved?[]:scenarioList).map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));contactNote=null;physicsEvents=[];interactionEvents=[];traceSamples=[];sensorReadMask=0;traceStep=0;movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
@@ -109,6 +110,52 @@ window.readLine=function(k){
 };
 // Cinemática centralizada en strike-physics.js, compartida con el modelo 3D.
 const MECH=window.IROH_MECHANICS, HIT=MECH.spec;
+/* Avisos de contacto (solo el TEXTO de pantalla: la física, los contadores y los registros no cambian).
+   noteContact() escribe el aviso y lo recuerda; settleContactNote() lo RETIRA cuando ya no es cierto:
+    · 'robot' / 'garra' (bloqueos): permanecen mientras el robot o la garra sigan bloqueados o tocando el obstáculo, aunque el programa no esté dando órdenes;
+    · 'actividad' («empuja…», «contactó…»): al terminar el barrido de la garra (o ACTIVITY_HOLD s tras el último empuje) se cambia por un resumen que dice a cuántos cm de su posición inicial quedó la caja tocada y pide comprobar el camino (MOVER no es DESPEJAR);
+      ese resumen no lo pisan los mensajes rutinarios de órdenes de la garra durante SUMMARY_HOLD s (commandNote).
+   Solo se reemplaza el texto exacto que este bloque escribió: un error, una calibración u otro mensaje posterior nunca se pisan. */
+const NOTE_HOLD=0.6;       // s simulados: espera antes de retirar un aviso de BLOQUEO (evita parpadeos)
+const ACTIVITY_HOLD=0.1;  // s: espera tras el último contacto de «empuja/desplaza» por traslación (durante un empuje hay contacto en cada tick)
+const SUMMARY_HOLD=3;     // s: el resumen «está a N cm de su posición inicial» no lo pisan los mensajes rutinarios de órdenes de la garra (las alertas de contacto sí)
+const TOUCH_MARGIN=1;   // cm: un bloqueo deja al robot en la última pose válida, a menos de un paso (≤ 0,7 cm a toda velocidad) del contacto; con menos separación el aviso sigue siendo cierto
+const stillTouching=()=>activeObstacles.some(ob=>MECH.bodyOverlapsBox(R,ob,HIT.bodyRadius+TOUCH_MARGIN)||MECH.barOverlapsBox(R,striker.angle,ob,HIT.halfWidth+TOUCH_MARGIN));
+function noteContact(kind,text,ids=[]){
+ ui.feedback.textContent=text;
+ const seen=contactNote&&contactNote.kind===kind&&contactNote.ids?contactNote.ids:new Set();
+ for(const id of ids)seen.add(id);
+ contactNote={kind,text,t:simTime,ids:seen};
+}
+const CONTACT_RELEASED='Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.';
+/* Resumen al terminar un contacto de «empuja/desplaza». La cifra es la DISTANCIA ACTUAL de ESA caja a su posición inicial en el escenario (no un acumulado de varias cajas ni de este barrido);
+   solo se da cuando el aviso se refiere a UNA caja identificada (la que tocó la garra en este contacto). Con varias cajas tocadas, o si no se puede atribuir, el mensaje no lleva cifra. */
+function movedSummary(ids){
+ const tail=' Comprueba que el camino esté despejado.';
+ const list=[...ids].map(id=>{const ob=activeObstacles.find(o=>o.id===id),o0=scenarioList.find(o=>o.id===id);return ob&&o0?{prism:!!MECH.polyOf(ob),d:Math.hypot(ob.x-o0.x,ob.y-o0.y)}:null;}).filter(Boolean);
+ if(!ids.size||list.length!==ids.size)return CONTACT_RELEASED;                                              // no se puede atribuir: sin cifra
+ if(list.length>1)return 'Se movieron '+list.length+' objetos respecto de su posición inicial.'+tail;     // varias cajas: sin cifra
+ const o=list[0],who=activeObstacles.length>1?(o.prism?'El prisma que tocó la garra':'La caja que tocó la garra'):(o.prism?'El prisma':'La caja');
+ return who+' está a '+(o.d<1?'menos de 1':Math.round(o.d))+' cm de su posición inicial.'+tail;
+}
+/* Fin de una actividad de contacto («empuja/desplaza»): muestra a cuántos cm de su posición inicial quedó la caja tocada y pide comprobar el camino. */
+function endActivity(){
+ const n=contactNote;if(!n||n.kind!=='actividad'||ui.feedback.textContent!==n.text)return;
+ const text=movedSummary(n.ids);ui.feedback.textContent=text;contactNote={kind:'resumen',text,t:simTime,ids:new Set()};
+}
+function settleContactNote(){
+ const n=contactNote;if(!n)return;
+ if(ui.feedback.textContent!==n.text){contactNote=null;return;}   // otro mensaje ya lo reemplazó: no se toca
+ if(n.kind==='resumen')return;                                      // se queda hasta que otro mensaje lo reemplace
+ if(n.kind==='actividad'){if(simTime-n.t>=ACTIVITY_HOLD)endActivity();return;}
+ const vigente=n.kind==='robot'?wasContact||stillTouching():!!striker.blocked||stillTouching();
+ if(vigente){n.t=simTime;return;}
+ if(simTime-n.t<NOTE_HOLD)return;
+ ui.feedback.textContent=n.kind==='robot'?CONTACT_RELEASED:'La garra ya no toca el obstáculo.';
+ contactNote=null;
+}
+/* Mensaje rutinario de una orden de la garra: no pisa un resumen de desplazamiento recién mostrado. */
+function commandNote(text){if(contactNote&&contactNote.kind==='resumen'&&simTime-contactNote.t<SUMMARY_HOLD)return;ui.feedback.textContent=text;}
 const forwardVector=()=>[Math.sin(R.th),-Math.cos(R.th)];
 function nearbyObstacle(reach=200){
  const {f,r}=MECH.basis(R);let result=null,nearest=Infinity;
@@ -191,10 +238,10 @@ function moveRodTowards(desired,dt){
  for(const id of result.hits)if(!striker.hitIds.has(id)){
   movedCount++;striker.hitIds.add(id);
  }
- if(result.hits.length)ui.feedback.textContent=hitsPrism(result.hits)?'Garra: contactó un prisma triangular y lo está desplazando.':'Garra: contactó una caja y la está desplazando.';
+ if(result.hits.length)noteContact('actividad',hitsPrism(result.hits)?'Garra: contactó un prisma triangular y lo está desplazando.':'Garra: contactó una caja y la está desplazando.',result.hits);
 
- if(result.blocked){logPhysics('contact',null,'servo');striker.blocked=result.blocked;ui.feedback.textContent=result.blocked;}
- else striker.blocked=null;
+ if(result.blocked){logPhysics('contact',null,'servo');striker.blocked=result.blocked;noteContact('garra',result.blocked);}
+ else{striker.blocked=null;if(Math.abs(striker.angle-desired)<1e-6)endActivity();}   // la garra llegó a su posición: resumen de lo que desplazó
 }
 // Posición pedagógica del servo (−1 izquierda, 0 centro, +1 derecha DEL ROBOT) → ángulo físico → objetivo del servo.
 // Devuelve false (sin mover nada) si el valor no es exactamente −1, 0 o 1.
@@ -203,7 +250,7 @@ function setStrikerPosition(cmd){
  if(striker.target===target&&striker.pulse===0)return true;
  if(target!==0)striker.hitIds.clear();   // nueva orden: se puede contar un nuevo golpe (la física no cambia)
  striker.target=target;striker.pulse=0;striker.returning=false;
- ui.feedback.textContent=target===0?'Garra: centro.':'Garra: '+(target<0?'izquierda':'derecha')+'. Solo mueve objetos por contacto.';
+ commandNote(target===0?'Garra: centro.':'Garra: '+(target<0?'izquierda':'derecha')+'. Solo mueve objetos por contacto.');
  return true;
 }
 window.setStrikerPosition=setStrikerPosition;
@@ -281,6 +328,7 @@ function update(dt){
   // En modo código, moverServoGolpe() también debe mover el servo de verdad.
   moveRodTowards(striker.target,dt);
  }
+ settleContactNote();   // retira los avisos de contacto que ya no son ciertos (también con el programa terminado)
  if(resumeDemoAfterStrike&&mode==='idle'&&movedCount>0&&Math.abs(striker.angle)<.5&&striker.pulse===0&&
     !nearbyObstacle(HIT.pivotForward+HIT.length+4)){
   resumeDemoAfterStrike=false;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;
@@ -318,11 +366,11 @@ function update(dt){
   for(const [id,pos] of step.changes){const ob=activeObstacles.find(item=>item.id===id);if(ob){pushedFrom.set(id,{x:ob.x,y:ob.y});ob.x=pos.x;ob.y=pos.y;if(pos.poly)ob.poly=pos.poly;}}
   for(const id of step.hits){const ob=activeObstacles.find(item=>item.id===id);logPhysics('push',id,'translation',pushedFrom.get(id),ob&&{x:ob.x,y:ob.y});}
   for(const id of step.hits)if(!striker.hitIds.has(id)){movedCount++;striker.hitIds.add(id);}
-  if(step.hits.length)ui.feedback.textContent=hitsPrism(step.hits)?'Garra: empuja un prisma triangular por contacto.':'Garra: empuja una caja por contacto.';
+  if(step.hits.length)noteContact('actividad',hitsPrism(step.hits)?'Garra: empuja un prisma triangular por contacto.':'Garra: empuja una caja por contacto.',step.hits);
   R.x=step.pose.x;R.y=step.pose.y;R.th=step.pose.th;
  }
  if(blocked){
-  ui.feedback.textContent=blockMessage+' Cambia la trayectoria de tu programa o mueve la garra para apartarlo.';
+  noteContact('robot',blockMessage+' Cambia la trayectoria de tu programa o mueve la garra para apartarlo.');
   if(mode==='demo'){mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;}
  }
  if(blocked&&!wasContact)collisionCount++;wasContact=blocked;

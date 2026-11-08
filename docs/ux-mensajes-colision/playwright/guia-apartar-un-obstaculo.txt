@@ -1,0 +1,14 @@
+Apartar un obstáculo con la garra
+Detéctalo: lee leerDistanciaSonar(). Un 200 significa que no ve nada.
+Acércate despacio hasta una distancia adecuada y detente con detenerse().
+Haz un barrido: con la garra en un lado, llévala al lado contrario con moverServoGolpe() y espera con pausa().
+Comprueba: vuelve la garra al centro y lee el sonar otra vez. Si todavía ve la caja delante, no se despejó.
+Recupera la línea y sigue. Si la caja no se despejó, retrocede un poco con retroceder() e inténtalo de nuevo.
+
+Mover no es despejar. Una caja puede moverse un poco y seguir en tu camino. Despejar es dejarla fuera de la trayectoria del robot.
+
+La distancia importa. La garra llega a unos 22 cm del centro del robot y el sonar está más adelante. En S01, con un barrido que empieza al leer 10 cm, la caja se movió unos 19 cm y el robot siguió su camino. Con 12 cm la garra ya estaba tocando la caja y solo la movió 1 cm: siguió en el camino y el robot la empujó hasta el borde de la pista. La distancia adecuada depende de cómo llega el robot y de la forma del obstáculo: prueba y comprueba con el sonar.
+
+¿Por qué se bloquea un giro? Si la garra toca una caja mientras el robot gira, el robot se detiene: no puede empujar una caja girando. Retrocede un poco o mueve la garra a un lado antes de girar con girarDerecha().
+
+Prueba: haz el barrido al leer 10 cm y luego al leer 12 cm. Mira dónde queda la caja cada vez.

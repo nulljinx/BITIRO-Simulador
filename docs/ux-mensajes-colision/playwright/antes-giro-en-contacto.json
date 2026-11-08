@@ -1,0 +1,41 @@
+{
+ "arbol": "antes",
+ "caso": "giro-en-contacto",
+ "descripcion": "S01 con una caja colocada por el usuario en (40, 80): el robot avanza con la garra al centro, se detiene con la punta junto a la caja, intenta girar a la izquierda (la garra la toca) y luego retrocede",
+ "mensajes": [
+  {
+   "simTime": 0,
+   "texto": "Ejecutando el programa didáctico del editor."
+  },
+  {
+   "simTime": 4.87,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  }
+ ],
+ "episodiosDeContacto": [
+  {
+   "inicio": 4.83,
+   "fin": 4.83,
+   "texto": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo."
+  }
+ ],
+ "tras1_5sDelUltimoContacto": null,
+ "final": {
+  "fb": "La garra tocó una caja durante un giro: el robot se detuvo. Cambia la trayectoria de tu programa o mueve la garra para apartarlo.",
+  "enContacto": false,
+  "bloqueoGarra": false,
+  "col": 1,
+  "mov": 0,
+  "caja": [
+   40,
+   80
+  ]
+ },
+ "problemas": {
+  "js": [],
+  "console": [],
+  "requestFailed": [],
+  "bad": [],
+  "csp": []
+ }
+}
