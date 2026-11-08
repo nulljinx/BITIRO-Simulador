@@ -1,6 +1,6 @@
 # Estado funcional de sesiones S01–S08
 
-> **Lectura vigente (12-10-2026):** la matriz de `SESSION-VALIDATION-2` y las descripciones de S07/S08 que aparecen a continuación son **históricas**. Los avances posteriores de producción HEAD-CANVAS se registran al final, en «Actualización posterior». La geometría de `main` es diferente y no ha sido revalidada integralmente con esas soluciones.
+> **Lectura vigente (12-10-2026):** la matriz de `SESSION-VALIDATION-2` y las descripciones de S07/S08 que aparecen a continuación son **históricas**. Los avances posteriores de producción HEAD-CANVAS (hoy incluida en la producción SIM-UX-V1, 2026-11-08) se registran al final, en «Actualización posterior»; no se han revalidado sobre SIM-UX-V1. La geometría de `main` es diferente y no ha sido revalidada integralmente con esas soluciones.
 
 ## Alcance de esta matriz
 
@@ -196,7 +196,7 @@ Limitaciones:
 
 ## Actualización posterior — HEAD-CANVAS / S08-PRODUCTION-FIX-1 (2026-10-12)
 
-Esta sección añade evidencia a la evaluación histórica, sin sustituir su matriz ni cambiar automáticamente los estados curriculares. **HEAD-CANVAS existe en producción, no en el código funcional de `main`.** Ningún resultado posterior se ha comprobado con hardware físico ni con la geometría medida de `main`.
+Esta sección añade evidencia a la evaluación histórica, sin sustituir su matriz ni cambiar automáticamente los estados curriculares. **HEAD-CANVAS existe en producción (hoy incluido en SIM-UX-V1, rama `release/sim-ux-v1`), no en el código funcional de `main`.** Ningún resultado posterior se ha comprobado con hardware físico ni con la geometría medida de `main`.
 
 ### S07: capacidad virtual disponible, sesión aún sin cierre
 
