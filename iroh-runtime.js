@@ -430,7 +430,6 @@ function* main(){
 function fail(e){running=0;waitingButton=0;R.L=R.R=0;if(window.onCodeStopped)window.onCodeStopped();$('msg').innerHTML+='\n<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>'}
 function start(){
   let P;
-  if(window.BITIRO_COMPETITION){const ok=BITIRO_COMPETITION.mayStartProgram($('src').value);if(!ok.ok){$('msg').innerHTML='<span class=err>✖ '+esc(ok.reason)+'</span>';return}}
   try{P=parse(lex($('src').value))}
   catch(e){reset();$('msg').innerHTML='<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>';return}
   const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;UF=P.fns;callDepth=0;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict,h:!strict};warns=new Set();

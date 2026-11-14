@@ -10,7 +10,7 @@ let camera={azimuth:.10,elevation:.94,distance:1.80,follow:false};
 let motion={dragging:false,x:0,y:0};
 let observation=[155,865,155];
 // Registro PASIVO de hechos físicos (contacto / empuje / barrido). El simulador solo escribe; nada lo lee para decidir movimiento. Lo observará el evaluador (Etapa C).
-let physicsEvents=[],obstaclesRemoved=false;   // obstaclesRemoved: decisión de la ronda FIRVI (retirar obstáculos antes de empezar); false en práctica
+let physicsEvents=[];
 /* from/to (opcionales): posición del obstáculo ANTES del primer paso y DESPUÉS del último paso del hecho, en cm. Permite atribuir cada desplazamiento al abanico o al empuje. */
 function logPhysics(kind,id,detail,from,to){
  const last=physicsEvents[physicsEvents.length-1];
@@ -20,7 +20,7 @@ function logPhysics(kind,id,detail,from,to){
  physicsEvents.push(e);
 }
 window.BITIRO_PHYSICS_LOG=()=>physicsEvents.map(e=>({...e}));
-/* Registros PASIVOS para el evaluador FIRVI (Etapa C). El simulador solo escribe; nada de esto se lee para decidir movimiento, sensores o escenario.
+/* Registros PASIVOS (diagnóstico y pruebas). El simulador solo escribe; nada de esto se lee para decidir movimiento, sensores o escenario.
    · interactionEvents: el intérprete avisa cuándo el programa espera/supera botonInicio() y cuándo lee el Pulsador (solo cambios de valor).
    · traceSamples: pose + lectura física de los tres sensores de línea + qué sensores CONSULTÓ el programa desde la muestra anterior (máscara L=1, C=2, D=4). */
 let interactionEvents=[],traceSamples=[],sensorReadMask=0,traceStep=0,eventSeq=0;   // eventSeq: orden total de hechos discretos (nunca se reinicia)
@@ -42,14 +42,14 @@ const shorten=(str,n=35)=>str.length>n?str.slice(0,n-1)+'…':str;
 // sceneTrack = solo geometría del suelo. Los objetos físicos viven en el escenario (scenario-props.js) y en activeObstacles (mundo activo).
 let scenarioList=[];
 function toScene(t){return {id:t.id,capStyle:t.capStyle,references:t.references,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,start:t.start};}
-// Las pistas de S01–S08/Óvalo/Ocho son verticales (la cámara mira a lo largo de x). Una pista apaisada (FIRVI 2025, 360 × 150 cm) se mira de frente: desde +z.
+// Las pistas de S01–S08/Óvalo/Ocho son verticales (la cámara mira a lo largo de x). Una pista apaisada se miraría de frente: desde +z.
 const perspectiveAzimuth=()=>track.w>track.h?Math.PI/2+.10:.10;
 function changeTrack(name){
- if(window.BITIRO_COMPETITION&&track&&BITIRO_COMPETITION.blocksTrackChange()){ui.track.value=chosen;ui.feedback.textContent='Hay una ronda en curso: termínala antes de cambiar de pista.';return;}
+ if(typeof name!=='string'||!Object.prototype.hasOwnProperty.call(sourceTracks,name))name='s01';   // selección inválida o pista retirada (p. ej. sesión antigua): vuelve a S01
  if(track&&$app('src'))BITIRO_STORAGE.set('bitiro:standalone:code:'+chosen,$app('src').value);
  chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);scenarioList=BITIRO_SCENARIO.load(chosen,track).list;
  if($app('src'))$app('src').value=BITIRO_STORAGE.get('bitiro:standalone:code:'+chosen)||EJ[0];ui.name.textContent=track.id.toUpperCase()+' / '+shorten(track.name.replace(/^S\d+ · /,''),32);ui.size.textContent=track.w+' × '+track.h+' cm';ui.stage.textContent=track.id.toUpperCase();
- ui.origin.textContent=track.competition==='firvi-2025'?track.name+' · reconstrucción de la Figura 1 (no oficial)':['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
+ ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
  {const r=$app('reference');if(r)r.hidden=!sourceImageForTrack(name);}
  camera={azimuth:perspectiveAzimuth(),elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
  ui.feedback.textContent=track.note;ui.track.value=name;{const ed=$app('editScenario');if(ed)ed.disabled=track.scenarioEditable===false;}updateLesson();updateZoom();draw();
@@ -65,12 +65,9 @@ function syncWaiting(){
 }
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
- // Modo competencia FIRVI con recorrido puntuable en curso: Ejecutar NO teletransporta al robot ni restaura el campo. Solo se apaga el programa
- // (el robot, los obstáculos, el reloj de simulación y el registro físico se conservan). Las reposiciones autorizadas pasan por BITIRO_SIM_ADAPTER.placeRobot.
- if(window.BITIRO_COMPETITION&&BITIRO_COMPETITION.softReset()){haltProgramState();return;}
  if(window.HEAD_SONAR)HEAD_SONAR.reset();
  // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
- activeObstacles=(obstaclesRemoved?[]:scenarioList).map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));contactNote=null;physicsEvents=[];interactionEvents=[];traceSamples=[];sensorReadMask=0;traceStep=0;movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
+ activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));contactNote=null;physicsEvents=[];interactionEvents=[];traceSamples=[];sensorReadMask=0;traceStep=0;movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
@@ -82,7 +79,7 @@ window.resetRobot=function(){
  if(mode==='idle')ui.feedback.textContent='Listo. Inicia una demostración o ejecuta tu código.';
  updateTelemetry();
 };
-window.onCodeStarted=function(){if(window.BITIRO_COMPETITION)BITIRO_COMPETITION.programStarted();mode='code';paused=false;setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Ejecutando el programa didáctico del editor.';};
+window.onCodeStarted=function(){mode='code';paused=false;setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Ejecutando el programa didáctico del editor.';};
 window.onCodeStopped=function(){mode='idle';setState('DETENIDO');$app('pause').disabled=true;ui.feedback.textContent='El programa se detuvo por un error. Revisa el editor.';};
 function closestSegment(px,py){
  if(track.capStyle==='butt')return {dist:BITIRO_LINE_GEOMETRY.distance(track.paths,px,py)};   // extremos planos: geometría compartida con el renderer
@@ -202,7 +199,6 @@ window.BITIRO_MANUAL=(()=>{
  const free=(x,y)=>!activeObstacles.some(ob=>MECH.bodyOverlapsBox({x,y,th:R.th},ob));
  function place(x,y,th){
   if(![x,y,th].every(Number.isFinite))return false;
-  if(window.BITIRO_COMPETITION&&BITIRO_COMPETITION.manualLocked())return false;   // recorrido puntuable: nadie recoloca al robot a mano
   const b=bounds(),cx=clamp(x,b.minX,b.maxX),cy=clamp(y,b.minY,b.maxY);
   let nx=R.x,ny=R.y;
   if(free(cx,cy)){nx=cx;ny=cy;}else if(free(cx,R.y)){nx=cx;}else if(free(R.x,cy)){ny=cy;}
@@ -379,7 +375,6 @@ function update(dt){
  if(!trail.length||Math.hypot(R.x-trail[trail.length-1].x,R.y-trail[trail.length-1].y)>.8){trail.push({x:R.x,y:R.y});if(trail.length>1800)trail.shift();}
  simTime+=dt;
  if(++traceStep>=TRACE_EVERY&&traceSamples.length<TRACE_MAX){traceStep=0;traceSamples.push({t:simTime,x:R.x,y:R.y,h:R.th-Math.PI/2,s:[0,1,2].map(k=>+LINE_SENSOR.detected(readLine(k),k)),r:sensorReadMask,a:Math.round(striker.angle),l:R.L,m:R.R});sensorReadMask=0;}
- if(window.BITIRO_COMPETITION)BITIRO_COMPETITION.observe({x:R.x,y:R.y,heading:R.th-Math.PI/2});   // observación pasiva de la pose (competencia FIRVI)
  if(R.x<-16||R.x>track.w+16||R.y<-16||R.y>track.h+16){mode='idle';running=0;R.L=R.R=0;setState('FUERA DE PISTA');ui.feedback.textContent='IROH salió del área de práctica. Pulsa Reiniciar.';$app('pause').disabled=true;}
 }
 function render(){
@@ -402,8 +397,7 @@ function updateTelemetry(){
  $app('lcd').textContent=lcd[0].padEnd(16).slice(0,16)+'\n'+lcd[1].padEnd(16).slice(0,16);
 }
 function frame(now){
- if(window.BITIRO_COMPETITION)BITIRO_COMPETITION.poll();   // límite de 8 min con el reloj de competencia (de pared), no con el tiempo simulado
- const speed=window.BITIRO_COMPETITION&&BITIRO_COMPETITION.timeLocked()?1:(Number($app('speed').value)||1),delta=Math.max(0,Math.min(.1,(now-last)/1000));last=now;
+ const speed=Number($app('speed').value)||1,delta=Math.max(0,Math.min(.1,(now-last)/1000));last=now;
  if(!document.hidden&&!paused){acc=Math.min(.5,acc+delta*speed);while(acc>=FIXED_DT){update(FIXED_DT);acc-=FIXED_DT;}syncWaiting();}
  else acc=0;
  if((frameCounter++%4)===0)updateTelemetry();render();requestAnimationFrame(frame);
@@ -422,13 +416,12 @@ document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>came
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
 $app('demo')?.addEventListener('click',()=>{
- if(track.noDemo){ui.feedback.textContent='FIRVI 2025 no tiene demostración guiada: el robot solo se mueve con tu programa.';return;}
  const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
  // Solo la demo visual: con cajas en el escenario, aparta la garra (−1) antes de acercarse; sin cajas no hay nada que preparar.
  if(activeObstacles.length)setStrikerPosition(-1);
  mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
-$app('pause').addEventListener('click',()=>{if(window.BITIRO_COMPETITION&&BITIRO_COMPETITION.timeLocked())return;paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':runLabel());$app('step').disabled=!paused;acc=0;});
-$app('step').addEventListener('click',()=>{if(!paused||mode==='idle'||(window.BITIRO_COMPETITION&&BITIRO_COMPETITION.timeLocked()))return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
+$app('pause').addEventListener('click',()=>{paused=!paused;$app('pause').textContent=paused?'Continuar':'Pausar';setState(paused?'EN PAUSA':runLabel());$app('step').disabled=!paused;acc=0;});
+$app('step').addEventListener('click',()=>{if(!paused||mode==='idle')return;paused=false;for(let n=0;n<12;n++)update(FIXED_DT);paused=true;acc=0;updateTelemetry();draw();});
 $app('reset').addEventListener('click',()=>{window.resetRobot();$app('msg').textContent='Simulación reiniciada; tu código se conserva.';});
 // Garra manual: Izquierda (−1), Centro (0), Derecha (+1) del robot. Sin retorno automático: el usuario decide la posición.
 for(const [id,cmd] of [['clawLeft',-1],['clawCenter',0],['clawRight',1]])$app(id)?.addEventListener('click',()=>{
@@ -498,8 +491,6 @@ function updateLesson(){
  s07:['Repetir y comparar','Superficie neutra sin plotter oficial: elige cualquier otra pista y cambia una sola condición entre ensayos.','¿Qué cambio explica el resultado?'],
  s08:['Integrar estrategias','Combina sensores y memoria de estado. La clasificación requiere tu propia lógica.','¿Qué evidencia valida tu decisión?'],
  oval:['Ajustar el seguimiento','Compara dos velocidades y observa cuánto tiempo detecta línea el robot.','¿Más rápido sigue siendo preciso?'],
- 'firvi-2025':['Competencia FIRVI 2025','Reconstrucción de la Figura 1 de las bases. Tu programa debe guiarse solo por sus sensores: no hay ayudas ni conocimiento del recorrido.','¿Qué hace tu robot cuando la línea desaparece?'],
- 'firvi-2025-b':['Competencia FIRVI 2025','Mismo trazado recorrido desde el otro INICIO. Tu programa debe guiarse solo por sus sensores.','¿Qué hace tu robot cuando la línea desaparece?'],
  ocho:['Resolver un cruce','Observa el patrón de sensores en el cruce y decide cómo conservar el rumbo.','¿Cruce o final del recorrido?']
  };
  const [title,goal,question]=lessons[chosen];$app('lessonTitle').textContent=title;$app('lessonGoal').textContent=goal;$app('lessonQuestion').textContent=question;
@@ -508,33 +499,6 @@ function updateLearningTelemetry(){
  for(const [id,angle] of [['clawLeft',-75],['clawCenter',0],['clawRight',75]]){const b=$app(id);if(!b)continue;b.disabled=mode==='code';b.setAttribute('aria-pressed',String(striker.target===angle));}
  $app('step').disabled=!paused||mode==='idle';
 }
-// Apaga el PROGRAMA y los motores sin mover al robot ni tocar el mundo (reinicio suave y reposición autorizada).
-function haltProgramState(){
- mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;lcd=['',''];
- $app('step').disabled=true;setState('EN ESPERA');$app('pause').disabled=true;$app('pause').textContent='Pausar';updateTelemetry();
-}
-/* Adaptador que usa el motor de competencia (firvi-competition.js). Son las ÚNICAS operaciones con que el motor actúa sobre el mundo:
-   colocar al robot en una reposición autorizada, restaurar el campo, quitar obstáculos antes de la ronda y apagar el programa. */
-window.BITIRO_SIM_ADAPTER=Object.freeze({
- pose:()=>({x:R.x,y:R.y,heading:R.th-Math.PI/2}),
- simTime:()=>simTime,
- seq:()=>++eventSeq,
- source:()=>$app('src').value,
- physicsLog:()=>physicsEvents.map(e=>({...e})),
- interactionLog:()=>interactionEvents.map(e=>({...e})),
- traceLog:()=>traceSamples.map(e=>({...e,s:e.s.slice()})),
- obstacles:()=>activeObstacles.map(ob=>{const o0=scenarioList.find(item=>item.id===ob.id)||ob;return {id:ob.id,x:ob.x,y:ob.y,x0:o0.x,y0:o0.y,poly:ob.poly?ob.poly.map(q=>q.slice()):null,poly0:o0.poly?o0.poly.map(q=>q.slice()):null};}),   // solo lectura: posición actual y de origen
- hardReset:()=>{window.resetRobot();draw();},
- setObstaclesRemoved:flag=>{obstaclesRemoved=!!flag;},
- stopProgram:()=>haltProgramState(),
- /* Reposición autorizada: coloca al robot SIN tocar obstáculos. Rechaza la posición si el cuerpo o la garra solapan un obstáculo. */
- placeRobot:p=>{
-  const th=p.heading+Math.PI/2,pose={x:p.x,y:p.y,th};
-  if(activeObstacles.some(ob=>MECH.bodyOverlapsBox(pose,ob)||MECH.barOverlapsBox(pose,striker.angle,ob)))return {ok:false,reason:'hay un obstáculo en la baldosa de reposición'};
-  haltProgramState();R.x=p.x;R.y=p.y;R.th=th;previousPose={x:R.x,y:R.y,th:R.th,angle:striker.angle};trail=[];wasContact=false;
-  ui.feedback.textContent='Robot repuesto por el capitán en la posición autorizada.';updateTelemetry();draw();return {ok:true};
- }
-});
 // API mínima para scenario-editor.js (el editor no toca el estado interno del simulador).
 window.BITIRO_WORLD={
  track:()=>track,
@@ -558,7 +522,6 @@ function initializeCalibration(){
  };
  function populate(p){draft=p;for(let k=0;k<3;k++){ $app('white'+k).value=p.white[k];$app('black'+k).value=p.black[k];}$app('threshold').value=p.threshold;$app('thresholdValue').textContent=p.threshold+' / 1000';}
  $app('calibrate').addEventListener('click',()=>{
-  if(window.BITIRO_COMPETITION&&!BITIRO_COMPETITION.canCalibrate()){ui.feedback.textContent='Recorrido puntuable en curso: no se permiten nuevas calibraciones.';return;}
   paused=true;if(mode!=='idle'){setState('EN PAUSA');$app('pause').textContent='Continuar';}acc=0;
   populate(LINE_SENSOR.profile);$app('calibrationMessage').textContent='Mide las dos superficies y comprueba su contraste.';dialog.showModal();
  });
