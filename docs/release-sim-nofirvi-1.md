@@ -1,6 +1,6 @@
 # SIM-NOFIRVI-1
 
-Registro de la integración que convierte a `main` en la única fuente oficial del simulador publicado. **Esta página es un registro nuevo; no modifica los registros históricos** (SIM-UI-RELEASE-4, SIM-NNJ, HEAD-CANVAS, SIM-UX-V1).
+Registro de la integración que convierte a `main` en la única fuente oficial del simulador publicado. **Estado: integración en revisión (PR pendiente); la migración de Cloudflare Pages no ha ocurrido** (Pages sigue publicando `deploy/cloudflare-pages` en `9c0b492`). **Esta página es un registro nuevo; no modifica los registros históricos** (SIM-UI-RELEASE-4, SIM-NNJ, HEAD-CANVAS, SIM-UX-V1).
 
 ## Identidad
 
@@ -61,9 +61,22 @@ Se genera con `node scripts/build-pages.mjs` en `dist/` (ignorado por Git). La a
 
 `docs/`, `tests/`, `tools/`, `examples/`, `scripts/`, `pages/`, `README.md`, `LEEME.md`, `INICIO-RAPIDO.txt`, `.gitignore` ni activos experimentales.
 
-## Pruebas
+## Pruebas: conservadas y retiradas
 
-Suites Node y de navegador reconciliadas con este runtime; las dependientes de FIRVI o del experimento se retiraron de `main` (siguen en el historial de Git y en la rama experimental). Resultados en el informe de la Pull Request.
+Las suites del runtime oficial se tomaron de `e34712d` (la línea HEAD-CANVAS anterior al retiro de FIRVI); los goldens son los de `e34712d`, sin regenerar. El inventario distingue qué se retiró respecto del `main` anterior (`6f4d6a7`) y qué solo existía en ramas históricas.
+
+**A. Retiradas respecto de `main` (`6f4d6a7`)** — pertenecían al experimento y siguen en `experiment/measured-geometry-iroh3d`:
+
+`tests/physical-geometry.cjs`, `tests/iroh-visual.cjs`, `tests/iroh-visual-ui.mjs`, `tests/perf/iroh-ab-node.cjs`, `tests/perf/iroh-ab.mjs`, `tests/perf/iroh-render-svg.cjs`, `tests/perf/iroh-world.cjs` (y `tools/build-iroh-render-asset.mjs`). Además, 8 goldens y varias suites de `main` se sustituyeron por las versiones de `e34712d`, calculadas con el runtime oficial.
+
+**B. Nunca estuvieron en `main`** — solo existían en la línea histórica (`e34712d`, `feature/head-canvas`, `release/sim-ux-v1`) y no se incorporaron:
+
+- FIRVI: `firvi-2025{,-ui}`, `firvi-competition{,-ui}`, `firvi-integral{,-ui}`, `firvi-scoring{,-ui}`, `firvi-ui-final`, `firvi-2025/`, `head-firvi-compat`, `integration/`, `pending/`.
+- No FIRVI, pero dependientes de bases históricas o de entorno: `ux-engine-unchanged.cjs` (compara contra `b06052b`, que incluye FIRVI), `compare-head-canvas.cjs` (requiere un árbol externo) y `contact-messages-ui.mjs` (capturas contra `b06052b`; requiere un Chromium de Playwright).
+
+**C. Añadidas respecto de `main`** (cubren HEAD-CANVAS y avisos de contacto): `head-sonar.cjs`, `head-ui.mjs`, `head-compat-ui.mjs`, `contact-messages.cjs`, `head/` (matriz y arranque real de S08) y `examples/`.
+
+Resultados de la verificación en el informe de la Pull Request.
 
 ## Excepción heredada de producción: `renderer3d.js` línea 280
 

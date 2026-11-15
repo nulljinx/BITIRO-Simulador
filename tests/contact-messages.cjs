@@ -1,5 +1,5 @@
 /* node tests/contact-messages.cjs — avisos de contacto (ui.feedback) para NNJ: se RETIRAN cuando dejan de ser ciertos y NUNCA mientras siguen vigentes.
-   Solo cambia el TEXTO de pantalla: la física, collisionCount, movedCount y BITIRO_PHYSICS_LOG no cambian (se comprueba aquí y con tests/ux-engine-unchanged.cjs).
+   Solo cambia el TEXTO de pantalla: la física, collisionCount, movedCount y BITIRO_PHYSICS_LOG no cambian (se comprueba aquí; la comparación completa del motor contra la base histórica b06052b la hacía tests/ux-engine-unchanged.cjs, retirada de main y conservada en el historial de Git).
    Reglas que se fijan:
      1. mientras el robot siga bloqueado O TOCANDO el obstáculo (aunque el programa ya no dé órdenes) el aviso permanece, por mucho que pase el tiempo;
      2. al retroceder/girar y terminar el contacto, el aviso pasa a «Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.» (o «La garra ya no toca el obstáculo.»);
@@ -31,7 +31,7 @@ test('retroceder termina el contacto: el aviso se sustituye por «Contacto liber
  h.sec(5.8);assert.match(h.fb(),/no tiene espacio/,'bloqueado: aviso vigente');const yBlocked=h.js('R.y');
  h.sec(0.4);assert.match(h.fb(),/no tiene espacio/,'acaba de empezar a retroceder: el contacto termina a los ≈ 0,1 s y el aviso se conserva 0,6 s más (sin parpadeo)');
  h.sec(1.4);assert.match(h.fb(),NO_CONTACT);assert.ok(h.js('R.y')>yBlocked+3,'se alejó de la caja');
- assert.ok(h.js('collisionCount')>=1,'el contador interno registró el contacto (su valor exacto lo fija ux-engine-unchanged.cjs)');
+ assert.ok(h.js('collisionCount')>=1,'el contador interno registró el contacto');
 });
 test('robot detenido TOCANDO la caja (el programa dejó de dar órdenes): el aviso permanece, no se esconde un contacto real',()=>{
  const h=world([B('b',46,3)],{pose:{x:50,y:60,th:0}});h.go(START+'void loop(){avanzar(30);pausa(6000);detenerse();pausa(30000);}');

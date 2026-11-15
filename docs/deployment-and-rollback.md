@@ -13,7 +13,9 @@
 
 Pages **nunca** debe publicar la raíz del repositorio: contiene `docs/`, `tests/`, `examples/` y material no público.
 
-## Configuración requerida en Pages
+## Configuración requerida en Pages (objetivo tras la migración)
+
+> **Pendiente:** hoy la rama de producción de Pages es `deploy/cloudflare-pages`. Nada de lo siguiente se ha aplicado todavía.
 
 - Producción: rama `main`.
 - Comando de build: `node scripts/build-pages.mjs`.

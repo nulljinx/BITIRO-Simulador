@@ -1,6 +1,18 @@
 # Versionado y releases
 
-> **Actualización SIM-NOFIRVI-1:** a partir de esta integración `main` es la fuente oficial del simulador publicado y el artefacto público se reconstruye con `node scripts/build-pages.mjs` (35 archivos con SHA-256 fijos). El principio «Producción no es HEAD de `main`» se sustituye, para el simulador público, por «el deployment se identifica por el manifiesto de 35 hashes y debe poder regenerarse desde un commit de `main`»; las releases anteriores siguen registradas tal cual. Las líneas experimentales (`experiment/*`) no se despliegan. Ver [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`deployment-and-rollback.md`](deployment-and-rollback.md).
+## Política vigente propuesta (SIM-NOFIRVI-1)
+
+> **Estado:** propuesta incluida en la Pull Request de integración; no entra en vigor hasta que se fusione y se autorice cada acción posterior. **La migración de Cloudflare Pages no ha ocurrido:** hoy Pages publica la rama `deploy/cloudflare-pages` (candidato `9c0b492`), y el cambio de la rama de producción a `main` sigue **pendiente** (ver [`deployment-and-rollback.md`](deployment-and-rollback.md)).
+
+- `main` es la fuente oficial del simulador publicado; el artefacto público (35 archivos con SHA-256 fijos en `scripts/pages-manifest.json`) se genera con `node scripts/build-pages.mjs` y debe poder regenerarse desde cualquier commit de `main`.
+- El deployment se identifica por el manifiesto de 35 hashes, no por el nombre de una rama.
+- Las líneas experimentales (`experiment/*`) no se despliegan; la geometría medida y el modelo IROH 3D viven en `experiment/measured-geometry-iroh3d`.
+- Etiquetas de despliegue futuras, protección de `main` y CI son propuestas separadas que requieren autorización.
+- Registros: [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`current-baseline.md`](current-baseline.md).
+
+## Política histórica (hasta SIM-UX-V1; conservada sin cambios)
+
+> Todo lo que sigue es la política y el estado documentados antes de SIM-NOFIRVI-1. En particular, el principio «Producción no es HEAD de `main`» y el §11 describen la situación de entonces (despliegue manual por nginx); **no** describen el artefacto de Pages ni el `main` integrado.
 
 > **Estado:** política documental para adoptar mediante Pull Request a `main`. Su integración registra la aprobación del procedimiento; no activa automáticamente protecciones, CI, ramas ni etiquetas. Esos controles requieren actuaciones separadas y autorización explícita.
 

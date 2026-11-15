@@ -8,13 +8,13 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 
 ## Estado de versiones (léelo primero)
 
-Desde **SIM-NOFIRVI-1**, `main` es la **única fuente oficial** del simulador publicado. Conviene distinguir cinco cosas:
+Con la integración **SIM-NOFIRVI-1** (en revisión mediante Pull Request), `main` pasa a ser la **única fuente oficial** del simulador publicado. **La migración de Cloudflare Pages aún no ocurrió:** hasta que se ejecute, Pages sigue publicando la rama `deploy/cloudflare-pages` (candidato `9c0b492`, cuyo contenido coincide byte a byte con el artefacto que genera este `main`). Conviene distinguir cinco cosas:
 
 | Concepto | Qué es | Referencia |
 |---|---|---|
 | **Código fuente oficial** | La rama `main`: runtime de 32 archivos, pruebas, documentación y `scripts/build-pages.mjs` | [`docs/current-baseline.md`](docs/current-baseline.md) |
 | **Build estático público** | `dist/`, generado con `node scripts/build-pages.mjs`: exactamente 35 archivos verificados por SHA-256 | [`scripts/pages-manifest.json`](scripts/pages-manifest.json), [`docs/release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md) |
-| **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
+| **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama. Rama de producción actual: `deploy/cloudflare-pages`; el cambio a `main` está **pendiente** | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
 | **Experimentos** | Geometría IROH medida (rueda 10 cm, sonar 7,40 cm) y modelo visual IROH 3D: **no activos en producción** | rama `experiment/measured-geometry-iroh3d` ([`docs/experiment-measured-geometry-iroh3d.md`](docs/experiment-measured-geometry-iroh3d.md)) |
 | **Historial de versiones** | Etiquetas `v0.x`, releases `release/*` y registros `docs/release-*.md`; no se reescriben | [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md) |
 
@@ -132,9 +132,9 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 ## Estado de las sesiones S01–S08
 
-**Referencia curricular:** `SESSION-VALIDATION-2` es la última evaluación integral de las ocho sesiones con programas, sensores y recorridos en el simulador. Es anterior a la geometría medida y al modelo IROH 3D de `main`. Los estados de esa evaluación se conservan **como resultado histórico**, no como una revalidación posterior.
+**Referencia curricular:** `SESSION-VALIDATION-2` es la última evaluación integral de las ocho sesiones con programas, sensores y recorridos en el simulador. Es anterior a HEAD-CANVAS y a la geometría medida y el modelo IROH 3D del experimento. Los estados de esa evaluación se conservan **como resultado histórico**, no como una revalidación posterior.
 
-**Avances posteriores (12-10-2026):** HEAD-CANVAS incorporó el yaw virtual y el sonar orientable en producción; S08 recibió dos soluciones independientes probadas. Estas pruebas son adicionales y no equivalen a una evaluación curricular integral ni a pruebas del robot físico.
+**Avances posteriores (12-10-2026):** HEAD-CANVAS incorporó el yaw virtual y el sonar orientable, hoy parte del runtime oficial de `main` (SIM-NOFIRVI-1); S08 recibió dos soluciones independientes probadas. Estas pruebas son adicionales y no equivalen a una evaluación curricular integral ni a pruebas del robot físico.
 
 | Sesión | Resultado de `SESSION-VALIDATION-2` | Avance posterior o limitación vigente |
 |---|---|---|
@@ -149,9 +149,9 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 
 ### Evidencia posterior: S07 y S08
 
-- **S07:** `inicializarCabeza()` y `moverServoYaw(angulo)` funcionan en producción, y `leerDistanciaSonar()` mide en la dirección de la cabeza. La sesión S07 **no fue revalidada completa**; `moverServoPitch()` sigue sin modelo. Estas capacidades **no están integradas en `main`**.
+- **S07:** `inicializarCabeza()` y `moverServoYaw(angulo)` funcionan en el runtime oficial (HEAD-CANVAS), y `leerDistanciaSonar()` mide en la dirección de la cabeza. La sesión S07 **no fue revalidada completa**; `moverServoPitch()` sigue sin modelo. Estas capacidades **están integradas en `main`** desde SIM-NOFIRVI-1; la evidencia de S07/S08 es histórica (simulador publicado el 12-10-2026) y no se ha repetido de forma integral sobre este `main`.
 - **S08, posición inicial publicada:** la referencia docente corregida y la solución pedagógica NNJ superaron **40/40 casos automatizados cada una**: 38 llegadas a base, un caso de cero cajas (sin base) y una espera indefinida esperada ante IR anticipado. En esas pruebas no hubo colisiones ni cajas desplazadas y las lecturas laterales se realizaron con el cuerpo detenido.
-- **Prueba manual:** ambas soluciones funcionaron en el escenario comunicado desde producción el 12-10-2026; esa observación cubre un escenario por solución, no todos los casos.
+- **Prueba manual:** ambas soluciones funcionaron en el escenario comunicado desde producción el 12-10-2026; esa observación es histórica y cubre un escenario por solución, no todos los casos.
 - **Base 2:** la matriz histórica conserva **90/90 puntos verificables**; con la posición inicial publicada son **80/80** porque los 10 puntos de salida de la zona roja no aplican. En ambas evaluaciones permanecen **10 puntos de selección A/B sin verificación independiente**. La identificación de A/B en el plotter y el significado curricular de cero cajas también siguen pendientes.
 
 **Nota sobre versiones:** los resultados de HEAD-CANVAS corresponden al simulador publicado el 12-10-2026; no se han repetido sobre SIM-NOFIRVI-1 y **no** constituyen una revalidación de S08 con la geometría medida del experimento ni una comprobación con hardware real.
@@ -318,7 +318,7 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Baseline actual](docs/current-baseline.md)
 - [Versionado y releases](docs/versioning-and-releases.md)
 - [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
-- Release SIM-NOFIRVI-1 (**producción oficial**): [`release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md); procedimiento en [`deployment-and-rollback.md`](docs/deployment-and-rollback.md)
+- Release SIM-NOFIRVI-1 (candidato a producción oficial; migración de Pages pendiente): [`release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md); procedimiento en [`deployment-and-rollback.md`](docs/deployment-and-rollback.md)
 - Release SIM-UX-V1 (histórica; incluía FIRVI): [`release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (en `release/sim-ux-v1`)
 - Release HEAD-CANVAS (histórica; su cabeza virtual forma parte de SIM-NOFIRVI-1): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
 - [Limitaciones conocidas](docs/known-limitations.md)
