@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - integration/main-sim-nofirvi   # temporal: validar CI antes de abrir la PR; retirar tras fusionarla
 
 permissions:
   contents: read

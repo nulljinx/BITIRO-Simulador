@@ -296,10 +296,12 @@ La validación integral ejecuta las suites Node `tests/*.cjs`, además de prueba
 node tests/syntax.cjs             # sintaxis de todos los scripts
 node tests/motor-dynamics.cjs      # aceleración/frenado simétricos
 node tests/head-sonar.cjs         # cabeza virtual y sonar orientable
-node tests/calibration-ui.mjs      # navegador real (Chrome por CDP); se omite sin Chrome
+node tests/calibration-ui.mjs      # navegador real (Chrome por CDP); solo, sin Chrome imprime SKIP y sale con 0
 node tests/head-ui.mjs            # navegador real (Chrome por CDP)
 node scripts/build-pages.mjs      # build público y verificación de los 35 hashes
 ```
+
+Las pruebas de navegador ejecutadas una a una se omiten con código 0 si no hay Chrome; `node scripts/run-suites.mjs --browser`, en cambio, exige `CHROME_BIN` y trata cualquier SKIP como fallo. Para ejecutar todas las suites oficiales (21 Node y 5 de navegador) y entender el CI: [`docs/ci-and-validation.md`](docs/ci-and-validation.md).
 
 Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs/calibration-mode.md).
 
@@ -315,6 +317,7 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Geometría física del IROH](docs/physical-geometry.md)
 - [Integración del modelo IROH 3D](docs/iroh-3d-integration.md)
 - [Modo calibración](docs/calibration-mode.md)
+- [CI y validación](docs/ci-and-validation.md)
 - [Baseline actual](docs/current-baseline.md)
 - [Versionado y releases](docs/versioning-and-releases.md)
 - [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
