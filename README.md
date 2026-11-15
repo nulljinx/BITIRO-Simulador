@@ -8,17 +8,19 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 
 ## Estado de versiones (léelo primero)
 
-Hay tres conceptos distintos que **no** deben confundirse:
+Desde **SIM-NOFIRVI-1**, `main` es la **única fuente oficial** del simulador publicado. Conviene distinguir cinco cosas:
 
 | Concepto | Qué es | Referencia |
 |---|---|---|
-| **Versión etiquetada** | Última etiqueta semántica en Git | `v0.9.0-rc.1` (Release Candidate; solo tag, sin GitHub Release) |
-| **Desarrollo (`main`)** | Integración de desarrollo: geometría IROH medida + modelo visual IROH 3D experimental + Guía de programación | `main` (9 commits posteriores a `v0.9.0-rc.1` al 2026-10-12); **no está desplegado íntegramente** |
-| **Producción** | Lo que sirve `simulador.nulljinx.com` | **SIM-UX-V1** (2026-11-08, despliegue manual de 2 archivos sobre FIRVI `b06052b`); fuente runtime `5f427d6`; línea exacta en la rama `release/sim-ux-v1` ([identidad y manifiesto](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md)). Incluye FIRVI 2025 A y B (publicado el 2026-10-25) y HEAD-CANVAS (2026-10-12) |
+| **Código fuente oficial** | La rama `main`: runtime de 32 archivos, pruebas, documentación y `scripts/build-pages.mjs` | [`docs/current-baseline.md`](docs/current-baseline.md) |
+| **Build estático público** | `dist/`, generado con `node scripts/build-pages.mjs`: exactamente 35 archivos verificados por SHA-256 | [`scripts/pages-manifest.json`](scripts/pages-manifest.json), [`docs/release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md) |
+| **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
+| **Experimentos** | Geometría IROH medida (rueda 10 cm, sonar 7,40 cm) y modelo visual IROH 3D: **no activos en producción** | rama `experiment/measured-geometry-iroh3d` ([`docs/experiment-measured-geometry-iroh3d.md`](docs/experiment-measured-geometry-iroh3d.md)) |
+| **Historial de versiones** | Etiquetas `v0.x`, releases `release/*` y registros `docs/release-*.md`; no se reescriben | [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md) |
 
-> Estado general: **Release Candidate / beta avanzada**. No es una versión v1.0 estable: el proyecto sigue en desarrollo activo y algunas capacidades del robot físico todavía están pendientes de modelado o validación.
+> Estado general: **Release Candidate / beta avanzada**, no una versión v1.0 estable.
 >
-> **Producción no coincide con `main` ni con `v0.9.0-rc.1`.** La publicación se identifica por el manifiesto SHA-256 de los archivos modificados **y la cadena de baselines heredadas**; no por HEAD de `main` ni por una etiqueta semántica. Ver [Producción vs. main](#producción-vs-main) y [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md).
+> **Geometría funcional oficial:** separación de ruedas 12 cm, origen del sonar a 9,83 cm del centro del eje, cabeza virtual HEAD-CANVAS (`moverServoYaw`). FIRVI 2025 no forma parte del runtime oficial.
 
 ## Qué es
 
@@ -36,16 +38,15 @@ programa + física + sensores + actuadores + escenario + entradas manuales
 
 Si el código está mal, el robot puede salirse de la línea, elegir otra base, chocar o quedarse detenido. Eso es intencional: el objetivo es **probar, observar, equivocarse, modificar y volver a intentar**.
 
-## Capacidades de desarrollo (`main`)
+## Capacidades del runtime oficial (`main`)
 
 - movimiento diferencial con paso fijo determinista;
 - dinámica de motores con aceleración y frenado simétricos;
-- geometría funcional del IROH alineada con mediciones físicas (ver [Geometría física](#geometría-física-del-iroh));
+- geometría funcional oficial: ruedas a 12 cm y sonar a 9,83 cm (la geometría medida es un experimento, ver [Geometría física](#geometría-física-del-iroh));
 - modo de calibración manual;
-- modelo visual IROH 3D medido (experimental, mediante `?robot=iroh`), con renderer Canvas2D, sin Three.js/WebGL por ahora;
-- pruebas específicas de geometría y de visual IROH;
+- renderer procedural sobre Canvas2D (el modelo IROH 3D es un experimento);
 - tres sensores de línea;
-- sonar frontal geométrico (fijo al eje frontal en `main`; la cabeza virtual orientable solo existe en producción/HEAD-CANVAS, ver [Producción vs. main](#producción-vs-main));
+- sonar frontal geométrico (orientable con la cabeza virtual HEAD-CANVAS, `moverServoYaw`);
 - IR izquierdo y derecho como entradas manuales;
 - Pulsador y `botonInicio()` como barrera real de ejecución;
 - LCD 16×2;
@@ -153,35 +154,26 @@ El modelo físico actual usa aproximadamente `-75° / 0° / +75°`. La barra y l
 - **Prueba manual:** ambas soluciones funcionaron en el escenario comunicado desde producción el 12-10-2026; esa observación cubre un escenario por solución, no todos los casos.
 - **Base 2:** la matriz histórica conserva **90/90 puntos verificables**; con la posición inicial publicada son **80/80** porque los 10 puntos de salida de la zona roja no aplican. En ambas evaluaciones permanecen **10 puntos de selección A/B sin verificación independiente**. La identificación de A/B en el plotter y el significado curricular de cero cajas también siguen pendientes.
 
-**Nota sobre versiones:** `main` contiene geometría y modelo visual IROH distintos de la producción. Los resultados de HEAD-CANVAS corresponden al simulador publicado el 12-10-2026 (la producción actual, SIM-UX-V1, lo incluye, pero esas pruebas no se han repetido sobre SIM-UX-V1), **no** constituyen una revalidación de S08 con la física de `main` ni una comprobación con hardware real.
+**Nota sobre versiones:** los resultados de HEAD-CANVAS corresponden al simulador publicado el 12-10-2026; no se han repetido sobre SIM-NOFIRVI-1 y **no** constituyen una revalidación de S08 con la geometría medida del experimento ni una comprobación con hardware real.
 
 Informes: [evaluación integral histórica](docs/sesiones-s01-s08.md) · [actualización y pruebas HEAD-CANVAS](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/sesiones-s01-s08.md) · [dos soluciones docentes S08](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md).
 
-### Producción vs. main
+### Línea oficial y experimento
 
-Son dos líneas de desarrollo con historias divergentes (no se han fusionado):
-
-| | `main` (desarrollo) | Producción (SIM-UX-V1, incluye FIRVI y HEAD-CANVAS) |
+| | `main` (oficial, SIM-NOFIRVI-1) | `experiment/measured-geometry-iroh3d` |
 |---|---|---|
-| Fuente | rama `main` | rama `release/sim-ux-v1` (runtime `5f427d6`; línea `954c37c` → SIM-NNJ → HEAD-CANVAS → FIRVI `b06052b` → SIM-UX-V1) |
-| Geometría física medida (wheelbase 10 cm, origen del sonar 7,40 cm) | **sí** | **no** (conserva base de 12 cm y sonar a 9,83 cm de la release anterior) |
-| Modelo visual IROH 3D medido (`?robot=iroh`, experimental) | **sí** | **no** |
-| Cabeza virtual (`moverServoYaw`, sonar orientable) | **no** (reconocida, sin efecto) | **sí** (yaw virtual; el pitch no tiene modelo) |
-| FIRVI 2025 (pistas A y B, competencia y puntuación) | **no** | **sí** (publicado el 2026-10-25) |
-| Avisos de contacto actualizados y tarjeta «Apartar un obstáculo» de la Guía | **no** | **sí** (SIM-UX-V1, 2026-11-08) |
-| Guía de programación IROH por temas | sí | sí |
-| Soluciones docentes S08 con cabeza (`examples/`) | no | sí, en `feature/head-canvas` |
-| Tags | `v0.9.0-rc.1` es ancestro | `sim-ux-v1-deployed` (SIM-UX-V1); anteriores: `sim-prod-20261025-firvi` (FIRVI) y `sim-nnj-101d19f-deployed` (base); sin tag propio de HEAD-CANVAS |
+| Separación de ruedas / origen del sonar | 12 cm / 9,83 cm | 10 cm / 7,40 cm (medidos) |
+| Modelo visual IROH 3D (`?robot=iroh`) | no | sí |
+| Cabeza virtual HEAD-CANVAS | sí | no |
+| FIRVI 2025 | no | no |
+| Avisos de contacto SIM-UX-V1 y Guía por temas | sí | Guía sí; avisos no |
 
-- Ninguno de los componentes exclusivos de `main` (geometría medida, modelo IROH 3D, origen del sonar) está desplegado en producción.
-- Ninguna capacidad de la cabeza virtual existe en `main`; tampoco FIRVI 2025 ni los avisos de contacto de SIM-UX-V1. **`main` no equivale al runtime desplegado.**
-- La cabeza virtual es un **modelo virtual**: velocidad, espera, alcance, alturas y zona muerta son provisionales y no están medidos en el robot físico.
-- **Identidad exacta de producción (SIM-UX-V1):** SHA-256 de los 30 archivos runtime, procedencia, pruebas, respaldo y rollback en [`docs/release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (rama `release/sim-ux-v1`, publicada en GitHub).
-- Identidad histórica de los seis archivos de HEAD-CANVAS (SHA-256, junto con la referencia a la release base): [`docs/release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) (enlace a un commit fijo de `feature/head-canvas`).
-- Soluciones y pruebas de S08: [`examples/README.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/examples/README.md), [`tests/head/`](https://github.com/nulljinx/BITIRO-Simulador/tree/563aa923fb9622214eaec9775f6e27f4a514a617/tests/head) y `tests/head-sonar.cjs` (todas en `feature/head-canvas`, no en `main`).
-- Reconciliar ambas líneas es una decisión pendiente y requiere aprobación explícita; no se fusionan automáticamente.
+- La rama experimental conserva `main` tal como estaba en `6f4d6a7`; no se ha fusionado y reconciliarla con el runtime oficial es una decisión pendiente.
+- El historial de producción anterior (SIM-UI-RELEASE-4, SIM-NNJ, HEAD-CANVAS, FIRVI, SIM-UX-V1) se conserva en `docs/versioning-and-releases.md` y `docs/release-*.md`.
 
 ## Geometría física del IROH
+
+> **Experimental, no activa en el runtime oficial.** Lo descrito en esta sección vive en la rama `experiment/measured-geometry-iroh3d`. El runtime oficial usa rueda a 12 cm y sonar a 9,83 cm.
 
 Los valores se clasifican así:
 
@@ -209,6 +201,8 @@ Más detalles: [`docs/physical-geometry.md`](docs/physical-geometry.md) y [`docs
 
 ## Modelos visuales
 
+> **Experimental.** El modelo IROH 3D (`?robot=iroh`, `iroh-visual.js`, `assets/iroh/iroh-render-v1.js`) solo existe en la rama `experiment/measured-geometry-iroh3d`; el runtime oficial usa el renderer procedural de `renderer3d.js`.
+
 | Selección | Renderer |
 |---|---|
 | por defecto | 3D clásico/legacy |
@@ -216,7 +210,7 @@ Más detalles: [`docs/physical-geometry.md`](docs/physical-geometry.md) y [`docs
 
 Ambos comparten la misma física, el mismo R, los mismos sensores, el mismo runtime, las mismas pistas y las mismas colisiones funcionales. **Cambiar el modelo visual no debe cambiar la trayectoria ni el programa.**
 
-El modelo IROH usa `assets/iroh/iroh-render-v1.js`, `iroh-visual.js` y `renderer3d.js`. El asset deriva del modelo Blender mediante `tools/build-iroh-render-asset.mjs`.
+El modelo IROH 3D (rama experimental) usa `assets/iroh/iroh-render-v1.js`, `iroh-visual.js` y `renderer3d.js`.
 
 Este modelo es una representación medida y aproximada; no es un gemelo digital final ni ultra realista. Todavía no existe un selector visible 2D/3D/realista: pertenece a `DISPLAY-MODES-1` (futuro).
 
@@ -259,9 +253,10 @@ iroh-runtime.js       parser, intérprete y API educativa
 simulator.js          estado, reloj y ciclo de simulación
 strike-physics.js     contacto de garra/cajas
 renderer3d.js         renderer procedural sobre Canvas
-iroh-visual.js        integración visual del modelo IROH medido
-assets/iroh/iroh-render-v1.js   asset de render IROH (derivado del modelo Blender)
-tools/build-iroh-render-asset.mjs   genera el asset desde el modelo Blender
+head-config.js        configuración de la cabeza virtual
+head-sonar.js         sonar orientable (yaw)
+line-geometry.js      geometría de segmentos para el sensor de línea
+scripts/build-pages.mjs   genera dist/ (35 archivos públicos)
 calibration.js        modelo simulado de sensores de línea + light field
 tracks.js             pistas base
 extra-tracks.js       pistas adicionales
@@ -298,12 +293,12 @@ No requiere base de datos, cuenta, credenciales ni servicios externos para ejecu
 La validación integral ejecuta las suites Node `tests/*.cjs`, además de pruebas específicas en Chrome. No se enumeran todas; algunas relevantes:
 
 ```bash
-node tests/physical-geometry.cjs   # geometría física medida
+node tests/syntax.cjs             # sintaxis de todos los scripts
 node tests/motor-dynamics.cjs      # aceleración/frenado simétricos
-node tests/iroh-visual.cjs         # visual IROH
+node tests/head-sonar.cjs         # cabeza virtual y sonar orientable
 node tests/calibration-ui.mjs      # navegador real (Chrome por CDP); se omite sin Chrome
-node tests/iroh-visual-ui.mjs      # navegador real (Chrome por CDP)
-node tests/perf/iroh-ab.mjs        # comparación A/B de rendimiento legacy vs IROH
+node tests/head-ui.mjs            # navegador real (Chrome por CDP)
+node scripts/build-pages.mjs      # build público y verificación de los 35 hashes
 ```
 
 Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs/calibration-mode.md).
@@ -323,8 +318,9 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Baseline actual](docs/current-baseline.md)
 - [Versionado y releases](docs/versioning-and-releases.md)
 - [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
-- Release SIM-UX-V1 (**producción actual**): [`release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (en `release/sim-ux-v1`)
-- Release HEAD-CANVAS (histórica; incluida en la producción actual): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
+- Release SIM-NOFIRVI-1 (**producción oficial**): [`release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md); procedimiento en [`deployment-and-rollback.md`](docs/deployment-and-rollback.md)
+- Release SIM-UX-V1 (histórica; incluía FIRVI): [`release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (en `release/sim-ux-v1`)
+- Release HEAD-CANVAS (histórica; su cabeza virtual forma parte de SIM-NOFIRVI-1): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
 - [Limitaciones conocidas](docs/known-limitations.md)
 - [Baseline v4 histórica](docs/sim-v4-baseline.md)
 - [Historia de decisiones de UI](docs/pilot-ui-reference.md)

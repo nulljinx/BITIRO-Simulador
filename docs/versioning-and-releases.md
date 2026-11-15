@@ -1,5 +1,7 @@
 # Versionado y releases
 
+> **Actualización SIM-NOFIRVI-1:** a partir de esta integración `main` es la fuente oficial del simulador publicado y el artefacto público se reconstruye con `node scripts/build-pages.mjs` (35 archivos con SHA-256 fijos). El principio «Producción no es HEAD de `main`» se sustituye, para el simulador público, por «el deployment se identifica por el manifiesto de 35 hashes y debe poder regenerarse desde un commit de `main`»; las releases anteriores siguen registradas tal cual. Las líneas experimentales (`experiment/*`) no se despliegan. Ver [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`deployment-and-rollback.md`](deployment-and-rollback.md).
+
 > **Estado:** política documental para adoptar mediante Pull Request a `main`. Su integración registra la aprobación del procedimiento; no activa automáticamente protecciones, CI, ramas ni etiquetas. Esos controles requieren actuaciones separadas y autorización explícita.
 
 ## 1. Principio rector

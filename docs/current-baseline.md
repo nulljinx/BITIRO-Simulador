@@ -1,5 +1,9 @@
 # Baseline actual
 
+> **Baseline oficial (SIM-NOFIRVI-1, propuesta pendiente de PR):** `main` pasa a ser la única fuente del simulador publicado. Runtime de 32 archivos copiado completo del candidato `9c0b4922ffab228d5bf9af75abc51cf94c194264`; artefacto público de 35 archivos generado con `node scripts/build-pages.mjs` (hashes en `scripts/pages-manifest.json`). Geometría funcional: ruedas 12 cm, sonar 9,83 cm, HEAD-CANVAS activo; sin módulos FIRVI. La geometría medida (10 cm / 7,40 cm) y el modelo IROH 3D quedan en la rama `experiment/measured-geometry-iroh3d`. Detalle: [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`deployment-and-rollback.md`](deployment-and-rollback.md).
+>
+> Todo lo que sigue en este documento es **historial** (producciones anteriores en el servidor nginx) y no se ha modificado; en particular, las frases «`main` no contiene…» describen el `main` anterior a SIM-NOFIRVI-1.
+
 > **Producción vigente (actualización 2026-11-08): SIM-UX-V1.** `https://simulador.nulljinx.com` sirve los archivos runtime del commit de referencia **`5f427d6ee46113b4af1bda69f2cb3d1780ce32f0`** (`fix(ui): clarify obstacle contact and movement feedback`), etiqueta `sim-ux-v1-deployed` (publicada en GitHub; apunta a `149a1aa`, punta de la rama `release/sim-ux-v1`, cuyo runtime corresponde a `5f427d6`).
 >
 > | Campo | Valor |

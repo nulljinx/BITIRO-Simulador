@@ -1,5 +1,7 @@
 # Limitaciones conocidas
 
+> **Aviso (SIM-NOFIRVI-1):** las referencias a wheelbase de 10 cm, sonar a 7,40 cm y modelo IROH 3D describen el experimento `experiment/measured-geometry-iroh3d`, no el runtime oficial (ruedas 12 cm, sonar 9,83 cm).
+
 Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepancias que necesitan medición física antes de modificarse.
 
 ## Prioridades actuales (tras SESSION-VALIDATION-2)
