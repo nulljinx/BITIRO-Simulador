@@ -54,7 +54,7 @@ test('todas las llamadas escritas en la Guía existen en el runtime o son funcio
 });
 
 const INIT='inicializarMovimiento();inicializarSensores();inicializarGolpe();';
-const NO_EFFECT=/apagarPantalla|prenderPantalla|inicializarCabeza|apagarCabeza|moverServoYaw|moverServoPitch/;
+const NO_EFFECT=/apagarPantalla|prenderPantalla|apagarCabeza|moverServoPitch/;   // inicializarCabeza y moverServoYaw tienen efecto desde HEAD-CANVAS
 const tops=sigs.filter(s=>s.ctx==='top').map(s=>s.code).join('\n');
 
 test('cada ejemplo corto se ejecuta sin errores; solo las instrucciones «sin efecto» producen avisos',()=>{
@@ -242,9 +242,22 @@ test('lo «no disponible» que lista la Guía produce error en el intérprete',(
 });
 
 test('instrucciones sin efecto: avisan con ⚠; inicializarPantalla() no avisa',()=>{
- for(const c of ['apagarPantalla();','prenderPantalla();','inicializarCabeza();','apagarCabeza();','moverServoYaw(10);','moverServoPitch(10);']){
+ for(const c of ['apagarPantalla();','prenderPantalla();','apagarCabeza();','moverServoPitch(10);']){
   const h=run(W(c));assert.deepEqual(h.errors(),[]);assert.ok(h.warns().some(w=>/no tiene efecto/.test(w)),c);}
  assert.deepEqual(run(W('inicializarPantalla();')).warns(),[]);
+});
+
+test('cabeza: inicializarCabeza() y moverServoYaw() tienen efecto, sin avisos ni errores, y la Guía lo dice',()=>{
+ for(const c of ['inicializarCabeza();','inicializarCabeza();moverServoYaw(10);','inicializarCabeza();moverServoYaw(45);']){
+  const h=run(W(c));assert.deepEqual(h.errors(),[]);assert.deepEqual(h.warns(),[],c);}
+ assert.ok(/<code>moverServoYaw\(grados\)<\/code> funciona en el simulador/.test(dialog),'la Guía describe moverServoYaw');
+ assert.ok(!/todavía no modela la cabeza/.test(dialog));
+ const g=strip(dialog);
+ assert.ok(/acepta cualquier ángulo intermedio/.test(g)&&/progresivo/.test(g),'Guía: ángulos intermedios y giro progresivo');
+ assert.ok(/mide hacia donde apunta la cabeza/.test(g),'Guía: el sonar sigue la orientación real');
+ assert.ok(/moverServoPitch\(\) y apagarCabeza\(\) se reconocen, pero el simulador no los modela/.test(g),'Guía: pitch sin modelo');
+ assert.ok(/sin medir en el robot real/.test(g),'Guía: parámetros físicos pendientes');
+ assert.ok(!/que está justo delante|estén justo delante/.test(g),'Guía: el sonar ya no es solo frontal');
 });
 
 console.log(`\n${checks} comprobaciones de contenido de la Guía superadas.`);
