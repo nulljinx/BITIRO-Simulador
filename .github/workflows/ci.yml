@@ -1,0 +1,78 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - integration/main-sim-nofirvi   # temporal: validar CI antes de abrir la PR; retirar tras fusionarla
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # SHA-256 de scripts/pages-manifest.json (candidato aprobado 9c0b492). Cambiar el manifiesto exige cambiar este valor
+  # en el mismo commit, de modo que la modificación sea visible en la revisión.
+  MANIFEST_SHA256: cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24
+
+jobs:
+  pages-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '24'
+      - name: Build de Cloudflare Pages
+        run: node scripts/build-pages.mjs
+      - name: Verificación independiente de dist/
+        run: node scripts/verify-dist.mjs
+
+  node-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '24'
+      - name: Suites Node oficiales (21, lista explícita, el árbol no debe cambiar)
+        run: node scripts/run-suites.mjs
+
+  # Informativo: NO exigirlo como check obligatorio hasta validarlo en GitHub.
+  browser-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '24'
+      - name: Chrome sin sandbox (el runner restringe los user namespaces)
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable)"
+          test -x "$CHROME"
+          printf '#!/bin/sh\nexec "%s" --no-sandbox "$@"\n' "$CHROME" > "$RUNNER_TEMP/chrome-nosandbox"
+          chmod +x "$RUNNER_TEMP/chrome-nosandbox"
+          echo "CHROME_BIN=$RUNNER_TEMP/chrome-nosandbox" >> "$GITHUB_ENV"
+          "$CHROME" --version
+      - name: Pruebas de navegador (un SKIP es un fallo)
+        run: node scripts/run-suites.mjs --browser
+      - name: Hacer visible el fallo (el job es informativo, pero no debe pasar inadvertido)
+        if: failure()
+        run: |
+          echo "::error title=browser-tests::Las pruebas de navegador fallaron o se omitieron; revisa el registro del paso anterior."
+          echo "### browser-tests: FALLO (informativo, no bloquea)" >> "$GITHUB_STEP_SUMMARY"
