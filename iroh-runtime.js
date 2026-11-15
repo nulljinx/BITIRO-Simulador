@@ -306,10 +306,12 @@ function mov(l,r){
   R.L=Math.max(-100,Math.min(100,l));R.R=Math.max(-100,Math.min(100,r));
 }
 function sens(k){if(strict&&!ini.s){warn('Leíste un sensor sin llamar antes a inicializarSensores(): el robot real no entregaría lecturas válidas.');return 0}return k<3?lect(k):ir[k-3]}
-function lineDetected(k){if(strict&&!ini.s){sens(k);return 0;}return +LINE_SENSOR.detected(lect(k),k);}
+function lineDetected(k){if(strict&&!ini.s){sens(k);return 0;}if(window.noteInteraction)window.noteInteraction('sensor-read',k);return +LINE_SENSOR.detected(lect(k),k);}
 function lcdW(c,f,v){f=Math.max(0,Math.min(1,f|0));c=Math.max(0,c|0);v=String(v);const s=lcd[f].padEnd(16);lcd[f]=(s.slice(0,c)+v+s.slice(c+v.length)).slice(0,16)}
 const NOP=()=>0;
 const unavailable=name=>()=>{warn(name+'() no tiene efecto en este modelo virtual.');return 0;};
+const headLoaded=()=>!!(window.HEAD_SONAR&&HEAD_SONAR.available&&typeof HEAD_SONAR.command==='function');
+const headMissing=name=>{warn(name+'() no tiene efecto en este modelo virtual: la cabeza móvil no está disponible porque no se cargó head-sonar.js (¿página en caché de una versión anterior?). Recarga con Ctrl+F5.');return 0;};
 const FN={
  avanzar:[[1,2],a=>mov(a[0],a[1]??a[0])],
  retroceder:[[1,2],a=>mov(-a[0],-(a[1]??a[0]))],
@@ -322,7 +324,7 @@ const FN={
  leerSensorLineaIzquierdo:[[0],()=>sens(0)],
  leerSensorLineaCentral:[[0],()=>sens(1)],
  leerSensorLineaDerecho:[[0],()=>sens(2)],
- leerBoton:[[0],()=>btn],
+ leerBoton:[[0],()=>{if(window.noteInteraction)window.noteInteraction('button-read',btn);return btn;}],
  leerDistanciaSonar:[[0],()=>{if(strict&&!ini.s){warn('Inicializa los sensores antes de leer el sonar.');return 200;}return window.readSonarDistance?window.readSonarDistance():200;}],
  leerLineaNormalizada:[[1],a=>{const k=a[0];if(!Number.isInteger(k)||k<0||k>2)throw{m:'El sensor debe ser 0 (izquierdo), 1 (central) o 2 (derecho)',ln:0};if(strict&&!ini.s){sens(k);return 0;}return LINE_SENSOR.normalized(lect(k),k);}],
  leerUmbralLinea:[[0],()=>LINE_SENSOR.profile.threshold],
@@ -334,8 +336,8 @@ const FN={
  apagarPantalla:[[0],unavailable("apagarPantalla")],prenderPantalla:[[0],unavailable("prenderPantalla")],
  inicializarMovimiento:[[0],()=>{ini.m=1}],
  inicializarSensores:[[0],()=>{ini.s=1}],
- inicializarCabeza:[[0],unavailable("inicializarCabeza")],inicializarGolpe:[[0],()=>{ini.g=1;if(window.setStrikerPosition)window.setStrikerPosition(0);}],inicializarPantalla:[[0],NOP],
- apagarCabeza:[[0],unavailable("apagarCabeza")],moverServoYaw:[[1],unavailable("moverServoYaw")],moverServoPitch:[[1],unavailable("moverServoPitch")],moverServoGolpe:[[1],a=>{if(strict&&!ini.g){warn('Inicializa el golpe con inicializarGolpe() antes de moverlo.');return;}if(!Number.isFinite(a[0]))throw{m:'La posición del golpe debe ser un número finito',ln:0};if(a[0]!==-1&&a[0]!==0&&a[0]!==1){warn('moverServoGolpe() admite -1, 0 o 1.');return;}if(window.setStrikerPosition)window.setStrikerPosition(a[0]);}]
+ inicializarCabeza:[[0],()=>{ini.h=1;if(headLoaded())HEAD_SONAR.init();else headMissing('inicializarCabeza');}],inicializarGolpe:[[0],()=>{ini.g=1;if(window.setStrikerPosition)window.setStrikerPosition(0);}],inicializarPantalla:[[0],NOP],
+ apagarCabeza:[[0],unavailable("apagarCabeza")],moverServoYaw:[[1],a=>{if(!headLoaded()){headMissing('moverServoYaw');return;}if(strict&&!ini.h){warn('Inicializa la cabeza con inicializarCabeza() antes de moverla.');return;}const r=HEAD_SONAR.command(a[0]);if(!r.ok)throw{m:'moverServoYaw() necesita un número finito',ln:0};if(r.clamped)warn('moverServoYaw('+a[0]+') quedó fuera del alcance de la cabeza: se limitó a '+r.value+'.');}],moverServoPitch:[[1],unavailable("moverServoPitch")],moverServoGolpe:[[1],a=>{if(strict&&!ini.g){warn('Inicializa el golpe con inicializarGolpe() antes de moverlo.');return;}if(!Number.isFinite(a[0]))throw{m:'La posición del golpe debe ser un número finito',ln:0};if(a[0]!==-1&&a[0]!==0&&a[0]!==1){warn('moverServoGolpe() admite -1, 0 o 1.');return;}if(window.setStrikerPosition)window.setStrikerPosition(a[0]);}]
 };
 function find(n,ln){for(let i=scopes.length-1;i>=0;i--)if(Object.prototype.hasOwnProperty.call(scopes[i],n))return scopes[i];if(n in CONS)return null;throw{m:'La variable «'+n+'» no está declarada',ln}}
 function coerce(value,type,ln){
@@ -385,7 +387,7 @@ function* ev(e){
       if(u)return yield* callUser(u,args,e.ln);
       if(e.n==='pausa'){const ms=args[0];if(!Number.isFinite(ms)||ms<0)throw{m:'pausa() necesita milisegundos finitos y no negativos',ln:e.ln};yield ms;return 0}
       // botonInicio(): barrera cooperativa de NIVEL (como la librería real: espera hasta leerBoton()==1). No consume ni libera el Pulsador.
-      if(e.n==='botonInicio'){while(!btn){waitingButton=1;yield 0;}waitingButton=0;return 0}
+      if(e.n==='botonInicio'){if(window.noteInteraction&&!btn)window.noteInteraction('gate-wait',0);while(!btn){waitingButton=1;yield 0;}waitingButton=0;if(window.noteInteraction)window.noteInteraction('gate-pass',0);return 0}
       return FN[e.n][1](args)||0;
     }
     case'b':{
@@ -430,7 +432,7 @@ function start(){
   let P;
   try{P=parse(lex($('src').value))}
   catch(e){reset();$('msg').innerHTML='<span class=err>✖ Error'+(e.ln?' (línea '+e.ln+')':'')+': '+esc(e.m||'error interno: '+e.message)+'</span>';return}
-  const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;UF=P.fns;callDepth=0;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict};warns=new Set();
+  const inputs=[...ir],pressed=btn;reset();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);if(window.onCodeStarted)window.onCodeStarted();prog=P;UF=P.fns;callDepth=0;strict=P.sketch;ini={m:!strict,s:!strict,g:!strict,h:!strict};warns=new Set();
   scopes=[Object.create(null)];variableTypes=new WeakMap();it=main();running=1;
   $('msg').innerHTML='<span class=ok>✔ Sintaxis validada. Intérprete didáctico en ejecución…</span>';
 }
