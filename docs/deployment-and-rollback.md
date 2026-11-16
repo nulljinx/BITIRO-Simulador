@@ -1,6 +1,6 @@
 # Deployment y rollback (Cloudflare Pages)
 
-> **Estado:** procedimiento propuesto. No se ha cambiado ninguna configuración de Cloudflare. Cada paso que toque Cloudflare, DNS, WAF o Access requiere autorización explícita.
+> **Estado (2026-11-16):** la migración a `main` **se ejecutó**. Cloudflare Pages publica desde `main` y el deployment activo es `449a5877-ad96-4598-a493-22cfd205eb57` (commit `3c80a33`). Cada cambio posterior que toque Cloudflare, DNS, WAF o Access requiere autorización explícita. El registro del cierre está en [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md).
 
 ## Modelo
 
@@ -13,15 +13,43 @@
 
 Pages **nunca** debe publicar la raíz del repositorio: contiene `docs/`, `tests/`, `examples/` y material no público.
 
-## Configuración requerida en Pages (objetivo tras la migración)
+## Configuración actual en Pages
 
-> **Pendiente:** hoy la rama de producción de Pages es `deploy/cloudflare-pages`, con build command, build output y root directory vacíos y *Automatic deployments* activo (comprobado en el panel). Nada de lo siguiente se ha aplicado todavía; el procedimiento está en «Migración» más abajo.
+Confirmada en el panel de Cloudflare por el responsable del proyecto tras la migración; este repositorio no puede comprobarla por sí mismo.
 
-- Producción: rama `main`.
-- Comando de build: `node scripts/build-pages.mjs`.
-- Directorio de salida: `dist`.
+| Ajuste | Valor actual |
+|---|---|
+| Production branch | `main` |
+| Build command | `node scripts/build-pages.mjs` |
+| Build output directory | `dist` |
+| Root directory | vacío |
+| Build system | v3 |
+| Enable automatic production branch deployments | Enabled |
+| Preview branch | None |
+| Deploy Hooks | ninguno (el Deploy Hook temporal usado durante la migración fue eliminado) |
+| Deployment activo | `449a5877-ad96-4598-a493-22cfd205eb57` (`main`, `3c80a33`) |
+| Deployment de respaldo | `47b60699-bb45-4ea1-b1f6-852d87e8f3da` (`deploy/cloudflare-pages`, `9c0b492`) |
+
 - Variables de entorno: ninguna. Sin dependencias (`npm install` no es necesario).
-- Se mantienen WAF, Access y la redirección de `pages.dev`.
+- Se mantienen WAF, Access y la redirección de `pages.dev`; la migración no los modificó. Comprobado desde fuera: `bitiro-simulador.pages.dev` redirige con 302 a `simulador.nulljinx.com` y las URL de deployment (`<id>.bitiro-simulador.pages.dev`) redirigen al login de Cloudflare Access.
+
+### Controles de ramas en Cloudflare Pages
+
+Dos ajustes del proyecto de Pages controlan qué ramas generan deployments:
+
+1. **`Enable automatic production branch deployments`: Enabled.** Cada push a la rama de producción (`main`) genera un deployment de producción.
+2. **`Preview branch`: None.** Ninguna otra rama genera deployments de vista previa.
+
+Ambos valores fueron confirmados en el panel por el responsable del proyecto. `deploy/cloudflare-pages` ya no alimenta producción y se conserva intacta en `9c0b492` como respaldo.
+
+### Protección de `main` en GitHub (independiente de Cloudflare)
+
+El ruleset `protect-main` (27346085, `active`, sobre la rama por defecto) es una protección distinta e independiente de los ajustes de Cloudflare. Según la API de GitHub:
+
+- `deletion` y `non_fast_forward`: impiden borrar `main` y reescribir su historial.
+- `pull_request`: los cambios entran por Pull Request (método de integración permitido: `merge`; 0 aprobaciones requeridas).
+- `required_status_checks`: exige `pages-build` y `node-tests`, con política estricta. `browser-tests` se ejecuta en el CI pero no es un check requerido.
+- Sin bypass actors.
 
 ## Verificación previa a cada deployment
 
@@ -32,19 +60,23 @@ Pages **nunca** debe publicar la raíz del repositorio: contiene `docs/`, `tests
 
 ## Rollback
 
+Destino actual de rollback: el deployment `47b60699-bb45-4ea1-b1f6-852d87e8f3da` (commit `9c0b492`). **Este rollback no se ha ejecutado** y no se ha probado su restauración; el procedimiento es el del panel de Pages.
+
 1. En Cloudflare Pages → Deployments, elegir el deployment anterior verificado y `Rollback to this deployment` (no reconstruye; es inmediato).
 2. Verificar por HTTPS el deployment restaurado (hashes y comportamiento de `404.html` y `_headers`, ver «Comprobación por HTTPS»).
 3. Si el problema es de código, corregir en `main` mediante Pull Request; no editar `dist/` a mano.
 
+Advertencia: el rollback de un deployment no cambia la rama de producción. Con `Enable automatic production branch deployments` activado, un futuro push a `main` puede volver a publicar esa rama y reemplazar el deployment restaurado. Si el rollback debe mantenerse, pausar los despliegues automáticos antes de restaurar la configuración (acción de panel que requiere autorización explícita). Es una consecuencia del modelo de Pages descrita en este documento, no algo comprobado en una prueba real.
+
 Respaldo permanente: el commit `9c0b492` de `deploy/cloudflare-pages` se conserva sin tocar hasta que el ciclo de migración termine y se autorice su archivado.
 
-## Migración desde `deploy/cloudflare-pages` a `main`
+## Migración desde `deploy/cloudflare-pages` a `main` (histórico: ejecutada el 2026-11-16)
 
-> **Estado:** plan no ejecutado. Cada paso que modifique Cloudflare requiere autorización explícita y se hace manualmente en el panel; ningún script de este repositorio toca Cloudflare.
+> **Estado:** **ejecutada**. Se conserva el procedimiento tal como se planificó, como referencia histórica y para repetirlo si hiciera falta; los pasos en tiempo futuro describen el plan, no un trabajo pendiente. Se hizo manualmente en el panel; ningún script de este repositorio toca Cloudflare. Resultado y verificación: [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md). Nota: durante la migración se usó un Deploy Hook temporal que ya fue eliminado; el procedimiento de abajo no lo contempla.
 
-### Configuración actual (comprobada en el panel)
+### Configuración previa a la migración (histórica; comprobada en el panel entonces)
 
-| Ajuste | Valor actual | Valor objetivo |
+| Ajuste | Valor previo | Valor objetivo |
 |---|---|---|
 | Production branch | `deploy/cloudflare-pages` | `main` |
 | Automatic deployments | Enabled | Enabled (se pausa solo durante la migración) |
@@ -52,7 +84,7 @@ Respaldo permanente: el commit `9c0b492` de `deploy/cloudflare-pages` se conserv
 | Build output directory | vacío | `dist` |
 | Root directory | vacío | vacío |
 
-Hoy Pages sirve los archivos de `deploy/cloudflare-pages` tal cual, sin build. La rama contiene el candidato `9c0b492` (el mismo que fija `scripts/pages-manifest.json`).
+Antes de la migración, Pages servía los archivos de `deploy/cloudflare-pages` tal cual, sin build. La rama contiene el candidato `9c0b492` (el mismo que fija `scripts/pages-manifest.json`).
 
 **Riesgo principal:** el panel de Cloudflare **no ofrece un cambio atómico**: la rama de producción, el comando de build y el directorio de salida se modifican uno tras otro, y entre un cambio y el siguiente la configuración es incoherente (p. ej. comando de build `node scripts/build-pages.mjs` con la rama `deploy/cloudflare-pages`, que no contiene `scripts/`, o rama `main` sin directorio de salida `dist`, que publicaría la raíz del repositorio). Con *Automatic deployments* activo, cualquier push en esa ventana dispara un deployment con una configuración a medias. Por eso los despliegues automáticos **se deshabilitan antes de tocar cualquier otro ajuste** y solo se reactivan cuando los tres ajustes están aplicados y verificados.
 
@@ -104,15 +136,24 @@ for(const h of ["content-security-policy","x-content-type-options","strict-trans
 console.log(bad?bad+" fallos":"33/33 archivos coinciden; 404.html y _headers verificados por comportamiento");process.exit(bad?1:0)})()'
 ```
 
-Criterio de éxito: sin ningún `FALLO`. Pages puede aplicar transformaciones transparentes al cliente (p. ej. compresión) y, en algunas configuraciones, redirigir `/index.html`; si algo difiere solo por eso, se investiga antes de dar la migración por buena. Esta comprobación no se ha ejecutado todavía contra producción; el comportamiento exacto de `404.html` y `_headers` en Pages debe confirmarse en la primera ejecución real.
+Criterio de éxito: sin ningún `FALLO`. Pages puede aplicar transformaciones transparentes al cliente (p. ej. compresión) y, en algunas configuraciones, redirigir `/index.html`; si algo difiere solo por eso, se investiga antes de dar la migración por buena.
 
-### Rollback de la migración
+#### Resultado de la ejecución real (2026-11-16)
 
-Dispara si la comprobación falla, el build falla o aparece cualquier regresión visible.
+El script se ejecutó contra `https://simulador.nulljinx.com` con el manifiesto de `main` (`3c80a33`), solo con peticiones GET:
+
+- `33/33 archivos coinciden; 404.html y _headers verificados por comportamiento` (código de salida 0).
+- `/` respondió 200 con `Content-Security-Policy`, `X-Content-Type-Options: nosniff` y `Strict-Transport-Security: max-age=31536000` (más `Permissions-Policy` y `Referrer-Policy`).
+- Comportamiento observado de Pages: `/_headers` devuelve 404 (no se sirve); `/index.html` redirige con 308 a `/`; `http://` redirige con 308 a `https://`. Coincide con lo descrito arriba y no se requirió investigar ninguna diferencia.
+- El log de build de Cloudflare confirmó la ejecución de `node scripts/build-pages.mjs` y la verificación de 35 archivos (confirmado por el responsable en el panel; no se puede leer desde el repositorio).
+
+### Rollback de la migración (histórico; vigente mientras no se archive `deploy/cloudflare-pages`)
+
+Se habría disparado si la comprobación falla, el build falla o aparece cualquier regresión visible.
 
 1. **Pausar** *Automatic deployments* si estaban activos.
 2. En Deployments, restaurar el deployment de producción anotado en la precondición 5 (`Rollback to this deployment`); no reconstruye y es inmediato.
-3. **Restaurar los ajustes** a su valor actual, de uno en uno y con los despliegues automáticos aún deshabilitados (tampoco aquí hay operación atómica): Production branch → `deploy/cloudflare-pages`; Build command y Build output directory vacíos. Hacer el rollback del deployment *sin* restaurar los ajustes deja el proyecto listo para romperse en el siguiente push.
+3. **Restaurar los ajustes** a su valor previo a la migración, de uno en uno y con los despliegues automáticos aún deshabilitados (tampoco aquí hay operación atómica): Production branch → `deploy/cloudflare-pages`; Build command y Build output directory vacíos. Hacer el rollback del deployment *sin* restaurar los ajustes deja el proyecto listo para romperse en el siguiente push.
 4. Reactivar *Automatic deployments*.
 5. Ejecutar la comprobación por HTTPS (mismo script: 33 hashes y comportamiento de `404.html` y `_headers`).
 6. Investigar la causa en una rama aparte y corregir en `main` mediante Pull Request; no editar `dist/` a mano.
