@@ -23,7 +23,7 @@ const server = http.createServer((q, r) => {
   fs.createReadStream(f).pipe(r);
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
-const URL_ = `http://127.0.0.1:${server.address().port}/` + (process.env.BITIRO_TEST_QUERY || '');   // opcional: p. ej. '?robot=iroh' (tests/iroh-visual-ui.mjs); vacío = comportamiento original
+const URL_ = `http://127.0.0.1:${server.address().port}/`;
 const browser = await launch({ port: 9372 });
 
 const PRINT = 'void setup(){inicializarMovimiento();inicializarSensores();inicializarPantalla();}\\nvoid loop(){escribirPantalla(0,0,leerSensorLineaCentral());avanzar(20);}';
@@ -103,7 +103,7 @@ const finite = (...v) => v.every(Number.isFinite);
     const readings = await ui.ev('[0,1,2].map(k=>String(readLine(k)))');
     const texts = (await ui.visibleText()).join(' | ');
     for (const v of readings) assert.ok(!new RegExp(`(^|[^\\d])${v}([^\\d]|$)`).test(texts), `valor de sensor ${v} no debe aparecer fuera de la LCD: ${texts}`);
-    for (const sel of ['#valL', '#valC', '#valR', '#sonar', '#motors', '#strikerStatus', '.inputs-strip', '.simulator-toolbar']) {
+    for (const sel of ['#valL', '#valC', '#valR', '#sonar', '#motors', '#strikerStatus', '#moreData', '.inputs-strip', '.simulator-toolbar', '#decision', '#runEvidence']) {
       const shown = await ui.ev(`(()=>{const e=document.querySelector('${sel}');if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'})()`);
       assert.equal(shown, false, sel + ' oculto en calibración');
     }

@@ -15,7 +15,18 @@ window.BITIRO_SCENARIO=(()=>{
  const finite=v=>typeof v==='number'&&Number.isFinite(v);
 
  /* ── modelo ─────────────────────────────────────────────────────────────────────── */
+ /* FIRVI-2025-A · Prisma triangular (obstáculo de las bases FIRVI 2025): se declara por centroide (cx,cy), rotación y lado; la base
+    poligonal sale de IROH_MECHANICS.prism. Solo lo definen pistas FIRVI; S01–S08 siguen con cajas de 8 × 8 cm. */
+ function normalizePrism(b){
+  if(typeof b.id!=='string'||b.id===''||!finite(b.cx)||!finite(b.cy))return null;
+  const side=finite(b.sideCm)&&b.sideCm>0?b.sideCm:13,rot=finite(b.rotationDeg)?b.rotationDeg:0;
+  const out={id:b.id,shape:'triangular-prism',cx:b.cx,cy:b.cy,rotationDeg:rot,sideCm:side,...MECH().prism(b.cx,b.cy,rot,side),
+   movable:b.movable!==false,visualHeightCm:finite(b.visualHeightCm)?b.visualHeightCm:20};
+  if(typeof b.official==='boolean')out.official=b.official;
+  return out;
+ }
  function normalizeBox(b){
+  if(b&&typeof b==='object'&&b.shape==='triangular-prism')return normalizePrism(b);
   if(!b||typeof b!=='object'||typeof b.id!=='string'||b.id===''||!finite(b.x)||!finite(b.y))return null;
   const out={id:b.id,x:round(b.x),y:round(b.y),width:SIZE,height:SIZE,movable:b.movable!==false};
   if(typeof b.official==='boolean')out.official=b.official;

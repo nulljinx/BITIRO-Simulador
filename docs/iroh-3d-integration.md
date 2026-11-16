@@ -1,5 +1,7 @@
 # Integración experimental del IROH 3D (SIM-3D-INTEGRATION-1 y -2)
 
+> **Experimental, no activo en el runtime oficial (SIM-NOFIRVI-1).** El modelo IROH 3D solo existe en la rama `experiment/measured-geometry-iroh3d`.
+
 Estado: **prototipo reversible, experimental**. Solo se activa con `?robot=iroh`. El robot legacy sigue siendo el default.
 No hay commit ni deploy. Esta copia no es producción.
 

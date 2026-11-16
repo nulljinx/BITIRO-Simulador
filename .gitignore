@@ -1,3 +1,4 @@
 tests/load/results/
 __pycache__/
 tests/perf/results/
+dist/

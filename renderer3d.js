@@ -3,11 +3,6 @@
 'use strict';
 const staticScenes=new WeakMap();
 const HARDWARE=window.IROH_MECHANICS.spec;
-/* Selector técnico del modelo visual del robot (SIM-3D-INTEGRATION-1/2A). 'legacy' es el default; solo ?robot=iroh activa 'iroh-v1'.
-   Sin almacenamiento del navegador ni control visible. assets/iroh/iroh-render-v1.js e iroh-visual.js los carga index.html con <script>
-   estático (autoalojado, compatible con CSP, sin document.write); en modo legacy no se procesa el asset. */
-const ROBOT_MODEL=(()=>{try{return typeof location!=='undefined'&&/[?&]robot=iroh(?:&|$)/.test(location.search)?'iroh-v1':'legacy'}catch(e){return 'legacy'}})();
-window.BITIRO_ROBOT_MODEL=ROBOT_MODEL;
 const V = (x,y,z)=>({x,y,z});
 const sub=(a,b)=>V(a.x-b.x,a.y-b.y,a.z-b.z);
 const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
@@ -25,30 +20,14 @@ function box(list,x,y,z,w,h,d,c,layer=3){
 function floor(list,x,z,w,d,y,color,layer=1){face(list,[V(x,y,z),V(x+w,y,z),V(x+w,y,z+d),V(x,y,z+d)],color,layer)}
 function band(a,b,w,color,layer=2){let dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz)||1,ox=dz/len*w/2,oz=-dx/len*w/2;return {points:[V(a.x+ox,a.y,a.z+oz),V(b.x+ox,b.y,b.z+oz),V(b.x-ox,b.y,b.z-oz),V(a.x-ox,a.y,a.z-oz)],fill:color,layer,alpha:1}}
 // Cámara de la escena: UNA sola matemática para dibujar y para convertir píxeles ↔ plano del plotter (modo calibración).
-const FOCAL_K=1.68,HORIZON=.46;   // focal = min(w,h)·FOCAL_K; el horizonte de pantalla cae en HORIZON·h
-/* Encuadre de la cámara Robot con el modelo IROH (SIM-3D-INTEGRATION-2A). El preset 'robot' (follow, distance≈.37) miraba al suelo bajo R a
-   una distancia proporcional al tablero: con un robot de ≈21 cm de alto la cabeza quedaba fuera del borde superior. Aquí, solo con ?robot=iroh,
-   cuando la cámara sigue al robot y está cerca, el objetivo sube al centro del modelo y la distancia sale de la esfera envolvente del
-   asset (IROH_VISUAL.frame, calculada de sus vértices) para que quepa con margen en el canvas actual. No hay constantes por escenario;
-   camera.distance sigue siendo el zoom del usuario (relativo al preset). 'follow' (.8) y el resto de vistas no cambian (peso 0). */
-const ROBOT_PRESET_DISTANCE=.37,ROBOT_FRAME_MARGIN=.12;
-function robotFrame(camera,w,h){
- if(ROBOT_MODEL!=='iroh-v1'||!camera.follow||!window.IROH_VISUAL||!window.IROH_VISUAL.frame)return null;
- const k=Math.min(1,Math.max(0,(.6-camera.distance)/.2));   // 1 hasta distance .4 (preset .37), 0 desde .6; follow (.8) queda fuera
- if(!k)return null;
- const fr=window.IROH_VISUAL.frame,avail=Math.min(HORIZON*h,.5*w)*(1-ROBOT_FRAME_MARGIN);
- const fit=Math.sqrt(fr.radius*fr.radius+Math.pow(fr.radius*Math.min(w,h)*FOCAL_K/avail,2));
- return {k,lift:fr.centerUp,fit:fit*Math.max(.24,camera.distance)/ROBOT_PRESET_DISTANCE};
-}
 function cameraRig(track,robot,camera,w,h){
  const X=x=>x-track.physicalWidthCm/2,Z=z=>z-track.physicalHeightCm/2;
- const rf=robotFrame(camera,w,h);
- const target=camera.follow?V(X(robot.x),rf?rf.k*rf.lift:0,Z(robot.y)):V(0,0,track.physicalHeightCm*.065);
- const reach=Math.max(track.physicalWidthCm,track.physicalHeightCm),base=clamp(camera.distance,.24,3.8)*reach,dist=rf?base+rf.k*(rf.fit-base):base;
+ const target=camera.follow?V(X(robot.x),0,Z(robot.y)):V(0,0,track.physicalHeightCm*.065);
+ const reach=Math.max(track.physicalWidthCm,track.physicalHeightCm),dist=clamp(camera.distance,.24,3.8)*reach;
  const position=V(target.x+dist*Math.cos(camera.elevation)*Math.cos(camera.azimuth),dist*Math.sin(camera.elevation),target.z+dist*Math.cos(camera.elevation)*Math.sin(camera.azimuth));
  const forward=norm(sub(target,position)),right=norm(cross(forward,V(0,1,0))),up=norm(cross(right,forward));
- const focal=Math.min(w,h)*FOCAL_K;
- const project=v=>{const rel=sub(v,position),depth=dot(rel,forward);if(depth<.2)return null;return{x:w/2+dot(rel,right)*focal/depth,y:h*HORIZON-dot(rel,up)*focal/depth,depth}};
+ const focal=Math.min(w,h)*1.68;
+ const project=v=>{const rel=sub(v,position),depth=dot(rel,forward);if(depth<.2)return null;return{x:w/2+dot(rel,right)*focal/depth,y:h*.46-dot(rel,up)*focal/depth,depth}};
  return {X,Z,position,forward,right,up,focal,project};
 }
 // Conversión entre píxeles del canvas y coordenadas del plotter (cm) sobre el plano del suelo. Solo la usa la interfaz de calibración.
@@ -58,7 +37,7 @@ window.BITIRO_SCENE_VIEW=Object.freeze({
  pickGround(canvas,track,camera,robot,px,py){
   const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(w<20||h<20)return null;
   const {position,forward,right,up,focal}=cameraRig(track,robot,camera,w,h);
-  const u=(px-w/2)/focal,v=(h*HORIZON-py)/focal;
+  const u=(px-w/2)/focal,v=(h*.46-py)/focal;
   const d=V(forward.x+right.x*u+up.x*v,forward.y+right.y*u+up.y*v,forward.z+right.z*u+up.z*v);
   if(Math.abs(d.y)<1e-9)return null;
   const t=(GROUND_Y-position.y)/d.y;if(!(t>0))return null;
@@ -90,7 +69,12 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  for(let i=10;i<tw;i+=10)faces.push(band(V(x0+i,-.89,z0),V(x0+i,-.89,z0+th),.07,'#D8DCD8',1));
  for(let i=10;i<th;i+=10)faces.push(band(V(x0,-.89,z0+i),V(x0+tw,-.89,z0+i),.07,'#D8DCD8',1));
  // Líneas del plotter: muchos tramos pequeños para mantener curvas suaves.
- for(const path of track.paths){for(let i=1;i<path.points.length;i++){
+ for(const path of track.paths){
+  if(track.capStyle==='butt'){   // misma geometría que lee el sensor (line-geometry.js)
+   for(const poly of BITIRO_LINE_GEOMETRY.polygons({w:path.widthCm,p:path.points.map(q=>[q.x,q.y])}))faces.push({points:poly.map(q=>V(X(q[0]),-.78,Z(q[1]))),fill:'#1E242A',layer:2,alpha:1});
+   continue;
+  }
+  for(let i=1;i<path.points.length;i++){
   const a=path.points[i-1],b=path.points[i];faces.push(band(V(X(a.x),-.78,Z(a.y)),V(X(b.x),-.78,Z(b.y)),path.widthCm,'#1E242A',2));
  }}
  // Bases físicas: pintadas encima de la lámina, con pequeña franja de marco.
@@ -98,6 +82,11 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
   floor(faces,X(zone.x)-.38,Z(zone.y)-.38,zone.width+.76,zone.height+.76,-.72,'#4B5052',2);
   floor(faces,X(zone.x),Z(zone.y),zone.width,zone.height,-.69,zone.kind==='finish-green'?'#91C5A8':'#D8978D',2);
   labels.push({at:V(X(zone.x+zone.width/2),-.58,Z(zone.y+zone.height/2)),text:zone.label||'BASE'});
+ }
+ for(const ref of track.references||[]){   // referencias planas del plano (FIRVI): flecha INICIO y ficha de checkpoint; no son sensables
+  if(ref.kind==='checkpoint'){const poly=[];for(let k=0;k<24;k++){const t=Math.PI*2*k/24;poly.push(V(X(ref.x+3.75*Math.cos(t)),-.8,Z(ref.y+3.75*Math.sin(t))));}faces.push({points:poly,fill:'#E08A2B',layer:2,alpha:1,bias:5});continue;}
+  const dx=Math.cos(ref.heading),dy=Math.sin(ref.heading),bx=ref.x-dx*10,by=ref.y-dy*10;   // punta en el inicio de la línea, base 10 cm atrás, 10 cm de ancho
+  faces.push({points:[V(X(ref.x),-.8,Z(ref.y)),V(X(bx-dy*5),-.8,Z(by+dx*5)),V(X(bx+dy*5),-.8,Z(by-dx*5))],fill:ref.kind==='start'?'#C0392B':'#B9A9A4',layer:2,alpha:1,bias:5});
  }
  for(const m of track.markers||[])floor(faces,X(m.x),Z(m.y),m.width,m.height,-.68,'#D57C69',2);
  // Pequeño borde del recinto en cuatro lados, no tapa la superficie.
@@ -111,16 +100,25 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  for(let i=stride;i<trace.length;i+=stride){const a=trace[i-stride],b=trace[i];faces.push(band(V(X(a.x),-.75,Z(a.y)),V(X(b.x),-.75,Z(b.y)),.24,'#5FABA0',2));}
  // Obstáculos reales en 3D, con sombra y caras diferenciadas.
  for(const ob of obstacles){
+  if(Array.isArray(ob.poly)&&ob.poly.length>=3){   // prisma de base poligonal (FIRVI 2025): sombra, caras laterales y tapa
+   const cx=ob.poly.reduce((a,q)=>a+q[0],0)/ob.poly.length,cy=ob.poly.reduce((a,q)=>a+q[1],0)/ob.poly.length,top=-.45+(ob.visualHeightCm ?? HARDWARE.sonarHeight+.5);
+   face(faces,ob.poly.map(q=>V(X(cx+(q[0]-cx)*1.18),-.66,Z(cy+(q[1]-cy)*1.18))),'#B2B4AF',3);
+   ob.poly.forEach((a,i)=>{const b=ob.poly[(i+1)%ob.poly.length];
+    face(faces,[V(X(a[0]),-.45,Z(a[1])),V(X(b[0]),-.45,Z(b[1])),V(X(b[0]),top,Z(b[1])),V(X(a[0]),top,Z(a[1]))],['#BA8653','#94603B','#A8723F'][i%3],3);});
+   face(faces,ob.poly.map(q=>V(X(q[0]),top,Z(q[1]))),'#D9B17B',3);
+   continue;
+  }
   floor(faces,X(ob.x)-.95,Z(ob.y)-.95,ob.width+1.9,ob.height+1.9,-.66,'#B2B4AF',3);
   box(faces,X(ob.x),-.45,Z(ob.y),ob.width,ob.visualHeightCm ?? HARDWARE.sonarHeight+.5,ob.height,['#D9B17B','#BA8653','#94603B'],3);
  }
- const iroh=ROBOT_MODEL==='iroh-v1'&&!!window.IROH_VISUAL&&!!window.IROH_RENDER_V1,robotFacesStart=faces.length;
  // Modelo PROCEDURAL 3D del IROH inspirado en la FOTO proporcionada:
  // dos ruedas negras/amarillas, chasis doble, placa Arduino, cables, sonar
  // sobre montura AZUL, 3 sensores bajos y servo con un palo de golpe recto y articulado.
  // No se utiliza ninguna fotografía como textura ni se añaden pestañas o boca.
  const heading=robot.heading,f2=[Math.cos(heading),Math.sin(heading)],r2=[-Math.sin(heading),Math.cos(heading)];
- const local=(f,r,y)=>V(X(robot.x)+f*f2[0]+r*r2[0],y,Z(robot.y)+f*f2[1]+r*r2[1]);
+ // HEAD-CANVAS: giro de la cabeza (rad, derecha positiva) alrededor del eje PAN (HEAD_SONAR.params.axisForward)
+ let headYaw=0;const HEAD_AXIS=window.HEAD_SONAR?HEAD_SONAR.params.axisForward.value:3.95;
+ const local=(f,r,y)=>{if(headYaw){const df=f-HEAD_AXIS,c=Math.cos(headYaw),sn=Math.sin(headYaw);const nf=HEAD_AXIS+df*c-r*sn;r=df*sn+r*c;f=nf;}return V(X(robot.x)+f*f2[0]+r*r2[0],y,Z(robot.y)+f*f2[1]+r*r2[1]);};
  const localBox=(f,r,y,len,wide,tall,palette,layer=4)=>{
   const base=[local(f-len/2,r-wide/2,y),local(f+len/2,r-wide/2,y),local(f+len/2,r+wide/2,y),local(f-len/2,r+wide/2,y)];
   const top=base.map(q=>V(q.x,q.y+tall,q.z));
@@ -157,9 +155,7 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  };
  // La carcasa de dos niveles es octogonal (no una caja rectangular genérica).
  const hull=[[-9,-5],[-6,-8.1],[5,-8.1],[9,-5],[9,5],[5,8.1],[-6,8.1],[-9,5]];
- const shadow=[];for(let j=0;j<20;j++){const a=j/20*2*Math.PI;shadow.push(local(Math.cos(a)*13+(iroh?-.8:0),Math.sin(a)*11,-.63))}   // iroh: R es el eje, el cuerpo queda centrado ≈ 0,8 cm detrás
- face(faces,shadow,'#46515A',3,.25);
- if(iroh)window.IROH_VISUAL.build(faces,local,{position,heading});else{   // modelo IROH v1 (assets/iroh) o robot legacy
+ const shadow=[];for(let j=0;j<20;j++){const a=j/20*2*Math.PI;shadow.push(local(Math.cos(a)*13,Math.sin(a)*11,-.63))}face(faces,shadow,'#46515A',3,.25);
  // Motores laterales y soportes negros.
  for(const side of [-1,1]){
   localBox(-3,side*6.7,2.4,6.0,3.2,2.5,['#43464B','#20252A','#161B20']);
@@ -191,6 +187,7 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  }
  // Bisagra frontal con cuello inclinado y cabezal AZUL poligonal (no ojos decorativos).
  localBox(5.8,0,8.2,3.3,4.8,3.2,['#172F5D','#10264D','#16325E']);
+ headYaw=robot.headYaw||0;
  localBox(6.9,0,10.8,3.3,5.7,2.4,['#1E49AA','#17388D','#15347B']);
  slab([[5.1,-4.0],[6.0,-5.2],[8.5,-5.0],[9.3,-3.4],[9.3,3.4],[8.5,5.0],[6.0,5.2],[5.1,4.0]],12.85,4.6,['#1A46B5','#183C98','#133079']);
  // Transductores HC-SR04: aros cilíndricos, gris plata con cámara negra, vistos desde el frente.
@@ -210,6 +207,7 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
   const dark=[];for(let j=0;j<N;j++){const t=j*2*Math.PI/N;dark.push(local(forward+.5,r+Math.cos(t)*.72,cy+Math.sin(t)*.72))}face(faces,dark,'#0C141C',4);
  };
  sonar(9.48,-2.45,15.15);sonar(9.48,2.45,15.15);
+ headYaw=0;
  // Dos pequeñas placas IR laterales con emisor y fotodiodo, sin adornos de cara.
  for(const side of [-1,1]){
   localBox(5.8,side*6.6,7.85,3.5,1.55,.33,['#236CC0','#134A95','#16438C']);
@@ -221,7 +219,6 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  for(let s=-1;s<=1;s++){
   localBox(LINE_SENSOR.geometry.front,s*LINE_SENSOR.geometry.spread,.5,1.07,1.30,.65,['#2079C4','#164E83','#17446A']);
   localBox(LINE_SENSOR.geometry.front+.53,s*LINE_SENSOR.geometry.spread,.6,.27,.76,.32,[robot.lineActive?.[s+1]?'#4BD6B4':'#171F24','#12191E','#10161A']);
- }
  }
  // Huellas: estos son los mismos puntos que usa la lectura de la pista.
  for(let k=0;k<3;k++){
@@ -235,16 +232,13 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
  const pivotF=HARDWARE.pivotForward,pivotR=HARDWARE.pivotRight;
  const armLength=HARDWARE.length,armHalf=HARDWARE.halfWidth;
  // Servo azul real montado longitudinalmente en el centro del frente.
- if(!iroh){
  localBox(pivotF-.4,0,3.25,3.8,3.8,3.15,['#2477C4','#19518A','#103E6A']);
  localBox(pivotF+.35,0,6.28,2.5,2.5,.45,['#BCC5C9','#87959C','#5B6870']);
  // Eje central plateado, tornillo y arandela.
  const screw=[];for(let j=0;j<14;j++){const a=2*Math.PI*j/14;screw.push(local(pivotF+.18+Math.cos(a)*.52,Math.sin(a)*.52,6.85))}
  face(faces,screw,'#E0E5E3',5);
- }
  const angle=window.IROH_MECHANICS.sweepAngle(robot.strikerAngle||0);
  const arm=(f,r,y)=>local(pivotF+Math.cos(angle)*f-Math.sin(angle)*r,pivotR+Math.sin(angle)*f+Math.cos(angle)*r,y);
- const barStart=faces.length;
  const outline=[arm(0,-armHalf,HARDWARE.bottomHeight),arm(armLength,-armHalf,HARDWARE.bottomHeight),arm(armLength,armHalf,HARDWARE.bottomHeight),arm(0,armHalf,HARDWARE.bottomHeight)];
  const top=outline.map(v=>V(v.x,v.y+HARDWARE.topHeight-HARDWARE.bottomHeight,v.z));
  face(faces,top,'#27323A',5);
@@ -258,20 +252,10 @@ function renderScene3D(canvas,track,robot,obstacles,camera){
   const bolt=arm(d,0,HARDWARE.topHeight+.035);
   face(faces,[V(bolt.x-.19,bolt.y,bolt.z-.19),V(bolt.x+.19,bolt.y,bolt.z-.19),V(bolt.x+.19,bolt.y,bolt.z+.19),V(bolt.x-.19,bolt.y,bolt.z+.19)],'#C1C9C9',5);
  }
- /* IROH: la barra de golpe es SOLO este overlay (el asset no trae ninguna: SERVO/FRONT_MECHANISM terminan en up 5,8 y no tienen palo; no hay duplicación).
-    Se dibuja con la misma geometría de siempre (pivote, largo y ancho de IROH_MECHANICS.spec, sin cambios) y se ancla visualmente al pivote:
-    tapa circular de radio = semiancho de la barra sobre el eje (mismo gris de los pernos; ninguna medida nueva) y un sesgo de profundidad
-    para que la barra (que nace a 5,18 cm, bajo la cara superior del servo, 5,8) no quede tapada por el servo al ordenar caras. */
- if(iroh){
-  const hub=[];for(let j=0;j<14;j++){const a=2*Math.PI*j/14;hub.push(local(pivotF+Math.cos(a)*armHalf,pivotR+Math.sin(a)*armHalf,HARDWARE.topHeight+.06))}
-  face(faces,hub,'#C1C9C9',5);
-  for(let i=barStart;i<faces.length;i++)faces[i].bias=-1.5;
- }
  // Luz de posición y botón azul sobre la placa.
- if(!iroh)localBox(0,6.4,8.11,1.2,1.0,.7,['#3CA8DB','#17699C','#0E5788']);
- window.BITIRO_RENDER_STATS={model:iroh?'iroh-v1':'legacy',robotFaces:faces.length-robotFacesStart};
+ localBox(0,6.4,8.11,1.2,1.0,.7,['#3CA8DB','#17699C','#0E5788']);
  // Ordenamiento de las caras por capa/distance, ninguna textura de foto.
- const ordered=faces.map(f=>{const verts=f.points.map(project);return {f,verts,depth:verts.reduce((s,p)=>s+(p?.depth||0),0)/verts.length+(f.bias||0)}}).filter(q=>q.verts.every(Boolean)).sort((a,b)=>(Math.min(a.f.layer,3)-Math.min(b.f.layer,3))||(b.depth-a.depth)||(a.f.layer-b.f.layer));
+ const ordered=faces.map(f=>{const verts=f.points.map(project);return {f,verts,depth:verts.reduce((s,p)=>s+(p?.depth||0),0)/verts.length}}).filter(q=>q.verts.every(Boolean)).sort((a,b)=>(Math.min(a.f.layer,3)-Math.min(b.f.layer,3))||(b.depth-a.depth)||(a.f.layer-b.f.layer));
  const light=norm(V(-.40,.84,-.36));
  const shade=(f)=>{
   if(f.layer<3||typeof f.fill!=='string'||!/^#[0-9a-fA-F]{6}$/.test(f.fill))return f.fill;

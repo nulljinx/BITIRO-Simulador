@@ -9,22 +9,50 @@ const FIXED_DT=1/120;
 let camera={azimuth:.10,elevation:.94,distance:1.80,follow:false};
 let motion={dragging:false,x:0,y:0};
 let observation=[155,865,155];
+// Registro PASIVO de hechos físicos (contacto / empuje / barrido). El simulador solo escribe; nada lo lee para decidir movimiento. Lo observará el evaluador (Etapa C).
+let physicsEvents=[];
+/* from/to (opcionales): posición del obstáculo ANTES del primer paso y DESPUÉS del último paso del hecho, en cm. Permite atribuir cada desplazamiento al abanico o al empuje. */
+function logPhysics(kind,id,detail,from,to){
+ const last=physicsEvents[physicsEvents.length-1];
+ if(last&&last.kind===kind&&last.id===id&&last.detail===detail){last.until=simTime;last.steps++;last.servoTo=Math.round(striker.angle);if(to)last.to=to;return;}
+ const e={kind,id,detail,t:simTime,seq:++eventSeq,until:simTime,steps:1,servo:Math.round(striker.angle),servoTo:Math.round(striker.angle)};
+ if(from&&to){e.from=from;e.to=to;}
+ physicsEvents.push(e);
+}
+window.BITIRO_PHYSICS_LOG=()=>physicsEvents.map(e=>({...e}));
+/* Registros PASIVOS (diagnóstico y pruebas). El simulador solo escribe; nada de esto se lee para decidir movimiento, sensores o escenario.
+   · interactionEvents: el intérprete avisa cuándo el programa espera/supera botonInicio() y cuándo lee el Pulsador (solo cambios de valor).
+   · traceSamples: pose + lectura física de los tres sensores de línea + qué sensores CONSULTÓ el programa desde la muestra anterior (máscara L=1, C=2, D=4). */
+let interactionEvents=[],traceSamples=[],sensorReadMask=0,traceStep=0,eventSeq=0;   // eventSeq: orden total de hechos discretos (nunca se reinicia)
+const TRACE_EVERY=6,TRACE_MAX=40000;   // una muestra cada 6 pasos físicos (1/120 s): 20 Hz
+window.noteInteraction=(kind,detail)=>{
+ const last=interactionEvents[interactionEvents.length-1];
+ if(kind==='sensor-read'){sensorReadMask|=1<<detail;return;}
+ if((kind==='button-read')&&last&&last.kind===kind&&last.detail===detail)return;
+ interactionEvents.push({kind,detail,t:simTime,seq:++eventSeq});
+};
+window.BITIRO_INTERACTION_LOG=()=>interactionEvents.map(e=>({...e}));
+window.BITIRO_TRACE_LOG=()=>traceSamples.map(e=>({...e,s:e.s.slice()}));
 let activeObstacles=[],striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null},movedCount=0,demoPath=[],demoIndex=0;
 window.BITIRO_RENDER_QUALITY='standard';
 const worldCv=$app('scene');
 const ui={track:$app('track'),name:$app('trackName'),size:$app('trackSize'),badge:$app('statusBadge'),stage:$app('stageLabel'),origin:$app('sceneSource'), feedback:$app('feedback')};
+let contactNote=null;   // último aviso de contacto escrito en ui.feedback por noteContact() (ver settleContactNote)
 const shorten=(str,n=35)=>str.length>n?str.slice(0,n-1)+'…':str;
 // sceneTrack = solo geometría del suelo. Los objetos físicos viven en el escenario (scenario-props.js) y en activeObstacles (mundo activo).
 let scenarioList=[];
-function toScene(t){return {id:t.id,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,start:t.start};}
+function toScene(t){return {id:t.id,capStyle:t.capStyle,references:t.references,physicalWidthCm:t.w,physicalHeightCm:t.h,paths:t.paths.map(p=>({id:p.id,widthCm:p.w,points:p.p.map(([x,y])=>({x,y}))})),finishZones:t.zones,markers:t.markers,start:t.start};}
+// Las pistas de S01–S08/Óvalo/Ocho son verticales (la cámara mira a lo largo de x). Una pista apaisada se miraría de frente: desde +z.
+const perspectiveAzimuth=()=>track.w>track.h?Math.PI/2+.10:.10;
 function changeTrack(name){
+ if(typeof name!=='string'||!Object.prototype.hasOwnProperty.call(sourceTracks,name))name='s01';   // selección inválida o pista retirada (p. ej. sesión antigua): vuelve a S01
  if(track&&$app('src'))BITIRO_STORAGE.set('bitiro:standalone:code:'+chosen,$app('src').value);
  chosen=name;track=sourceTracks[name];sceneTrack=toScene(track);scenarioList=BITIRO_SCENARIO.load(chosen,track).list;
  if($app('src'))$app('src').value=BITIRO_STORAGE.get('bitiro:standalone:code:'+chosen)||EJ[0];ui.name.textContent=track.id.toUpperCase()+' / '+shorten(track.name.replace(/^S\d+ · /,''),32);ui.size.textContent=track.w+' × '+track.h+' cm';ui.stage.textContent=track.id.toUpperCase();
  ui.origin.textContent=['s01','s02'].includes(track.id)?'Pista de proyecto · '+track.id.toUpperCase():track.id==='s07'?'Repaso · sin plotter oficial':track.id.startsWith('s')?'Plotter oficial (PDF vectorial) · '+track.id.toUpperCase():'Circuito libre no institucional';
  {const r=$app('reference');if(r)r.hidden=!sourceImageForTrack(name);}
- camera={azimuth:.10,elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
- ui.feedback.textContent=track.note;ui.track.value=name;updateLesson();updateZoom();draw();
+ camera={azimuth:perspectiveAzimuth(),elevation:.94,distance:track.h>165?1.90:1.80,follow:false};cameraUI('perspective');window.resetRobot();
+ ui.feedback.textContent=track.note;ui.track.value=name;{const ed=$app('editScenario');if(ed)ed.disabled=track.scenarioEditable===false;}updateLesson();updateZoom();draw();
 }
 let shownWaiting=false;
 // Espera de botonInicio(): el estado visible distingue «esperando el Pulsador» de «ejecutando» (la pausa tiene prioridad).
@@ -37,8 +65,9 @@ function syncWaiting(){
 }
 function setState(text){ui.badge.textContent=text;ui.badge.style.color=text==='EJECUTANDO'?'#8fdfbf':'#e4a57d';}
 window.resetRobot=function(){
+ if(window.HEAD_SONAR)HEAD_SONAR.reset();
  // MUNDO ACTIVO: copia del escenario guardado; golpes y colisiones mueven solo esta copia y Reiniciar la restaura.
- activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
+ activeObstacles=scenarioList.map(ob=>({...ob,visualHeightCm:ob.visualHeightCm ?? 15.6}));contactNote=null;physicsEvents=[];interactionEvents=[];traceSamples=[];sensorReadMask=0;traceStep=0;movedCount=0;striker={angle:0,target:0,pulse:0,returning:false,hitIds:new Set(),blocked:null};demoIndex=0;demoPath=resamplePath(createDemoPath(track));
  mode='idle';paused=false;resumeDemoAfterStrike=false;running=0;halt=0;wait=0;waitingButton=0;shownWaiting=false;it=null;simTime=0;R.L=0;R.R=0;wheel={left:0,right:0};acc=0;trail=[];runDistance=0;lineSeconds=0;observedSeconds=0;collisionCount=0;wasContact=false;lcd=['',''];
  R.x=track.start.x;R.y=track.start.y;
  // IROH's legacy heading is measured from canvas negative Y; BITIRO track heading is measured from +X.
@@ -53,6 +82,7 @@ window.resetRobot=function(){
 window.onCodeStarted=function(){mode='code';paused=false;setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Ejecutando el programa didáctico del editor.';};
 window.onCodeStopped=function(){mode='idle';setState('DETENIDO');$app('pause').disabled=true;ui.feedback.textContent='El programa se detuvo por un error. Revisa el editor.';};
 function closestSegment(px,py){
+ if(track.capStyle==='butt')return {dist:BITIRO_LINE_GEOMETRY.distance(track.paths,px,py)};   // extremos planos: geometría compartida con el renderer
  let best=Infinity,closest=null;
  for(const line of track.paths){const pts=line.p;
   for(let i=1;i<pts.length;i++){
@@ -77,6 +107,52 @@ window.readLine=function(k){
 };
 // Cinemática centralizada en strike-physics.js, compartida con el modelo 3D.
 const MECH=window.IROH_MECHANICS, HIT=MECH.spec;
+/* Avisos de contacto (solo el TEXTO de pantalla: la física, los contadores y los registros no cambian).
+   noteContact() escribe el aviso y lo recuerda; settleContactNote() lo RETIRA cuando ya no es cierto:
+    · 'robot' / 'garra' (bloqueos): permanecen mientras el robot o la garra sigan bloqueados o tocando el obstáculo, aunque el programa no esté dando órdenes;
+    · 'actividad' («empuja…», «contactó…»): al terminar el barrido de la garra (o ACTIVITY_HOLD s tras el último empuje) se cambia por un resumen que dice a cuántos cm de su posición inicial quedó la caja tocada y pide comprobar el camino (MOVER no es DESPEJAR);
+      ese resumen no lo pisan los mensajes rutinarios de órdenes de la garra durante SUMMARY_HOLD s (commandNote).
+   Solo se reemplaza el texto exacto que este bloque escribió: un error, una calibración u otro mensaje posterior nunca se pisan. */
+const NOTE_HOLD=0.6;       // s simulados: espera antes de retirar un aviso de BLOQUEO (evita parpadeos)
+const ACTIVITY_HOLD=0.1;  // s: espera tras el último contacto de «empuja/desplaza» por traslación (durante un empuje hay contacto en cada tick)
+const SUMMARY_HOLD=3;     // s: el resumen «está a N cm de su posición inicial» no lo pisan los mensajes rutinarios de órdenes de la garra (las alertas de contacto sí)
+const TOUCH_MARGIN=1;   // cm: un bloqueo deja al robot en la última pose válida, a menos de un paso (≤ 0,7 cm a toda velocidad) del contacto; con menos separación el aviso sigue siendo cierto
+const stillTouching=()=>activeObstacles.some(ob=>MECH.bodyOverlapsBox(R,ob,HIT.bodyRadius+TOUCH_MARGIN)||MECH.barOverlapsBox(R,striker.angle,ob,HIT.halfWidth+TOUCH_MARGIN));
+function noteContact(kind,text,ids=[]){
+ ui.feedback.textContent=text;
+ const seen=contactNote&&contactNote.kind===kind&&contactNote.ids?contactNote.ids:new Set();
+ for(const id of ids)seen.add(id);
+ contactNote={kind,text,t:simTime,ids:seen};
+}
+const CONTACT_RELEASED='Contacto liberado. Comprueba que el camino esté despejado antes de avanzar.';
+/* Resumen al terminar un contacto de «empuja/desplaza». La cifra es la DISTANCIA ACTUAL de ESA caja a su posición inicial en el escenario (no un acumulado de varias cajas ni de este barrido);
+   solo se da cuando el aviso se refiere a UNA caja identificada (la que tocó la garra en este contacto). Con varias cajas tocadas, o si no se puede atribuir, el mensaje no lleva cifra. */
+function movedSummary(ids){
+ const tail=' Comprueba que el camino esté despejado.';
+ const list=[...ids].map(id=>{const ob=activeObstacles.find(o=>o.id===id),o0=scenarioList.find(o=>o.id===id);return ob&&o0?{prism:!!MECH.polyOf(ob),d:Math.hypot(ob.x-o0.x,ob.y-o0.y)}:null;}).filter(Boolean);
+ if(!ids.size||list.length!==ids.size)return CONTACT_RELEASED;                                              // no se puede atribuir: sin cifra
+ if(list.length>1)return 'Se movieron '+list.length+' objetos respecto de su posición inicial.'+tail;     // varias cajas: sin cifra
+ const o=list[0],who=activeObstacles.length>1?(o.prism?'El prisma que tocó la garra':'La caja que tocó la garra'):(o.prism?'El prisma':'La caja');
+ return who+' está a '+(o.d<1?'menos de 1':Math.round(o.d))+' cm de su posición inicial.'+tail;
+}
+/* Fin de una actividad de contacto («empuja/desplaza»): muestra a cuántos cm de su posición inicial quedó la caja tocada y pide comprobar el camino. */
+function endActivity(){
+ const n=contactNote;if(!n||n.kind!=='actividad'||ui.feedback.textContent!==n.text)return;
+ const text=movedSummary(n.ids);ui.feedback.textContent=text;contactNote={kind:'resumen',text,t:simTime,ids:new Set()};
+}
+function settleContactNote(){
+ const n=contactNote;if(!n)return;
+ if(ui.feedback.textContent!==n.text){contactNote=null;return;}   // otro mensaje ya lo reemplazó: no se toca
+ if(n.kind==='resumen')return;                                      // se queda hasta que otro mensaje lo reemplace
+ if(n.kind==='actividad'){if(simTime-n.t>=ACTIVITY_HOLD)endActivity();return;}
+ const vigente=n.kind==='robot'?wasContact||stillTouching():!!striker.blocked||stillTouching();
+ if(vigente){n.t=simTime;return;}
+ if(simTime-n.t<NOTE_HOLD)return;
+ ui.feedback.textContent=n.kind==='robot'?CONTACT_RELEASED:'La garra ya no toca el obstáculo.';
+ contactNote=null;
+}
+/* Mensaje rutinario de una orden de la garra: no pisa un resumen de desplazamiento recién mostrado. */
+function commandNote(text){if(contactNote&&contactNote.kind==='resumen'&&simTime-contactNote.t<SUMMARY_HOLD)return;ui.feedback.textContent=text;}
 const forwardVector=()=>[Math.sin(R.th),-Math.cos(R.th)];
 function nearbyObstacle(reach=200){
  const {f,r}=MECH.basis(R);let result=null,nearest=Infinity;
@@ -93,22 +169,18 @@ function nearbyObstacle(reach=200){
 }
 // Sonar didáctico: haz central y dos rayos ±6°, desde la cara del transductor.
 window.readSonarDistance=function(){
- // SONAR_FACE_FORWARD = DERIVED_FROM_PHYSICAL_MEASUREMENTS
- //   R -> front lower plate = 6.50 cm (PHYSICALLY_MEASURED)
- //   front plate -> TX/RX face = 0.90 cm (PHYSICALLY_MEASURED)
- //   therefore R -> TX/RX face = 7.40 cm
- const SONAR_FACE_FORWARD=7.40;
- const origin=MECH.worldPoint(R,SONAR_FACE_FORWARD,0);let nearest=200;
+ const hs=window.HEAD_SONAR?HEAD_SONAR.frame(R,MECH):null;const origin=hs?hs.origin:MECH.worldPoint(R,9.83,0);const yawRel=hs?hs.yawRel:0;const coneK=window.HEAD_SONAR?HEAD_SONAR.coneScale():1;let nearest=200;
  for(const offset of [-Math.PI/30,0,Math.PI/30]){
-  const direction={x:Math.sin(R.th+offset),y:-Math.cos(R.th+offset)};
+  const direction={x:Math.sin(R.th+yawRel+offset*coneK),y:-Math.cos(R.th+yawRel+offset*coneK)};
   for(const ob of activeObstacles){
-   if((ob.visualHeightCm??15.6)<HIT.sonarHeight)continue;
+   if(!(window.HEAD_SONAR&&HEAD_SONAR.heightModel)&&(ob.visualHeightCm??15.6)<HIT.sonarHeight)continue;
+   if(MECH.polyOf(ob)){const t=MECH.rayPoly(origin.x,origin.y,direction.x,direction.y,ob.poly);if(t<=200&&(!(window.HEAD_SONAR&&HEAD_SONAR.heightModel)||HEAD_SONAR.heightOk(ob.visualHeightCm??15.6,t)))nearest=Math.min(nearest,t);continue;}
    let lo=0,hi=200;
    for(const [p,d,min,max] of [[origin.x,direction.x,ob.x,ob.x+ob.width],[origin.y,direction.y,ob.y,ob.y+ob.height]]){
     if(Math.abs(d)<1e-9){if(p<min||p>max){hi=-1;break;}continue;}
     let a=(min-p)/d,b=(max-p)/d;if(a>b)[a,b]=[b,a];lo=Math.max(lo,a);hi=Math.min(hi,b);
    }
-   if(hi>=lo)nearest=Math.min(nearest,lo);
+   if(hi>=lo&&(!(window.HEAD_SONAR&&HEAD_SONAR.heightModel)||HEAD_SONAR.heightOk(ob.visualHeightCm??15.6,lo)))nearest=Math.min(nearest,lo);
   }
  }
  return Math.round(nearest);
@@ -142,6 +214,7 @@ window.BITIRO_MANUAL=(()=>{
   begin(){state.dragging=true;},end,place,bounds
  });
 })();
+const hitsPrism=ids=>ids.some(id=>MECH.polyOf(activeObstacles.find(o=>o.id===id)||{}));
 function moveRodTowards(desired,dt){
  // `desired` y striker.angle están en GRADOS físicos (−75…+75, 0 = centro).
  if(Math.abs(desired-striker.angle)<1e-6)return;
@@ -151,17 +224,20 @@ function moveRodTowards(desired,dt){
  const next=striker.angle+Math.sign(step)*Math.min(Math.abs(step),Math.abs(desired-striker.angle));
  const result=MECH.advance(R,striker.angle,next,activeObstacles,track);
  striker.angle=result.angle;
+ const movedFrom=new Map();
  for(const [id,pos] of result.changes){
   const ob=activeObstacles.find(item=>item.id===id);
-  if(ob){ob.x=pos.x;ob.y=pos.y;}
+  if(ob){movedFrom.set(id,{x:ob.x,y:ob.y});ob.x=pos.x;ob.y=pos.y;if(pos.poly)ob.poly=pos.poly;}
  }
  // hitIds solo CUENTA cajas desplazadas por orden; nunca impide un contacto posterior (la física no lo consulta).
+ for(const id of result.hits){const ob=activeObstacles.find(item=>item.id===id);logPhysics('sweep',id,'servo',movedFrom.get(id),ob&&{x:ob.x,y:ob.y});}
  for(const id of result.hits)if(!striker.hitIds.has(id)){
   movedCount++;striker.hitIds.add(id);
  }
- if(result.hits.length)ui.feedback.textContent='Garra: contactó una caja y la está desplazando.';
- if(result.blocked){striker.blocked=result.blocked;ui.feedback.textContent=result.blocked;}
- else striker.blocked=null;
+ if(result.hits.length)noteContact('actividad',hitsPrism(result.hits)?'Garra: contactó un prisma triangular y lo está desplazando.':'Garra: contactó una caja y la está desplazando.',result.hits);
+
+ if(result.blocked){logPhysics('contact',null,'servo');striker.blocked=result.blocked;noteContact('garra',result.blocked);}
+ else{striker.blocked=null;if(Math.abs(striker.angle-desired)<1e-6)endActivity();}   // la garra llegó a su posición: resumen de lo que desplazó
 }
 // Posición pedagógica del servo (−1 izquierda, 0 centro, +1 derecha DEL ROBOT) → ángulo físico → objetivo del servo.
 // Devuelve false (sin mover nada) si el valor no es exactamente −1, 0 o 1.
@@ -170,7 +246,7 @@ function setStrikerPosition(cmd){
  if(striker.target===target&&striker.pulse===0)return true;
  if(target!==0)striker.hitIds.clear();   // nueva orden: se puede contar un nuevo golpe (la física no cambia)
  striker.target=target;striker.pulse=0;striker.returning=false;
- ui.feedback.textContent=target===0?'Garra: centro.':'Garra: '+(target<0?'izquierda':'derecha')+'. Solo mueve objetos por contacto.';
+ commandNote(target===0?'Garra: centro.':'Garra: '+(target<0?'izquierda':'derecha')+'. Solo mueve objetos por contacto.');
  return true;
 }
 window.setStrikerPosition=setStrikerPosition;
@@ -232,6 +308,7 @@ function demoDrive(){
 }
 function update(dt){
  if(paused)return;
+ if(window.HEAD_SONAR)HEAD_SONAR.step(dt);
  previousPose={x:R.x,y:R.y,th:R.th,angle:striker.angle};
  // La garra gira de forma continua entre −75° (izquierda), 0° (centro) y +75° (derecha). La orden del alumno (o el
  // control manual) fija la posición objetivo; solo la demostración guiada usa un ciclo con retorno automático.
@@ -247,6 +324,7 @@ function update(dt){
   // En modo código, moverServoGolpe() también debe mover el servo de verdad.
   moveRodTowards(striker.target,dt);
  }
+ settleContactNote();   // retira los avisos de contacto que ya no son ciertos (también con el programa terminado)
  if(resumeDemoAfterStrike&&mode==='idle'&&movedCount>0&&Math.abs(striker.angle)<.5&&striker.pulse===0&&
     !nearbyObstacle(HIT.pivotForward+HIT.length+4)){
   resumeDemoAfterStrike=false;mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;
@@ -265,7 +343,7 @@ function update(dt){
  // No es una orden de motor; detenerse() NO pasa por aquí (mode sigue en 'code') y frena con la rampa normal.
  if(mode==='idle'){wheel.left=wheel.right=0;}
  else{wheel.left=approach(wheel.left,R.L);wheel.right=approach(wheel.right,R.R);}
- const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=10;   // base = separación centro-centro de ruedas, 10,0 cm (PHYSICALLY_MEASURED, PHYSICAL-GEOMETRY-2)
+ const max=23, vL=wheel.left/100*max,vR=wheel.right/100*max,base=12;
  const before={x:R.x,y:R.y};
  const v=(vL+vR)/2,omega=(vL-vR)/base;
  // Subpasos de traslación/rotación: no permitir atravesar por tunnelling en
@@ -279,14 +357,16 @@ function update(dt){
   // Física compartida (strike-physics.js): la garra empuja por contacto una caja movible si hay espacio; si no, el robot se queda
   // en la última pose válida. El cuerpo no empuja cajas. Los cambios solo afectan al MUNDO ACTIVO.
   const step=MECH.advanceRobotPose({x:R.x,y:R.y,th:R.th},pose,striker.angle,activeObstacles,track);
-  if(step.blocked){blocked=true;blockMessage=step.blocked.message;R.L=R.R=0;wheel.left=wheel.right=0;break;}
-  for(const [id,pos] of step.changes){const ob=activeObstacles.find(item=>item.id===id);if(ob){ob.x=pos.x;ob.y=pos.y;}}
+  if(step.blocked){logPhysics('contact',null,step.blocked.reason);blocked=true;blockMessage=step.blocked.message;R.L=R.R=0;wheel.left=wheel.right=0;break;}
+  const pushedFrom=new Map();
+  for(const [id,pos] of step.changes){const ob=activeObstacles.find(item=>item.id===id);if(ob){pushedFrom.set(id,{x:ob.x,y:ob.y});ob.x=pos.x;ob.y=pos.y;if(pos.poly)ob.poly=pos.poly;}}
+  for(const id of step.hits){const ob=activeObstacles.find(item=>item.id===id);logPhysics('push',id,'translation',pushedFrom.get(id),ob&&{x:ob.x,y:ob.y});}
   for(const id of step.hits)if(!striker.hitIds.has(id)){movedCount++;striker.hitIds.add(id);}
-  if(step.hits.length)ui.feedback.textContent='Garra: empuja una caja por contacto.';
+  if(step.hits.length)noteContact('actividad',hitsPrism(step.hits)?'Garra: empuja un prisma triangular por contacto.':'Garra: empuja una caja por contacto.',step.hits);
   R.x=step.pose.x;R.y=step.pose.y;R.th=step.pose.th;
  }
  if(blocked){
-  ui.feedback.textContent=blockMessage+' Cambia la trayectoria de tu programa o mueve la garra para apartarlo.';
+  noteContact('robot',blockMessage+' Cambia la trayectoria de tu programa o mueve la garra para apartarlo.');
   if(mode==='demo'){mode='idle';resumeDemoAfterStrike=true;setState('OBSTÁCULO');$app('pause').disabled=true;}
  }
  if(blocked&&!wasContact)collisionCount++;wasContact=blocked;
@@ -294,13 +374,14 @@ function update(dt){
  if(traveled>.0001){observedSeconds+=dt;if([0,1,2].some(k=>LINE_SENSOR.detected(readLine(k),k)))lineSeconds+=dt;}
  if(!trail.length||Math.hypot(R.x-trail[trail.length-1].x,R.y-trail[trail.length-1].y)>.8){trail.push({x:R.x,y:R.y});if(trail.length>1800)trail.shift();}
  simTime+=dt;
+ if(++traceStep>=TRACE_EVERY&&traceSamples.length<TRACE_MAX){traceStep=0;traceSamples.push({t:simTime,x:R.x,y:R.y,h:R.th-Math.PI/2,s:[0,1,2].map(k=>+LINE_SENSOR.detected(readLine(k),k)),r:sensorReadMask,a:Math.round(striker.angle),l:R.L,m:R.R});sensorReadMask=0;}
  if(R.x<-16||R.x>track.w+16||R.y<-16||R.y>track.h+16){mode='idle';running=0;R.L=R.R=0;setState('FUERA DE PISTA');ui.feedback.textContent='IROH salió del área de práctica. Pulsa Reiniciar.';$app('pause').disabled=true;}
 }
 function render(){
  // A 3D scene rendered by a local software rasterizer, not WebGL/Three.js.
  const a=paused||mode==='idle'?1:Math.min(1,acc/FIXED_DT),p=previousPose||{...R,angle:striker.angle};
  const robot={x:p.x+(R.x-p.x)*a,y:p.y+(R.y-p.y)*a,heading:p.th+(R.th-p.th)*a-Math.PI/2,lineCenter:readLine(1),lineActive:window.BITIRO_MANUAL.calibration?[false,false,false]:[0,1,2].map(k=>LINE_SENSOR.detected(readLine(k),k)),   // en calibración el LED de detección no revela lecturas
-  strikerAngle:p.angle+(striker.angle-p.angle)*a,trail:$app('showTrail').checked?trail:[]};
+  strikerAngle:p.angle+(striker.angle-p.angle)*a,headYaw:window.HEAD_SONAR?HEAD_SONAR.frame(R,MECH).yawRel:0,trail:$app('showTrail').checked?trail:[]};
  renderScene3D(worldCv,sceneTrack,robot,activeObstacles,camera);
 }
 function draw(){if(sceneTrack)render();}
@@ -326,7 +407,7 @@ function cameraUI(name){
  $app('viewLabel').textContent=({top:'VISTA SUPERIOR',perspective:'PERSPECTIVA LIBRE',follow:'SEGUIR IROH',robot:'DETALLE DEL ROBOT'})[name];
  document.querySelectorAll('.cam').forEach(b=>{const yes=b.dataset.view===name;b.classList.toggle('active',yes);b.setAttribute('aria-pressed',String(yes));});
  if(name==='top'){camera.elevation=Math.PI/2-.02;camera.azimuth=Math.PI/2;camera.distance=2.3;camera.follow=false;}
- if(name==='perspective'){camera.elevation=.94;camera.azimuth=.10;camera.distance=track.h>165?1.90:1.80;camera.follow=false;}
+ if(name==='perspective'){camera.elevation=.94;camera.azimuth=perspectiveAzimuth();camera.distance=track.h>165?1.90:1.80;camera.follow=false;}
  if(name==='follow'){camera.elevation=.75;camera.azimuth=-1.1;camera.distance=.8;camera.follow=true;}
  if(name==='robot'){camera.elevation=.45;camera.azimuth=-1.12;camera.distance=.37;camera.follow=true;}
  updateZoom();
@@ -334,7 +415,8 @@ function cameraUI(name){
 document.querySelectorAll('.cam').forEach(b=>b.addEventListener('click',()=>cameraUI(b.dataset.view)));
 ui.track.addEventListener('change',e=>changeTrack(e.target.value));
 $app('quality').addEventListener('change',e=>{window.BITIRO_RENDER_QUALITY=e.target.value;draw();});
-$app('demo')?.addEventListener('click',()=>{const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
+$app('demo')?.addEventListener('click',()=>{
+ const inputs=[...ir],pressed=btn;window.resetRobot();inputs.forEach((v,k)=>setIR(k,v));setButton(pressed);demoPath=resamplePath(createDemoPath(track));demoIndex=0;
  // Solo la demo visual: con cajas en el escenario, aparta la garra (−1) antes de acercarse; sin cajas no hay nada que preparar.
  if(activeObstacles.length)setStrikerPosition(-1);
  mode='demo';setState('EJECUTANDO');$app('pause').disabled=false;ui.feedback.textContent='Demostración guiada por la ruta: no usa los sensores ni evalúa tu código. Prueba Ejecutar código para comprobar tu algoritmo.';});
@@ -346,7 +428,8 @@ for(const [id,cmd] of [['clawLeft',-1],['clawCenter',0],['clawRight',1]])$app(id
  if(mode==='code'){ui.feedback.textContent='En modo código, usa moverServoGolpe() en tu programa.';return;}
  if(resumeDemoAfterStrike&&cmd!==0)demoStrike(cmd);else setStrikerPosition(cmd);
 });
-$app('pulsador').addEventListener('click',()=>setButton(!btn));
+window.pressTouchSensor=v=>{const next=v?1:0;if(next===btn)return;setButton(next);logPhysics('touch',null,next?'press':'release');};   // evento físico independiente (observable por el evaluador)
+$app('pulsador').addEventListener('click',()=>window.pressTouchSensor(!btn));
 for(const k of [0,1])$app('ir'+k).addEventListener('click',()=>{setIR(k,!ir[k]);if(mode==='demo'){demoPath=resamplePath(createDemoPath(track));demoIndex=Math.min(demoIndex,demoPath.length-2);}});
 const codePanel=$app('codePanel');
 const codeKey=id=>'bitiro:standalone:code:'+id;

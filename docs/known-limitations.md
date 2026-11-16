@@ -1,5 +1,7 @@
 # Limitaciones conocidas
 
+> **Aviso (SIM-NOFIRVI-1):** las referencias a wheelbase de 10 cm, sonar a 7,40 cm y modelo IROH 3D describen el experimento `experiment/measured-geometry-iroh3d`, no el runtime oficial (ruedas 12 cm, sonar 9,83 cm).
+
 Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepancias que necesitan medición física antes de modificarse.
 
 ## Prioridades actuales (tras SESSION-VALIDATION-2)
@@ -7,7 +9,7 @@ Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepa
 | Prioridad | Elemento |
 |---|---|
 | **P0** | ninguno |
-| **P1** | HEAD-SERVO (cabeza yaw/pitch + sonar orientable); elementos de línea/intersección temporales para S03/S06 |
+| **P1** | HEAD-SERVO (cabeza yaw/pitch + sonar orientable; *actualización: yaw y sonar orientable ya implementados con HEAD-CANVAS, pendiente solo el pitch*); elementos de línea/intersección temporales para S03/S06 |
 | **P2** | diferencias de velocidad, sensores y sonar entre standalone y Lab; acoplamiento garra-sonar; IR/Pulsador sin rebote; `millis()` |
 | **P3** | `const`; aliases `*Robot`; starts prácticos; documentación y medición física |
 
@@ -15,9 +17,14 @@ Este documento diferencia limitaciones deliberadas, trabajo pendiente y discrepa
 
 ## Cabeza y sonar orientable
 
-`inicializarCabeza()`, `moverServoYaw()`, `moverServoPitch()` y `apagarCabeza()` son reconocidas pero no tienen efecto físico. El sonar permanece fijo al eje frontal.
+Estado en el runtime oficial (HEAD-CANVAS, SIM-NOFIRVI-1):
 
-Impacto principal: S07 no puede reproducirse completa y S08 necesita una estrategia alternativa girando el cuerpo.
+- **Yaw virtual: implementado.** `inicializarCabeza()`, `moverServoYaw(angulo)` y `apagarCabeza()` tienen efecto en el modelo.
+- **Sonar orientable: operativo.** `leerDistanciaSonar()` mide en la dirección de la cabeza. Velocidad, espera, alcance, alturas y zona muerta de la cabeza son **provisionales** (modelo virtual, sin medición del hardware).
+- **Pitch: pendiente.** `moverServoPitch()` se reconoce pero no tiene modelo físico.
+- S07 y S08 no se han revalidado de forma integral sobre este runtime.
+
+**Limitación histórica (anterior a HEAD-CANVAS, conservada como registro):** las funciones de cabeza eran reconocidas pero no tenían efecto físico y el sonar permanecía fijo al eje frontal; S07 no podía reproducirse completa y S08 necesitaba girar el cuerpo. Esto ya **no** describe el runtime oficial, salvo el pitch.
 
 ## Sonar
 

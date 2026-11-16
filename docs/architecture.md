@@ -1,5 +1,7 @@
 # Arquitectura actual de BITIRO Simulador
 
+> **Aviso (SIM-NOFIRVI-1):** las referencias a wheelbase de 10 cm, sonar a 7,40 cm y modelo IROH 3D describen el experimento `experiment/measured-geometry-iroh3d`, no el runtime oficial (ruedas 12 cm, sonar 9,83 cm).
+
 ## Vista general
 
 BITIRO Simulador es una aplicación web estática. No hay backend, base de datos ni servidor de ejecución: el programa del estudiante, la física y el renderer corren en el navegador.

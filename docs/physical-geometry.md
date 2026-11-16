@@ -1,5 +1,7 @@
 # Geometría física funcional (PHYSICAL-GEOMETRY-2)
 
+> **Experimental, no activo en el runtime oficial (SIM-NOFIRVI-1).** Describe la geometría medida de la rama `experiment/measured-geometry-iroh3d`; el runtime oficial usa ruedas a 12 cm y sonar a 9,83 cm.
+
 Este documento registra qué parte de la geometría **funcional** del simulador procede de medidas físicas del IROH entregadas por el usuario, qué es derivado y qué sigue siendo supuesto. **No afirma que el robot esté completamente calibrado.**
 
 `R` = centro cinemático del eje de ruedas. Todas las distancias longitudinales se miden desde `R`, positivas hacia delante.
