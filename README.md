@@ -8,13 +8,13 @@ Simulador web gratuito para programar y experimentar con el robot educativo **IR
 
 ## Estado de versiones (léelo primero)
 
-Con la integración **SIM-NOFIRVI-1** (en revisión mediante Pull Request), `main` pasa a ser la **única fuente oficial** del simulador publicado. **La migración de Cloudflare Pages aún no ocurrió:** hasta que se ejecute, Pages sigue publicando la rama `deploy/cloudflare-pages` (candidato `9c0b492`, cuyo contenido coincide byte a byte con el artefacto que genera este `main`). Conviene distinguir cinco cosas:
+Con la integración **SIM-NOFIRVI-1** (Pull Request #6, fusionado en `main` el 2026-11-16), `main` es la **única fuente oficial** del simulador publicado y la **rama de producción** de Cloudflare Pages. La rama `deploy/cloudflare-pages` (candidato `9c0b492`) se conserva intacta como respaldo histórico y ya no es la fuente de producción. Conviene distinguir cinco cosas:
 
 | Concepto | Qué es | Referencia |
 |---|---|---|
 | **Código fuente oficial** | La rama `main`: runtime de 32 archivos, pruebas, documentación y `scripts/build-pages.mjs` | [`docs/current-baseline.md`](docs/current-baseline.md) |
 | **Build estático público** | `dist/`, generado con `node scripts/build-pages.mjs`: exactamente 35 archivos verificados por SHA-256 | [`scripts/pages-manifest.json`](scripts/pages-manifest.json), [`docs/release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md) |
-| **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama. Rama de producción actual: `deploy/cloudflare-pages`; el cambio a `main` está **pendiente** | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
+| **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama. Rama de producción: `main` (build `node scripts/build-pages.mjs`, salida `dist`) | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
 | **Experimentos** | Geometría IROH medida (rueda 10 cm, sonar 7,40 cm) y modelo visual IROH 3D: **no activos en producción** | rama `experiment/measured-geometry-iroh3d` ([`docs/experiment-measured-geometry-iroh3d.md`](docs/experiment-measured-geometry-iroh3d.md)) |
 | **Historial de versiones** | Etiquetas `v0.x`, releases `release/*` y registros `docs/release-*.md`; no se reescriben | [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md) |
 
@@ -321,7 +321,7 @@ Modo calibración y modelo de sensor simulado: [`docs/calibration-mode.md`](docs
 - [Baseline actual](docs/current-baseline.md)
 - [Versionado y releases](docs/versioning-and-releases.md)
 - [Release SIM-UI-RELEASE-4 (histórica)](docs/release-sim-ui-release-4.md)
-- Release SIM-NOFIRVI-1 (candidato a producción oficial; migración de Pages pendiente): [`release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md); procedimiento en [`deployment-and-rollback.md`](docs/deployment-and-rollback.md)
+- Release SIM-NOFIRVI-1 (producción oficial desde `main`; migración de Pages completada el 2026-11-16): [`release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md); procedimiento en [`deployment-and-rollback.md`](docs/deployment-and-rollback.md)
 - Release SIM-UX-V1 (histórica; incluía FIRVI): [`release-sim-ux-v1.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/release/sim-ux-v1/docs/release-sim-ux-v1.md) (en `release/sim-ux-v1`)
 - Release HEAD-CANVAS (histórica; su cabeza virtual forma parte de SIM-NOFIRVI-1): [`release-sim-head-canvas.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-head-canvas.md) y SIM-NNJ-101d19f: [`release-sim-nnj-101d19f.md`](https://github.com/nulljinx/BITIRO-Simulador/blob/563aa923fb9622214eaec9775f6e27f4a514a617/docs/release-sim-nnj-101d19f.md) (en `feature/head-canvas`)
 - [Limitaciones conocidas](docs/known-limitations.md)

@@ -1,6 +1,6 @@
 # SIM-NOFIRVI-1
 
-Registro de la integración que convierte a `main` en la única fuente oficial del simulador publicado. **Estado: integración en revisión (PR pendiente); la migración de Cloudflare Pages no ha ocurrido** (Pages sigue publicando `deploy/cloudflare-pages` en `9c0b492`). **Esta página es un registro nuevo; no modifica los registros históricos** (SIM-UI-RELEASE-4, SIM-NNJ, HEAD-CANVAS, SIM-UX-V1).
+Registro de la integración que convierte a `main` en la única fuente oficial del simulador publicado. **Estado: integrado en `main` (PR #6) y publicado por Cloudflare Pages desde `main` el 2026-11-16**; el detalle está en «Cierre de la integración y migración de Pages». **Esta página es un registro nuevo; no modifica los registros históricos** (SIM-UI-RELEASE-4, SIM-NNJ, HEAD-CANVAS, SIM-UX-V1).
 
 ## Identidad
 
@@ -77,6 +77,38 @@ Las suites del runtime oficial se tomaron de `e34712d` (la línea HEAD-CANVAS an
 **C. Añadidas respecto de `main`** (cubren HEAD-CANVAS y avisos de contacto): `head-sonar.cjs`, `head-ui.mjs`, `head-compat-ui.mjs`, `contact-messages.cjs`, `head/` (matriz y arranque real de S08) y `examples/`.
 
 Resultados de la verificación en el informe de la Pull Request.
+
+## Cierre de la integración y migración de Pages
+
+Registro posterior a la fusión. Los datos de esta sección proceden de GitHub (PR, run de CI, ruleset) y de las comprobaciones HTTPS y locales descritas más abajo; los valores del panel de Cloudflare (ajustes del proyecto, log de build) fueron confirmados en el panel por el responsable del proyecto y no pueden comprobarse desde este repositorio.
+
+| Campo | Valor |
+|---|---|
+| Fecha | 2026-11-16 |
+| Pull Request | #6 (`integration/main-sim-nofirvi` → `main`), fusionado con **Merge Commit**; conserva los 8 commits de la rama (`1384e75` … `6ba57f3`) |
+| Merge commit en `main` | `3c80a3370d2dfda23ed23f90a464ccaaeaacb120` (padres `6f4d6a7` y `6ba57f3`) |
+| CI del merge | run `43794749100` (`ci`, evento `push`): success; checks `pages-build`, `node-tests` y `browser-tests` en success |
+| Protección de `main` | ruleset `protect-main` (27346085), `active`: `deletion`, `non_fast_forward`, `pull_request` y `required_status_checks` (`pages-build` y `node-tests`, política estricta); sin bypass actors. Es una protección de GitHub independiente de los ajustes de Cloudflare |
+| Deployment activo | `449a5877-ad96-4598-a493-22cfd205eb57` (rama `main`, commit `3c80a33`, estado success) |
+| Deployment de respaldo (rollback) | `47b60699-bb45-4ea1-b1f6-852d87e8f3da` (commit `9c0b4922ffab228d5bf9af75abc51cf94c194264`, rama `deploy/cloudflare-pages`) |
+| Rama de respaldo | `deploy/cloudflare-pages` permanece en `9c0b4922ffab228d5bf9af75abc51cf94c194264`, sin tocar |
+| Manifiesto | `scripts/pages-manifest.json` sin cambios: SHA-256 `cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24` (igual que `MANIFEST_SHA256` de `ci.yml`); `approvedCommit` y `approvedTree` históricos intactos |
+
+### Configuración de Cloudflare Pages tras la migración
+
+Producción desde `main`; build command `node scripts/build-pages.mjs`; build output `dist`; root directory vacío; build system v3; `Enable automatic production branch deployments`: Enabled; `Preview branch`: None; Deploy Hooks: ninguno. Detalle en [`deployment-and-rollback.md`](deployment-and-rollback.md).
+
+### Resultados de las pruebas
+
+| Prueba | Resultado |
+|---|---|
+| Log de build de Cloudflare | confirma la ejecución de `node scripts/build-pages.mjs` y la verificación de 35 archivos (confirmado por el responsable en el panel) |
+| Reproducibilidad con Node 22.23.4 y Node 24.22.1 | ambos producen los mismos 35 archivos |
+| HTTPS en `https://simulador.nulljinx.com` (script de `deployment-and-rollback.md`) | **33/33** archivos con el SHA-256 del manifiesto; ruta inexistente → **404** con el SHA-256 de `404.html`; presentes `Content-Security-Policy`, `X-Content-Type-Options` y `Strict-Transport-Security` |
+| Redirecciones y dominio | `/` responde 200; `http://` → 308 a `https://`; `/index.html` → 308 a `/`; `bitiro-simulador.pages.dev` → 302 a `simulador.nulljinx.com`; `/_headers` → 404 |
+| Regresión funcional | sin regresión evidente en una inspección por HTTPS (la página se sirve con los hashes aprobados). **No** se repitió una evaluación curricular ni una prueba interactiva en navegador sobre este despliegue |
+
+Limitaciones: el rollback al deployment `47b60699` queda registrado como **disponible pero no ejecutado**; solo se registra que ese deployment está identificado como destino. No se ha probado la validez actual de ese deployment desde fuera del panel (su URL de deployment está protegida por Access).
 
 ## Excepción heredada de producción: `renderer3d.js` línea 280
 

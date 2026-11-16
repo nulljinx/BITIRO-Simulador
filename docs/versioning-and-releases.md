@@ -1,13 +1,13 @@
 # Versionado y releases
 
-## Política vigente propuesta (SIM-NOFIRVI-1)
+## Política vigente (SIM-NOFIRVI-1)
 
-> **Estado:** propuesta incluida en la Pull Request de integración; no entra en vigor hasta que se fusione y se autorice cada acción posterior. **La migración de Cloudflare Pages no ha ocurrido:** hoy Pages publica la rama `deploy/cloudflare-pages` (candidato `9c0b492`), y el cambio de la rama de producción a `main` sigue **pendiente** (ver [`deployment-and-rollback.md`](deployment-and-rollback.md)).
+> **Estado (2026-11-16):** el PR #6 se fusionó en `main` (merge commit `3c80a33`). `main` es la fuente oficial; Cloudflare Pages publica desde `main` (deployment `449a5877-ad96-4598-a493-22cfd205eb57`; respaldo `47b60699-bb45-4ea1-b1f6-852d87e8f3da`, disponible y no ejecutado). El CI de GitHub Actions está operativo (run `43794749100` en success sobre el merge) y el ruleset `protect-main` está activo. Ver [`deployment-and-rollback.md`](deployment-and-rollback.md) y [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md). Las secciones posteriores a «Política histórica» son anteriores a este estado.
 
 - `main` es la fuente oficial del simulador publicado; el artefacto público (35 archivos con SHA-256 fijos en `scripts/pages-manifest.json`) se genera con `node scripts/build-pages.mjs` y debe poder regenerarse desde cualquier commit de `main`.
 - El deployment se identifica por el manifiesto de 35 hashes, no por el nombre de una rama.
 - Las líneas experimentales (`experiment/*`) no se despliegan; la geometría medida y el modelo IROH 3D viven en `experiment/measured-geometry-iroh3d`.
-- Etiquetas de despliegue futuras, protección de `main` y CI son propuestas separadas que requieren autorización.
+- La protección de `main` (`protect-main`) y el CI (`pages-build`, `node-tests`, `browser-tests`) están operativos. Las etiquetas de despliegue para este modelo **siguen siendo una decisión pendiente** que requiere autorización.
 - Registros: [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`current-baseline.md`](current-baseline.md).
 
 ## Política histórica (hasta SIM-UX-V1; conservada sin cambios)
@@ -109,6 +109,8 @@ Antes de aprobar un merge o una release:
 | Borrado de ramas/tags | Responsable del proyecto | Lista revisada; las ramas con commits únicos se archivan con tag antes. |
 
 ## 9. Política mínima propuesta para `main`
+
+> **Nota (2026-11-16):** este apartado es la propuesta histórica y se conserva sin cambios; hoy la protección vigente es el ruleset `protect-main` descrito arriba. Lo que sigue **no** describe el estado actual.
 
 Pendiente de aprobación; **no aplicada**.
 
