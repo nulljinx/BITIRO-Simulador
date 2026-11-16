@@ -28,7 +28,7 @@ test('Starters: solo estructura (setup/loop e inicializaciones); sin lógica de 
   assert.deepEqual(code,['void setup() {',...inits.map(n=>'  '+n+'();'),'}','void loop() {','}'],id);
   assert.ok(inits.length>=2&&inits.length<=3&&inits.every(n=>['inicializarMovimiento','inicializarSensores','inicializarPantalla'].includes(n)),id);
   // los comentarios solo pueden ser el encabezado con el título de la pista y las dos líneas neutrales del Lab
-  const cs=commentLines(src);assert.equal(cs.length,3,id);assert.match(cs[0],/^\/\/ BITIRO Simulador · S0[1-8] · /);
+  const cs=commentLines(src);assert.equal(cs.length,3,id);assert.match(cs[0],/^\/\/ IROH Simulator · S0[1-8] · /);
   assert.deepEqual(cs.slice(1),['// Divide el desafío en tareas pequeñas.','// Escribe aquí tu programa.']);
   assert.ok(src.endsWith('}\n'));assert.ok(src.includes('#include <KnightRoboticsLibs_Iroh.h>'));
  }
@@ -144,5 +144,48 @@ test('botonInicio() espera de verdad al Pulsador (los ejemplos con botonInicio y
  const h=load();h.js("changeTrack('oval')");h.program(h.js('EJ[0]'));h.tick(120);
  assert.equal(h.js('waitingButton'),1);assert.equal(h.js('R.L')+h.js('R.R'),0,'EJ[0] espera el Pulsador antes de mover el robot');
  h.el('pulsador').events.click();h.tick(60);assert.ok(h.js('runDistance')>0.5,'al presionar el Pulsador comienza el recorrido');
+});
+/* ───────── SIM-IROH-UI-1 · compatibilidad del código guardado con el cambio de encabezado ───────── */
+test('SIM-IROH-UI-1: el starter nuevo dice «IROH Simulator» y el anterior (legacyStarter) «BITIRO Simulador»; solo difiere el encabezado',()=>{
+ for(const id of TRACKS){
+  const nuevo=S.starter(id),viejo=S.legacyStarter(id);
+  assert.ok(nuevo.startsWith('// IROH Simulator · '),id);assert.ok(viejo.startsWith('// BITIRO Simulador · '),id);
+  assert.equal(nuevo.replace('// IROH Simulator · ',''),viejo.replace('// BITIRO Simulador · ',''),id+': el resto del starter no cambia');
+  assert.notEqual(nuevo,viejo);
+ }
+ for(const id of ['oval','ocho','nope'])assert.equal(S.legacyStarter(id),null,id);
+});
+test('SIM-IROH-UI-1: un starter ANTIGUO guardado se conserva carácter por carácter (resolve no reescribe nada)',()=>{
+ for(const id of TRACKS){
+  const viejo=S.legacyStarter(id);
+  assert.strictEqual(S.resolve(id,viejo,'EJ0'),viejo,id);
+  assert.ok(!S.isLegacyExample(viejo),id+': no es uno de los 5 ejemplos legacy, no debe migrarse');
+  for(const v of [viejo+'// nota\n',viejo.replace('avanzar','x'),viejo.trimEnd(),viejo.replace('\n','\r\n')])assert.strictEqual(S.resolve(id,v,'EJ0'),v,id);
+ }
+ // los guardados de OTRA pista tampoco se tocan
+ assert.strictEqual(S.resolve('s03',S.legacyStarter('s02'),'EJ0'),S.legacyStarter('s02'));
+});
+test('SIM-IROH-UI-1: isModified reconoce el starter anterior como NO modificado y detecta una diferencia de un carácter',()=>{
+ for(const id of TRACKS){
+  assert.equal(S.isModified(id,S.starter(id)),false,id+' nuevo');
+  assert.equal(S.isModified(id,S.legacyStarter(id)),false,id+' antiguo');
+  assert.equal(S.isModified(id,S.starter(id)+' '),true,id+' nuevo +1');
+  assert.equal(S.isModified(id,S.legacyStarter(id)+' '),true,id+' antiguo +1');
+  assert.equal(S.isModified(id,S.legacyStarter(id).replace('Simulador','Simulado')),true,id+' antiguo con una letra menos');
+  assert.equal(S.isModified(id,S.starter(id).slice(1)),true,id);
+  assert.equal(S.isModified(id,''),true,id+' vacío');
+ }
+ for(const id of ['oval','ocho','nope'])assert.equal(S.isModified(id,'cualquier cosa'),false,id+': sin starter nunca «modificado»');
+ assert.equal(typeof S.isLegacyStarter,'function');
+ for(const id of TRACKS){assert.equal(S.isLegacyStarter(S.legacyStarter(id),id),true,id);assert.equal(S.isLegacyStarter(S.starter(id),id),false,id);assert.equal(S.isLegacyStarter(S.legacyStarter(id)+'x',id),false,id);}
+});
+test('SIM-IROH-UI-1: los 5 ejemplos LEGACY siguen migrando a starter(id) (nuevo) y el código propio (con y sin nota) se conserva',()=>{
+ for(const id of TRACKS){
+  for(const ex of S.legacyExamples)assert.strictEqual(S.resolve(id,ex,'EJ0'),S.starter(id),id);
+  for(const saved of [null,undefined,''])assert.strictEqual(S.resolve(id,saved,'EJ0'),S.starter(id),id);
+  const propio='void setup() {\n  inicializarMovimiento();\n}\nvoid loop() {\n  avanzar(30);\n}\n';
+  assert.strictEqual(S.resolve(id,propio,'EJ0'),propio,id);assert.strictEqual(S.resolve(id,propio+'// nota\n','EJ0'),propio+'// nota\n',id);
+ }
+ for(const id of ['oval','ocho'])assert.strictEqual(S.resolve(id,S.legacyStarter('s01'),'EJ0'),S.legacyStarter('s01'),id+': práctica libre no se migra');
 });
 console.log(`\n${checks} comprobaciones PILOT-5 (starters, migración y entradas) superadas.`);
