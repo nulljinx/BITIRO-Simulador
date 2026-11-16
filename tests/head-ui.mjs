@@ -103,14 +103,18 @@ try {
   // ───── U3 · velocidades ─────
   {
     const rows = [];
+    const U3_STEPS = [24, 48, 108];   // 0,2 s, 0,4 s y 0,9 s simulados a FIXED_DT = 1/120
     for (const sp of ['0.5', '1', '2', '4']) {
       const page = await open(URL_APP); await track(page, 's08'); await boxes(page, [0, 1, 2, 3]); await loadProg(page, SWEEP);
-      await page.evaluate(START + `window.__rec={};const u=update;update=function(dt){u(dt);const r=window.__rec;if(r.t0===undefined&&HEAD_SONAR.state.target===180){r.t0=simTime;r.w0=performance.now();}if(r.t0!==undefined){const e=simTime-r.t0;if(e>=0.2&&r.a02===undefined)r.a02=HEAD_SONAR.state.angle;if(e>=0.4&&r.a04===undefined)r.a04=HEAD_SONAR.state.angle;if(e>=0.9&&r.a09===undefined){r.a09=HEAD_SONAR.state.angle;r.wall=performance.now();}}};document.getElementById('speed').value='${sp}';document.getElementById('speed').dispatchEvent(new Event('change'));`);
+      // Contador ENTERO de actualizaciones físicas (cada update(FIXED_DT) que avanza simTime), no restas de simTime en coma flotante:
+      // n=0 es la actualización que emite moverServoYaw(180) (HEAD_SONAR.step ya corrió antes en ella, así que el ángulo aún es el inicial);
+      // el ángulo tras n actualizaciones más es 90 + 1,5·n (180 °/s · 1/120 s) hasta saturar en 180.
+      await page.evaluate(START + `window.__rec={a:{},n:0};const u=update;update=function(dt){const s0=simTime;u(dt);if(simTime===s0)return;const r=window.__rec;if(r.t0===undefined){if(HEAD_SONAR.state.target!==180)return;r.t0=simTime;r.a00=HEAD_SONAR.state.angle;r.w0=performance.now();r.n=0;}else r.n++;if(r.n===${U3_STEPS[0]}||r.n===${U3_STEPS[1]}||r.n===${U3_STEPS[2]}){r.a[r.n]=HEAD_SONAR.state.angle;if(r.n===${U3_STEPS[2]})r.wall=performance.now();}};document.getElementById('speed').value='${sp}';document.getElementById('speed').dispatchEvent(new Event('change'));`);
       await page.evaluate(`document.getElementById('pulsador').click()`);
-      let rec = null; const t0 = Date.now(); while (Date.now() - t0 < 20000) { rec = await page.evaluate('window.__rec'); if (rec && rec.a09 !== undefined) break; await sleep(100); }
-      rows.push({ v: Number(sp), a02: rec?.a02, a04: rec?.a04, a09: rec?.a09, razon: rec?.wall ? +(0.9 / ((rec.wall - rec.w0) / 1000)).toFixed(2) : null }); await page.close();
+      let rec = null; const t0 = Date.now(); while (Date.now() - t0 < 20000) { rec = await page.evaluate('window.__rec'); if (rec && rec.a[U3_STEPS[2]] !== undefined) break; await sleep(100); }
+      rows.push({ v: Number(sp), a00: rec?.a00, a02: rec?.a?.[U3_STEPS[0]], a04: rec?.a?.[U3_STEPS[1]], a09: rec?.a?.[U3_STEPS[2]], pasos: U3_STEPS, razon: rec?.wall ? +(0.9 / ((rec.wall - rec.w0) / 1000)).toFixed(2) : null }); await page.close();
     }
-    check('U3 mismo ángulo a igual tiempo simulado en 0,5×/1×/2×/4×', rows.every((r) => r.a02 === rows[0].a02 && r.a04 === rows[0].a04 && r.a09 === rows[0].a09 && r.a09 === 180), rows);
+    check('U3 mismo ángulo a igual tiempo simulado en 0,5×/1×/2×/4×', rows.every((r) => r.a00 === 90 && r.a02 === rows[0].a02 && r.a04 === rows[0].a04 && r.a09 === rows[0].a09 && r.a09 === 180), rows);
     check('U3 razón simulado/real ≈ velocidad (±30 %)', rows.every((r) => r.razon && Math.abs(r.razon / r.v - 1) < 0.3), rows.map((r) => [r.v, r.razon]));
   }
   // ───── U4 · sonar a 90° idéntico en TODAS las pistas ─────
