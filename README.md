@@ -1,6 +1,8 @@
-# BITIRO Simulador
+# IROH Simulator
 
 Simulador web gratuito para programar y experimentar con el robot educativo **IROH** desde el navegador.
+
+> **Nombre:** hasta SIM-NOFIRVI-1 el producto se llamaba «BITIRO Simulador». Desde SIM-IROH-UI-1 su nombre visible es **IROH Simulator**; el repositorio conserva el nombre `BITIRO-Simulador`, y las releases, los registros y las claves persistentes históricas (`bitiro:*`) no cambian. Ver [`docs/identidad-iroh-simulator.md`](docs/identidad-iroh-simulator.md).
 
 **Probar en línea:** https://simulador.nulljinx.com  
 **Repositorio:** https://github.com/nulljinx/BITIRO-Simulador  
@@ -13,7 +15,7 @@ Con la integración **SIM-NOFIRVI-1** (Pull Request #6, fusionado en `main` el 2
 | Concepto | Qué es | Referencia |
 |---|---|---|
 | **Código fuente oficial** | La rama `main`: runtime de 32 archivos, pruebas, documentación y `scripts/build-pages.mjs` | [`docs/current-baseline.md`](docs/current-baseline.md) |
-| **Build estático público** | `dist/`, generado con `node scripts/build-pages.mjs`: exactamente 35 archivos verificados por SHA-256 | [`scripts/pages-manifest.json`](scripts/pages-manifest.json), [`docs/release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md) |
+| **Build estático público** | `dist/`, generado con `node scripts/build-pages.mjs`: exactamente 43 archivos verificados por SHA-256 (SIM-IROH-UI-1; 35 en SIM-NOFIRVI-1) | [`scripts/pages-manifest.json`](scripts/pages-manifest.json), [`docs/release-sim-nofirvi-1.md`](docs/release-sim-nofirvi-1.md) |
 | **Deployment real** | Lo que sirve Cloudflare Pages en `simulador.nulljinx.com`; se verifica por hashes, no por una rama. Rama de producción: `main` (build `node scripts/build-pages.mjs`, salida `dist`) | [`docs/deployment-and-rollback.md`](docs/deployment-and-rollback.md) |
 | **Experimentos** | Geometría IROH medida (rueda 10 cm, sonar 7,40 cm) y modelo visual IROH 3D: **no activos en producción** | rama `experiment/measured-geometry-iroh3d` ([`docs/experiment-measured-geometry-iroh3d.md`](docs/experiment-measured-geometry-iroh3d.md)) |
 | **Historial de versiones** | Etiquetas `v0.x`, releases `release/*` y registros `docs/release-*.md`; no se reescriben | [`docs/versioning-and-releases.md`](docs/versioning-and-releases.md) |
@@ -24,7 +26,7 @@ Con la integración **SIM-NOFIRVI-1** (Pull Request #6, fusionado en `main` el 2
 
 ## Qué es
 
-BITIRO Simulador ejecuta el programa del estudiante sobre un robot virtual con física, sensores, actuadores y un entorno configurable. No resuelve la actividad ni decide qué ruta, base o movimiento es correcto.
+IROH Simulator ejecuta el programa del estudiante sobre un robot virtual con física, sensores, actuadores y un entorno configurable. No resuelve la actividad ni decide qué ruta, base o movimiento es correcto.
 
 La regla de producto es:
 
@@ -256,7 +258,7 @@ renderer3d.js         renderer procedural sobre Canvas
 head-config.js        configuración de la cabeza virtual
 head-sonar.js         sonar orientable (yaw)
 line-geometry.js      geometría de segmentos para el sensor de línea
-scripts/build-pages.mjs   genera dist/ (35 archivos públicos)
+scripts/build-pages.mjs   genera dist/ (43 archivos públicos)
 calibration.js        modelo simulado de sensores de línea + light field
 tracks.js             pistas base
 extra-tracks.js       pistas adicionales
@@ -298,7 +300,7 @@ node tests/motor-dynamics.cjs      # aceleración/frenado simétricos
 node tests/head-sonar.cjs         # cabeza virtual y sonar orientable
 node tests/calibration-ui.mjs      # navegador real (Chrome por CDP); solo, sin Chrome imprime SKIP y sale con 0
 node tests/head-ui.mjs            # navegador real (Chrome por CDP)
-node scripts/build-pages.mjs      # build público y verificación de los 35 hashes
+node scripts/build-pages.mjs      # build público y verificación de los 43 hashes
 ```
 
 Las pruebas de navegador ejecutadas una a una se omiten con código 0 si no hay Chrome; `node scripts/run-suites.mjs --browser`, en cambio, exige `CHROME_BIN` y trata cualquier SKIP como fallo. Para ejecutar todas las suites oficiales (21 Node y 5 de navegador) y entender el CI: [`docs/ci-and-validation.md`](docs/ci-and-validation.md).

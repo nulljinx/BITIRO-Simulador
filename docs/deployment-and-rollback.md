@@ -7,7 +7,7 @@
 | Capa | Qué es |
 |---|---|
 | Fuente | rama `main` |
-| Artefacto | `dist/` (35 archivos) producido por `node scripts/build-pages.mjs` |
+| Artefacto | `dist/` producido por `node scripts/build-pages.mjs`; el número de archivos lo fija `scripts/pages-manifest.json` (35 en SIM-NOFIRVI-1; 43 en SIM-IROH-UI-1) |
 | Deployment | Cloudflare Pages sirviendo exactamente ese `dist/` |
 | Identidad del deployment | los SHA-256 de `scripts/pages-manifest.json`, no un nombre de rama |
 
@@ -54,7 +54,7 @@ El ruleset `protect-main` (27346085, `active`, sobre la rama por defecto) es una
 ## Verificación previa a cada deployment
 
 1. `git status` limpio y el commit a publicar identificado.
-2. `node scripts/build-pages.mjs` termina con código 0 (35 archivos verificados).
+2. `node scripts/build-pages.mjs` termina con código 0 (todos los archivos del manifiesto verificados: 35 en SIM-NOFIRVI-1; 43 en SIM-IROH-UI-1).
 3. Suites Node y de navegador en verde (`node scripts/run-suites.mjs` y `--browser`; ver [`ci-and-validation.md`](ci-and-validation.md)).
 4. Tras publicar: comprobar por HTTPS los hashes y el comportamiento de `404.html` y `_headers` (ver «Comprobación por HTTPS»).
 
@@ -109,7 +109,7 @@ Antes de la migración, Pages servía los archivos de `deploy/cloudflare-pages` 
 
 `404.html` y `_headers` son archivos especiales de Pages y **no se exige que se puedan descargar directamente**: `_headers` lo consume Pages para aplicar cabeceras y normalmente no se sirve como contenido, y `404.html` se entrega como respuesta a rutas inexistentes (una petición directa a `/404.html` puede devolver 404 o redirigir). Su integridad queda garantizada por los hashes del artefacto (`build-pages.mjs` y `verify-dist.mjs`) y su efecto se comprueba por comportamiento:
 
-- Los **33 archivos restantes** se descargan y su SHA-256 debe coincidir con el manifiesto.
+- Los **archivos restantes** (todos menos esos dos: 33 en SIM-NOFIRVI-1; 41 en SIM-IROH-UI-1) se descargan y su SHA-256 debe coincidir con el manifiesto.
 - `404.html`: una ruta inexistente debe responder **404** con un cuerpo cuyo SHA-256 sea el de `404.html`.
 - `_headers`: la respuesta de `/` (o de cualquier archivo servido) debe incluir las cabeceras que declara `pages/_headers` (como mínimo `Content-Security-Policy`, `X-Content-Type-Options` y `Strict-Transport-Security`).
 
@@ -133,7 +133,7 @@ if(nf.status!==404||sha(await nf.arrayBuffer())!==m["404.html"].sha256)no("404.h
 const home=await fetch(base+"/");
 for(const h of ["content-security-policy","x-content-type-options","strict-transport-security"])
   if(!home.headers.get(h))no("_headers: falta la cabecera "+h);
-console.log(bad?bad+" fallos":"33/33 archivos coinciden; 404.html y _headers verificados por comportamiento");process.exit(bad?1:0)})()'
+const n=Object.keys(m).length-SPECIAL.length;console.log(bad?bad+" fallos":n+"/"+n+" archivos coinciden; 404.html y _headers verificados por comportamiento");process.exit(bad?1:0)})()'
 ```
 
 Criterio de éxito: sin ningún `FALLO`. Pages puede aplicar transformaciones transparentes al cliente (p. ej. compresión) y, en algunas configuraciones, redirigir `/index.html`; si algo difiere solo por eso, se investiga antes de dar la migración por buena.
@@ -155,7 +155,7 @@ Se habría disparado si la comprobación falla, el build falla o aparece cualqui
 2. En Deployments, restaurar el deployment de producción anotado en la precondición 5 (`Rollback to this deployment`); no reconstruye y es inmediato.
 3. **Restaurar los ajustes** a su valor previo a la migración, de uno en uno y con los despliegues automáticos aún deshabilitados (tampoco aquí hay operación atómica): Production branch → `deploy/cloudflare-pages`; Build command y Build output directory vacíos. Hacer el rollback del deployment *sin* restaurar los ajustes deja el proyecto listo para romperse en el siguiente push.
 4. Reactivar *Automatic deployments*.
-5. Ejecutar la comprobación por HTTPS (mismo script: 33 hashes y comportamiento de `404.html` y `_headers`).
+5. Ejecutar la comprobación por HTTPS (mismo script, contra el manifiesto del deployment restaurado: todos sus hashes y el comportamiento de `404.html` y `_headers`).
 6. Investigar la causa en una rama aparte y corregir en `main` mediante Pull Request; no editar `dist/` a mano.
 
 El rollback no requiere tocar `deploy/cloudflare-pages` ni `main`, y es posible mientras no se archive esa rama.
@@ -163,3 +163,15 @@ El rollback no requiere tocar `deploy/cloudflare-pages` ni `main`, y es posible 
 ### Después de la migración
 
 `deploy/cloudflare-pages` sigue sin tocarse hasta que se autorice expresamente su archivado (tag o eliminación), una vez comprobado que la producción desde `main` es estable.
+
+### Rollback de SIM-IROH-UI-1
+
+> **Estado:** procedimiento preparado; **la release no está desplegada** y nada de lo siguiente se ha ejecutado.
+
+1. Antes de desplegar, anotar el identificador del deployment de producción vigente (a 2026-11-16: `449a5877-ad96-4598-a493-22cfd205eb57`, SIM-NOFIRVI-1 desde `main` en `3c80a33`). Es el destino del rollback.
+2. Si falla la verificación o aparece una regresión: `Rollback to this deployment` sobre ese deployment (no reconstruye; es inmediato). Respaldo adicional: `47b60699-bb45-4ea1-b1f6-852d87e8f3da` (`9c0b492`).
+3. Verificar por HTTPS contra el manifiesto **archivado** [`releases/sim-nofirvi-1.pages-manifest.json`](releases/sim-nofirvi-1.pages-manifest.json) (SHA-256 `cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24`, 35 archivos): el script de arriba lee `scripts/pages-manifest.json`; para esta comprobación se apunta a esa copia.
+4. Si el problema es de código, corregir en una rama nueva mediante Pull Request; no editar `dist/` a mano. Registrar el rollback con un tag nuevo (sin editar los anteriores).
+5. **Los datos del navegador no requieren migración en ninguna dirección:** SIM-IROH-UI-1 solo añade la clave `bitiro:standalone:welcome:v1`; las claves del código, del escenario y de la calibración no cambian. La versión anterior ignora la clave nueva.
+
+Con `Preview branch: None` en el proyecto de Pages (estado registrado el 2026-11-16), subir una rama **no** crea una vista previa pública.

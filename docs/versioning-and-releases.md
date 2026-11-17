@@ -4,8 +4,9 @@
 
 > **Estado (2026-11-16):** el PR #6 se fusionó en `main` (merge commit `3c80a33`). `main` es la fuente oficial; Cloudflare Pages publica desde `main` (deployment `449a5877-ad96-4598-a493-22cfd205eb57`; respaldo `47b60699-bb45-4ea1-b1f6-852d87e8f3da`, disponible y no ejecutado). El CI de GitHub Actions está operativo (run `43794749100` en success sobre el merge) y el ruleset `protect-main` está activo. Ver [`deployment-and-rollback.md`](deployment-and-rollback.md) y [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md). Las secciones posteriores a «Política histórica» son anteriores a este estado.
 
-- `main` es la fuente oficial del simulador publicado; el artefacto público (35 archivos con SHA-256 fijos en `scripts/pages-manifest.json`) se genera con `node scripts/build-pages.mjs` y debe poder regenerarse desde cualquier commit de `main`.
-- El deployment se identifica por el manifiesto de 35 hashes, no por el nombre de una rama.
+- `main` es la fuente oficial del simulador publicado; el artefacto público (archivos con SHA-256 fijos en `scripts/pages-manifest.json`: 35 en SIM-NOFIRVI-1, 43 en SIM-IROH-UI-1) se genera con `node scripts/build-pages.mjs` y debe poder regenerarse desde cualquier commit de `main`.
+- El deployment se identifica por el manifiesto de hashes (35 en SIM-NOFIRVI-1; 43 en SIM-IROH-UI-1), no por el nombre de una rama.
+- SIM-IROH-UI-1 (identidad visual «IROH Simulator»; **preparada, no desplegada**): [`release-sim-iroh-ui-1.md`](release-sim-iroh-ui-1.md). Su base es SIM-NOFIRVI-1, cuyo registro y manifiesto (`releases/sim-nofirvi-1.pages-manifest.json`) no se modifican.
 - Las líneas experimentales (`experiment/*`) no se despliegan; la geometría medida y el modelo IROH 3D viven en `experiment/measured-geometry-iroh3d`.
 - La protección de `main` (`protect-main`) y el CI (`pages-build`, `node-tests`, `browser-tests`) están operativos. Las etiquetas de despliegue para este modelo **siguen siendo una decisión pendiente** que requiere autorización.
 - Registros: [`release-sim-nofirvi-1.md`](release-sim-nofirvi-1.md) y [`current-baseline.md`](current-baseline.md).

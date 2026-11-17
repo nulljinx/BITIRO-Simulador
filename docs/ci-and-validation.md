@@ -16,8 +16,8 @@ Los eventos de una misma rama se serializan con `concurrency` (`cancel-in-progre
 | Job | Qué ejecuta | Bloquea | Tiempo máximo |
 |---|---|---|---|
 | `pages-build` | `node scripts/build-pages.mjs` y luego `node scripts/verify-dist.mjs` | Sí | 10 min |
-| `node-tests` | `node scripts/run-suites.mjs` (21 suites Node) | Sí | 20 min |
-| `browser-tests` | `node scripts/run-suites.mjs --browser` (5 pruebas de navegador) | **No** (`continue-on-error: true`) | 30 min |
+| `node-tests` | `node scripts/run-suites.mjs` (22 suites Node) | Sí | 20 min |
+| `browser-tests` | `node scripts/run-suites.mjs --browser` (6 pruebas de navegador) | **No** (`continue-on-error: true`) | 30 min |
 
 «Bloquea» describe el comportamiento del job, no la protección de rama: que un check sea obligatorio para fusionar se configura en GitHub, no en este archivo. `browser-tests` es informativo y **no debe exigirse como check obligatorio** hasta que se haya validado en GitHub. Si falla, un paso final emite una anotación `::error` y un resumen en `GITHUB_STEP_SUMMARY` para que el fallo no pase inadvertido.
 
@@ -29,14 +29,14 @@ Definida a nivel de workflow en `ci.yml`. Es el SHA-256 de `scripts/pages-manife
 
 ## `scripts/build-pages.mjs`
 
-Genera `dist/` (ignorado por Git) a partir de la allowlist de `scripts/pages-manifest.json`. Antes de copiar nada comprueba que hay 35 entradas y que cada origen existe y coincide con su SHA-256; después borra `dist/`, copia los 35 archivos y vuelve a comprobar que no sobra ni falta ninguno y que cada hash es el aprobado. Falla con código 1 y la lista completa de errores.
+Genera `dist/` (ignorado por Git) a partir de la allowlist de `scripts/pages-manifest.json`. Antes de copiar nada comprueba que hay 43 entradas y que cada origen existe y coincide con su SHA-256; después borra `dist/`, copia los 35 archivos y vuelve a comprobar que no sobra ni falta ninguno y que cada hash es el aprobado. Falla con código 1 y la lista completa de errores.
 
 ## `scripts/verify-dist.mjs`
 
 Comprobación **independiente** de `dist/`: no reutiliza código de `build-pages.mjs`, de modo que un error en el build no puede ocultarse a sí mismo. Exige:
 
 1. Que `MANIFEST_SHA256` esté definida y coincida con el SHA-256 real de `scripts/pages-manifest.json`.
-2. Exactamente 35 archivos en `dist/`.
+2. Exactamente 43 archivos en `dist/`.
 3. El conjunto exacto de rutas del manifiesto (sin extras ni faltantes).
 4. El SHA-256 de cada archivo.
 5. Ninguna ruta bajo `docs/`, `tests/` o `examples/`, ni cuyo nombre contenga «firvi».
@@ -55,8 +55,8 @@ Esa forma local toma el hash del propio archivo y por tanto **no** detecta un ma
 Ejecutor de suites con lista explícita y sin dependencias.
 
 ```bash
-node scripts/run-suites.mjs             # 21 suites Node (NODE_SUITES)
-node scripts/run-suites.mjs --browser   # 5 pruebas de navegador (BROWSER_SUITES); requiere CHROME_BIN
+node scripts/run-suites.mjs             # 22 suites Node (NODE_SUITES)
+node scripts/run-suites.mjs --browser   # 6 pruebas de navegador (BROWSER_SUITES); requiere CHROME_BIN
 ```
 
 Cada suite se ejecuta en un proceso aparte, con `cwd` en la raíz y un máximo de 300 s. Una suite **falla** si:
