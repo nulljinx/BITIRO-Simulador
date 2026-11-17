@@ -1,7 +1,7 @@
 # SIM-IROH-UI-1
 
 > **Estado: PREPARADA. NO está integrada en `main` y NO está desplegada.** Este registro describe lo que contiene la rama de trabajo y lo que falta; los datos de despliegue se añadirán cuando ocurra, en un registro nuevo (política de `versioning-and-releases.md`: los registros anteriores no se editan).
-> **No afirma alianza, patrocinio ni aprobación oficial de Fundación Mustakis.** El responsable del proyecto declara contar con su autorización para usar su identidad; este repositorio no incluye ese documento ni verifica su alcance (ver [`identidad-iroh-simulator.md`](identidad-iroh-simulator.md)). **La publicación pública está condicionada a confirmar ese alcance** (ver «Bloqueos y pendientes»).
+> **No afirma alianza, patrocinio ni aprobación oficial de Fundación Mustakis.** El responsable del proyecto **confirmó expresamente** contar con su autorización para usar su identidad, con el alcance público descrito en [`identidad-iroh-simulator.md`](identidad-iroh-simulator.md) (sitio `simulador.nulljinx.com`, repositorio público de GitHub, derivados, y la exposición y descarga propias de ese alojamiento, incluidos clones y forks); este repositorio no incluye el documento de autorización. **La confirmación no equivale a una licencia general de reutilización.**
 
 ## Identidad
 
@@ -43,9 +43,9 @@
 | `assets/iroh-favicon-192.png` | `1e4f04e2dad997bd370f9c15c2d3ebd5a7cd73c3a6d22265554a7bb99ab122be` | 14,903 | recorte de la cabeza de la mascota; sin inscripción |
 | `assets/iroh-favicon-32.png` | `264e7f4a545f3d5a8c38c41409edb16b90a4c8583577c6f3eba63c8779917659` | 1,901 | recorte de la cabeza de la mascota; sin inscripción |
 | `assets/iroh-isotipo-68.webp` | `3973d106b2e6c06c3fd1a7c6698c3719f79e04a37694a205a586475d36faa084` | 2,688 | recorte de la cabeza de la mascota; sin inscripción |
-| `assets/iroh-mascot-420.webp` | `2cf56c9e99023c579e9b8e4d336a1da1a3934cce62eb7b50d944dd0ea9081f76` | 34,630 | contiene la inscripción de Fundación Mustakis; publicación condicionada |
-| `assets/iroh-mascot-640.webp` | `c3898058e6a215811538b215bb5ec3dd47e0889b32a9b3f99236c4dc572b78ac` | 58,452 | contiene la inscripción de Fundación Mustakis; publicación condicionada |
-| `assets/iroh-mascot-960.webp` | `77c4e781bf1db555f7564cff2171fff17fe3bc2f67f3ed8e1992bcb9067ee838` | 96,560 | contiene la inscripción de Fundación Mustakis; publicación condicionada |
+| `assets/iroh-mascot-420.webp` | `2cf56c9e99023c579e9b8e4d336a1da1a3934cce62eb7b50d944dd0ea9081f76` | 34,630 | contiene la inscripción de Fundación Mustakis; uso público confirmado por el responsable (alcance en `identidad-iroh-simulator.md`) |
+| `assets/iroh-mascot-640.webp` | `c3898058e6a215811538b215bb5ec3dd47e0889b32a9b3f99236c4dc572b78ac` | 58,452 | contiene la inscripción de Fundación Mustakis; uso público confirmado por el responsable (alcance en `identidad-iroh-simulator.md`) |
+| `assets/iroh-mascot-960.webp` | `77c4e781bf1db555f7564cff2171fff17fe3bc2f67f3ed8e1992bcb9067ee838` | 96,560 | contiene la inscripción de Fundación Mustakis; uso público confirmado por el responsable (alcance en `identidad-iroh-simulator.md`) |
 | `iroh-brand.css` | `a16cbbef05d53275f276de087dd45ab4f4897929672cd6314f50aeb8ce948232` | 13,392 | |
 | `iroh-brand.js` | `50f661a26b0188ad3a1de77458146cf8ede2dc5b6b050cea809a7a1801440e33` | 4,266 | |
 
@@ -80,10 +80,10 @@ Física, sensores, calibración, programación, editor, pistas y persistencia de
 | Límites | Solo Chromium headless con emulación táctil; contraste calculado sobre estilos; sin lector de pantalla, Safari, Firefox, dispositivos reales, axe, Lighthouse, vista previa ni producción de Cloudflare, ni comprobación HTTPS |
 
 ## Bloqueos y pendientes
-1. **Publicación pública (condicionada):** antes de subir la rama, abrir un PR o desplegar, el responsable debe confirmar que el permiso de uso de la identidad de Fundación Mustakis cubre el **sitio web**, el **repositorio público** (incluidos forks y clones) y los **derivados** (isotipo, favicons y optimizaciones). Hasta entonces la rama es solo local. La titularidad de los derechos de la **ilustración generada con ChatGPT** no la resuelve este repositorio y debe documentarla el responsable. Los assets no se publican bajo licencia abierta.
+1. **Alcance de la publicación pública (confirmado por el responsable):** el permiso contempla el sitio `simulador.nulljinx.com`, el repositorio público de GitHub, los derivados (isotipo, favicons y versiones optimizadas) y la exposición y descarga propias de ese alojamiento, incluidos clones y forks; **no** implica una licencia general de reutilización a terceros. Es una declaración del responsable, sin documento en el repositorio. La titularidad de los derechos de la **ilustración generada con ChatGPT** no la resuelve este repositorio y debe documentarla el responsable. Los assets no se publican bajo licencia abierta.
 2. Cualquier cambio posterior en una de las 43 fuentes obliga a regenerar el manifiesto, `MANIFEST_SHA256` y este registro (el CI y `scripts/build-pages.mjs` lo exigen).
 3. Verificaciones **no** realizadas: lector de pantalla real, Safari/iOS, Firefox, dispositivos físicos, axe, Lighthouse, vista previa o producción de Cloudflare, comprobación HTTPS.
 4. Medir con `tests/perf/sim-low-end.mjs` antes y después en la máquina de referencia si se quiere declarar «sin regresión de rendimiento».
 
 ## Despliegue y rollback
-Procedimiento en [`deployment-and-rollback.md`](deployment-and-rollback.md) («Rollback de SIM-IROH-UI-1»). Destino de rollback previsto: deployment `449a5877-ad96-4598-a493-22cfd205eb57` (SIM-NOFIRVI-1 desde `main`). **Nada de esto se ha ejecutado**; publicar (push, PR, CI, merge y despliegue) requiere autorización explícita en cada paso.
+Procedimiento en [`deployment-and-rollback.md`](deployment-and-rollback.md) («Rollback de SIM-IROH-UI-1»). El destino de rollback es el deployment de producción **activo justo antes del merge**, comprobado en el panel de Pages; no se asume ninguno de los IDs registrados en documentos anteriores. **Nada de esto se ha ejecutado**; publicar (push, PR, CI, merge y despliegue) requiere autorización explícita en cada paso.

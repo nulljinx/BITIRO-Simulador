@@ -78,7 +78,7 @@ const click = (page, id) => page.evaluate(`document.getElementById(${JSON.string
 await test('0 · los recursos de la identidad existen en disco (mascota, isotipo, favicons, CSS y JS)', async () => {
   const need = ['assets/iroh-mascot-420.webp', 'assets/iroh-mascot-640.webp', 'assets/iroh-mascot-960.webp', 'assets/iroh-isotipo-68.webp', 'assets/iroh-favicon-32.png', 'assets/iroh-favicon-180.png', 'assets/iroh-favicon-192.png', 'iroh-brand.css', 'iroh-brand.js'];
   const missing = need.filter((f) => !fs.existsSync(path.join(ROOT, f)));
-  assert.deepEqual(missing, [], 'FALTAN recursos (la mascota con la inscripción institucional no está en Git hasta resolver su autorización: sin ella esta suite y el build deben fallar): ' + missing.join(', '));
+  assert.deepEqual(missing, [], 'FALTAN recursos de la identidad (sin ellos esta suite y el build deben fallar): ' + missing.join(', '));
   return { mascotaKB: Math.round(fs.statSync(path.join(ROOT, 'assets/iroh-mascot-640.webp')).size / 1024) };
 });
 

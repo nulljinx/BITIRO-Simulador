@@ -1,6 +1,6 @@
 # Identidad de IROH Simulator
 
-> **Estado:** criterios de SIM-IROH-UI-1 (preparada, no desplegada). Este documento fija el nombre, el crédito y las reglas de uso de la mascota. **No** registra el documento de autorización institucional ni su alcance: solo deja constancia de que el responsable declara contar con ella.
+> **Estado:** criterios de SIM-IROH-UI-1 (preparada, no desplegada). Este documento fija el nombre, el crédito y las reglas de uso de la mascota. El responsable del proyecto **confirmó expresamente** contar con la autorización de Fundación Mustakis y su alcance público (ver «Autorización institucional y su alcance»). Este repositorio **no incluye** el documento de autorización ni registra entidad firmante, fecha, referencia ni condiciones.
 
 ## Nombre
 
@@ -45,22 +45,23 @@ La ilustración original **fue generada con ChatGPT** (modelo de imagen `gpt-ima
 ### Origen de la ilustración y titularidad de las marcas
 Son cuestiones distintas y no se confunden:
 - **Origen de la ilustración:** generada con una herramienta de IA, como se indica arriba. El repositorio **no resuelve ni afirma** la titularidad de los derechos sobre la ilustración generada; ese punto lo documenta el responsable del proyecto.
-- **Marcas e identidad institucional:** el nombre y la inscripción «FUNDACIÓN MUSTAKIS» pertenecen a un tercero. El responsable del proyecto **declara contar con la autorización** de Fundación Mustakis para utilizar su identidad en este proyecto. Este repositorio **no incluye ese documento ni ha comprobado su alcance**, y no se registran aquí entidad firmante, fecha, referencia ni condiciones.
+- **Marcas e identidad institucional:** el nombre y la inscripción «FUNDACIÓN MUSTAKIS» pertenecen a un tercero. El responsable del proyecto **ha confirmado expresamente contar con la autorización** de Fundación Mustakis para utilizar su identidad en este proyecto (alcance más abajo). Este repositorio **no incluye ese documento**, y no se registran aquí entidad firmante, fecha, referencia ni condiciones.
 
 ### Lo que NO se afirma
-- No se afirma alianza, patrocinio, colaboración ni aprobación oficial de ninguna institución distintos de la autorización de uso de identidad que declara el responsable.
+- No se afirma alianza, patrocinio, colaboración ni aprobación oficial de ninguna institución distintos de la autorización de uso de identidad que ha confirmado el responsable.
 - La interfaz no menciona a la Fundación fuera de la inscripción de la propia mascota.
 
 ### Licencia
-Los assets de la mascota (incluidos el isotipo y los favicons) **no se publican bajo ninguna licencia abierta**. El repositorio sigue sin declarar una licencia de software propia (ver `README.md`), y los recursos de terceros conservan sus derechos. Que el repositorio sea público permite verlo y, según las condiciones de GitHub, bifurcarlo; eso **no** concede permiso de reutilizar la mascota ni la identidad institucional.
+Los assets de la mascota (incluidos el isotipo y los favicons) **no se publican bajo ninguna licencia abierta**. El repositorio sigue sin declarar una licencia de software propia (ver `README.md`), y los recursos de terceros conservan sus derechos. Que el repositorio sea público permite verlo y, según las condiciones de GitHub, bifurcarlo; eso **no** concede permiso de reutilizar la mascota ni la identidad institucional. La confirmación institucional tampoco equivale a **conceder a terceros una licencia general de reutilización** de la marca ni de los recursos.
 
-### Condición para la publicación pública
-Antes de subir esta rama, abrir un Pull Request o desplegar, el responsable debe confirmar que el permiso cubre:
-1. el **sitio web** público (`simulador.nulljinx.com` y sus redirecciones);
-2. el **repositorio público**, incluida la visibilidad, los forks y los clones;
-3. la incorporación de los **derivados** (isotipo, favicons y optimizaciones de la mascota).
+### Autorización institucional y su alcance
+El responsable del proyecto **ha confirmado expresamente** que cuenta con la autorización de Fundación Mustakis para:
+1. utilizar su identidad en la mascota de IROH Simulator, con la inscripción «FUNDACIÓN MUSTAKIS»;
+2. mostrarla públicamente en el sitio `simulador.nulljinx.com`;
+3. publicar las imágenes originales optimizadas y sus derivados (isotipo, favicons y versiones optimizadas) en el repositorio público de GitHub;
+4. permitir la exposición y descarga propias de ese alojamiento, incluidos los clones y los forks.
 
-Mientras eso no se confirme, la rama es solo local: los siete recursos ya están en commits locales y no deben salir del equipo.
+Esta autorización **no implica otorgar a terceros una licencia general de reutilización** de la marca ni de las ilustraciones (ver «Licencia»). Es una **declaración del responsable**: el documento de autorización no forma parte del repositorio y este no puede comprobarlo. Cualquier uso fuera de este alcance requiere una nueva confirmación.
 
 ## Tipografía y color
 
