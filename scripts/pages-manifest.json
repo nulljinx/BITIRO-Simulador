@@ -1,24 +1,24 @@
 {
  "schema": 1,
- "candidate": "SIM-NOFIRVI-1",
- "approvedCommit": "9c0b4922ffab228d5bf9af75abc51cf94c194264",
- "approvedTree": "d68a79962b2313a70da5b31713c37c62598b957c",
- "note": "Allowlist explícita del artefacto público de Cloudflare Pages: 32 archivos runtime + assets/fonts/OFL-IBM-Plex.txt + _headers + 404.html.",
+ "candidate": "SIM-IROH-UI-1",
+ "approvedCommit": "acb2679497ce6ed2851fcc814270edfd41764146",
+ "approvedTree": "e453fd53cc13e79677dcfdd9c35241a3cefb6f11",
+ "baseRelease": "SIM-NOFIRVI-1",
+ "baseCommit": "5ffcc1568d3d9a16f831d49fa8d328b142b83d22",
+ "baseApprovedCommit": "9c0b4922ffab228d5bf9af75abc51cf94c194264",
+ "baseApprovedTree": "d68a79962b2313a70da5b31713c37c62598b957c",
+ "baseManifestSha256": "cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24",
+ "note": "Allowlist explícita del artefacto público de Cloudflare Pages: 43 archivos = 31 heredados de SIM-NOFIRVI-1 con hash idéntico + 3 modificados (index.html, starters.js, 404.html) + 9 nuevos (identidad IROH Simulator); se retira assets/bitiro-symbol.png del artefacto (el archivo permanece en el repositorio). Los assets de la mascota (assets/iroh-mascot-*.webp, con la inscripción de Fundación Mustakis) y sus derivados (isotipo y favicons) usan una identidad institucional cuya autorización declara el responsable del proyecto; este repositorio no incluye el documento ni verifica su alcance, y no implica alianza, patrocinio ni aprobación oficial adicional. La ilustración fue generada con ChatGPT según la procedencia C2PA del original. No se publican bajo licencia abierta. Publicar requiere confirmar que el permiso cubre el sitio web, el repositorio público y los derivados. Ver docs/identidad-iroh-simulator.md. No incluye docs/, tests/ ni examples/.",
  "files": {
   "404.html": {
    "source": "pages/404.html",
-   "sha256": "36b0462e43e407600f56f4aa5beeb0e2750ebbff25e202992f2306724d74428b",
-   "bytes": 325
+   "sha256": "8ea59ac15e8d2c545137865cb765607d8564dd476ac5d0397ef6d6fa5384b8b5",
+   "bytes": 323
   },
   "_headers": {
    "source": "pages/_headers",
    "sha256": "1d1b1ecc474264b7b9388134c7dedee9029a533af8a72475749a36c9c03f03b5",
    "bytes": 528
-  },
-  "assets/bitiro-symbol.png": {
-   "source": "assets/bitiro-symbol.png",
-   "sha256": "a9dedf6715524e6deb385fd0fe774c6e08f75f035f08ba57022ec867b2811ad4",
-   "bytes": 17670
   },
   "assets/fonts/OFL-IBM-Plex.txt": {
    "source": "assets/fonts/OFL-IBM-Plex.txt",
@@ -49,6 +49,41 @@
    "source": "assets/fonts/ibm-plex-sans-latin-600-normal.woff2",
    "sha256": "8960851d691c054ed38e259bdcf1a6190d157b4203ed5bb32c632a863fb8ec2f",
    "bytes": 24252
+  },
+  "assets/iroh-favicon-180.png": {
+   "source": "assets/iroh-favicon-180.png",
+   "sha256": "b4f97f8fe2be73146ea0556ee1b904caf622470b91d69789b01253f95165fb9b",
+   "bytes": 13420
+  },
+  "assets/iroh-favicon-192.png": {
+   "source": "assets/iroh-favicon-192.png",
+   "sha256": "1e4f04e2dad997bd370f9c15c2d3ebd5a7cd73c3a6d22265554a7bb99ab122be",
+   "bytes": 14903
+  },
+  "assets/iroh-favicon-32.png": {
+   "source": "assets/iroh-favicon-32.png",
+   "sha256": "264e7f4a545f3d5a8c38c41409edb16b90a4c8583577c6f3eba63c8779917659",
+   "bytes": 1901
+  },
+  "assets/iroh-isotipo-68.webp": {
+   "source": "assets/iroh-isotipo-68.webp",
+   "sha256": "3973d106b2e6c06c3fd1a7c6698c3719f79e04a37694a205a586475d36faa084",
+   "bytes": 2688
+  },
+  "assets/iroh-mascot-420.webp": {
+   "source": "assets/iroh-mascot-420.webp",
+   "sha256": "2cf56c9e99023c579e9b8e4d336a1da1a3934cce62eb7b50d944dd0ea9081f76",
+   "bytes": 34630
+  },
+  "assets/iroh-mascot-640.webp": {
+   "source": "assets/iroh-mascot-640.webp",
+   "sha256": "c3898058e6a215811538b215bb5ec3dd47e0889b32a9b3f99236c4dc572b78ac",
+   "bytes": 58452
+  },
+  "assets/iroh-mascot-960.webp": {
+   "source": "assets/iroh-mascot-960.webp",
+   "sha256": "77c4e781bf1db555f7564cff2171fff17fe3bc2f67f3ed8e1992bcb9067ee838",
+   "bytes": 96560
   },
   "assets/plotters/s01.png": {
    "source": "assets/plotters/s01.png",
@@ -112,8 +147,18 @@
   },
   "index.html": {
    "source": "index.html",
-   "sha256": "719a435512229206b3c7dd18507296019e9811504cb5c6d34a6a68197468048a",
-   "bytes": 58461
+   "sha256": "afa7c920a41c16b663ca2cac042bc6da3bd4fd92149a5512e547697ab0c5dd9d",
+   "bytes": 64136
+  },
+  "iroh-brand.css": {
+   "source": "iroh-brand.css",
+   "sha256": "a16cbbef05d53275f276de087dd45ab4f4897929672cd6314f50aeb8ce948232",
+   "bytes": 13392
+  },
+  "iroh-brand.js": {
+   "source": "iroh-brand.js",
+   "sha256": "50f661a26b0188ad3a1de77458146cf8ede2dc5b6b050cea809a7a1801440e33",
+   "bytes": 4266
   },
   "iroh-runtime.js": {
    "source": "iroh-runtime.js",
@@ -147,8 +192,8 @@
   },
   "starters.js": {
    "source": "starters.js",
-   "sha256": "c50ea71bf92d5e00868cd26d97bff08addcadfe451dc0b555cb51c6a237100c4",
-   "bytes": 5426
+   "sha256": "67f39142fbf8b13d2bf32f349f24ffe0ac996f779edee6aa6877c508e72431f0",
+   "bytes": 6193
   },
   "strike-physics.js": {
    "source": "strike-physics.js",

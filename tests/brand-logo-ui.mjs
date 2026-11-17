@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SIM-UI-RELEASE-1 — la marca del simulador no navega (clic, toque ni teclado) y la Guía sigue operativa.
+// SIM-UI-RELEASE-1 / SIM-IROH-UI-1 — la marca del simulador no navega (clic, toque ni teclado) y la Guía sigue operativa.
 //   node tests/brand-logo-ui.mjs        # requiere Chrome/Chromium (CHROME_BIN o ~/.cache/ms-playwright); sin él, se omite con código 0.
 //   SHOTS_DIR=/ruta node tests/brand-logo-ui.mjs   # además guarda capturas 1440 px y 390 px.
 import http from 'node:http';
@@ -50,7 +50,7 @@ for (const [label, w, h, touch] of [['escritorio 1440', 1440, 900, false], ['mó
         closestA:!!b.closest('a'),imgOk:img.complete&&img.naturalWidth>0,imgW:r.width,text:b.textContent.replace(/\\s+/g,' ').trim(),tabbable:b.tabIndex}})()`);
     assert.equal(info.tag, 'DIV'); assert.equal(info.href, null); assert.deepEqual(info.attrs, ['class']);
     assert.notEqual(info.cursor, 'pointer'); assert.equal(info.links, 0); assert.equal(info.closestA, false); assert.equal(info.tabbable, -1);
-    assert.ok(info.imgOk && info.imgW === 34, 'logo visible 34 px'); assert.match(info.text, /^BITIRO Simulador/);
+    assert.ok(info.imgOk && info.imgW === 34, 'logo visible 34 px'); assert.match(info.text, /^IROH Simulator/);
   });
   await test(`${label} · clic/toque en la marca no navega ni abre pestañas`, async () => {
     const b = await rect(page, '.topbar .brand'); assert.ok(b.w > 20 && b.h > 20);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // node scripts/verify-dist.mjs — comprobación independiente de dist/ (no reutiliza el código de build-pages.mjs).
-// Exige: el SHA-256 de scripts/pages-manifest.json fijado en MANIFEST_SHA256 (variable de entorno), exactamente 35 archivos,
+// Exige: el SHA-256 de scripts/pages-manifest.json fijado en MANIFEST_SHA256 (variable de entorno), exactamente 43 archivos,
 // el conjunto exacto de rutas, el SHA-256 de cada archivo y ninguna ruta de docs/, tests/, examples/ ni con «firvi».
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -20,7 +20,7 @@ const files = JSON.parse(manifestBytes).files;
 
 const walk = (d) => readdirSync(d).flatMap((n) => { const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : [relative(DIST, p).split('\\').join('/')]; });
 const present = walk(DIST).sort();
-if (present.length !== 35) errors.push(`dist/ debe tener 35 archivos y tiene ${present.length}`);
+if (present.length !== 43) errors.push(`dist/ debe tener 43 archivos y tiene ${present.length}`);
 const want = Object.keys(files).sort();
 for (const f of present) if (!(f in files)) errors.push(`archivo extra: ${f}`);
 for (const f of want) if (!present.includes(f)) errors.push(`falta: ${f}`);

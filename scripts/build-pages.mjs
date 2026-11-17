@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// node scripts/build-pages.mjs — genera dist/ con EXACTAMENTE los 35 archivos públicos de Cloudflare Pages.
+// node scripts/build-pages.mjs — genera dist/ con EXACTAMENTE los 43 archivos públicos de Cloudflare Pages.
 // La allowlist y los SHA-256 aprobados están en scripts/pages-manifest.json. El build falla si falta un archivo,
 // si un origen no coincide con su hash, si dist/ contiene algo fuera de la allowlist o si el resultado difiere.
 import { createHash } from 'node:crypto';
@@ -14,7 +14,7 @@ const entries = Object.entries(manifest.files);
 const sha256 = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const errors = [];
 
-if (entries.length !== 35) errors.push(`la allowlist debe tener 35 entradas (tiene ${entries.length})`);
+if (entries.length !== 43) errors.push(`la allowlist debe tener 43 entradas (tiene ${entries.length})`);
 
 for (const [dest, { source, sha256: want }] of entries) {
   const src = join(ROOT, source);

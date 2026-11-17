@@ -1,8 +1,8 @@
-# BITIRO Simulador · Guía técnica breve
+# IROH Simulator · Guía técnica breve
 
 > **Aviso (SIM-NOFIRVI-1):** este documento describe el `main` anterior (geometría medida de 10 cm / sonar 7,40 cm, sonar fijo). El runtime oficial usa ruedas a 12 cm, sonar a 9,83 cm y cabeza virtual HEAD-CANVAS. La fuente vigente es [`README.md`](README.md) y [`docs/current-baseline.md`](docs/current-baseline.md); queda pendiente su reescritura completa.
 
-BITIRO Simulador es una aplicación web estática para programar y observar un robot IROH virtual. No requiere cuenta ni backend para ejecutar la simulación.
+IROH Simulator (llamado «BITIRO Simulador» hasta SIM-NOFIRVI-1; el repositorio conserva el nombre `BITIRO-Simulador`) es una aplicación web estática para programar y observar un robot IROH virtual. No requiere cuenta ni backend para ejecutar la simulación.
 
 Para una guía orientada a estudiantes y docentes consulta `docs/user-guide.md`. Para la API completa consulta `docs/api-iroh.md`.
 

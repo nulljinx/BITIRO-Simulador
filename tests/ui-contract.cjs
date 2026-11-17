@@ -36,7 +36,7 @@ test('Clases que consultan los scripts existen (.cam con data-view)',()=>{
 });
 test('Scripts en el orden v4 y ui-shell.js al final',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
-assert.deepEqual(scripts,['tracks.js','extra-tracks.js','line-geometry.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','renderer3d.js','starters.js','head-sonar.js','head-config.js','simulator.js','syntax-highlight.js','ui-shell.js','calibration-mode.js','scenario-editor.js']);
+assert.deepEqual(scripts,['tracks.js','extra-tracks.js','line-geometry.js','calibration.js','iroh-runtime.js','strike-physics.js','scenario-props.js','renderer3d.js','starters.js','head-sonar.js','head-config.js','simulator.js','syntax-highlight.js','ui-shell.js','calibration-mode.js','scenario-editor.js','iroh-brand.js']);   // SIM-IROH-UI-1: la identidad visual se carga la última
 });
 test('Controles de la vista normal y ausencia de elementos pedagógicos visibles',()=>{
  for(const id of ['track','run','pause','reset','step','src','lcd','sonar','codeToggle'])assert.ok(ids.includes(id),id);
@@ -138,12 +138,15 @@ test('PILOT-5: S01–S08 sin selector de soluciones; «Restaurar código inicial
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,'sin ids duplicados');
  assert.ok(!/(src|href)="https?:/.test(gd[1]),'sin recursos externos en la guía');
 });
-test('Fuentes locales referenciadas existen y no se cargan recursos externos (el único enlace absoluto es la marca hacia el Lab)',()=>{
+test('Fuentes locales referenciadas existen y no se cargan recursos externos (el único enlace absoluto es el crédito nulljinx)',()=>{
  const css=fs.readFileSync(path.join(root,'tokens.css'),'utf8');
  for(const m of css.matchAll(/url\(([^)]+)\)/g))assert.ok(fs.existsSync(path.join(root,m[1])),m[1]);
  for(const f of ['tokens.css','styles.css'])assert.ok(!/https?:\/\//.test(fs.readFileSync(path.join(root,f),'utf8')),f+' contiene una URL externa');
  const absolute=[...html.replace(/<!--.*?-->/gs,'').matchAll(/https?:\/\/[^"'\s)<]+/g)].map(m=>m[0]);
- assert.deepEqual(absolute,[],'sin enlaces absolutos: el logo ya no navega a BITIRO Lab');
+ // SIM-IROH-UI-1: la única URL absoluta permitida es el crédito «Desarrollado por nulljinx» (bienvenida y «Acerca de»), siempre con apertura segura.
+ assert.ok(absolute.length>0&&absolute.every(u=>u==='https://nulljinx.com'),'solo se permite https://nulljinx.com: '+absolute.join(' '));
+ for(const a of html.matchAll(/<a\b[^>]*href="https:\/\/nulljinx\.com"[^>]*>/g)){assert.match(a[0],/target="_blank"/);assert.match(a[0],/rel="noopener noreferrer"/);}
+ assert.ok(!/<a\b[^>]*href="https?:/.test(html.replace(/<a\b[^>]*href="https:\/\/nulljinx\.com"[^>]*>/g,'')),'todo enlace absoluto distinto de nulljinx.com está prohibido');
  for(const m of html.matchAll(/<(?:script|img|link|source|iframe)\b[^>]*\b(?:src|href)="([^"]+)"/g))assert.ok(!/^(?:https?:)?\/\//.test(m[1]),'recurso externo: '+m[1]);
 });
 test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la cabecera no contiene enlaces',()=>{
@@ -151,9 +154,32 @@ test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la
  assert.ok(!/<a\b/.test(header),'la cabecera no tiene enlaces');
  assert.ok(!/href=|target=|rel=/.test(header.match(/<div class="brand"[^>]*>/)[0]),'el logo no lleva href/target/rel');
  assert.match(header,/<div class="brand">/);
- assert.match(header,/<strong>BITIRO <span>Simulador<\/span><\/strong><small>Simulador libre del IROH<\/small>/);   // texto visible sin cambios
+ // SIM-IROH-UI-1: marca «IROH Simulator» con el mismo patrón (marca en 600 + producto en 400); translate="no" en <strong>, NO en .brand (brand-logo-ui exige class como único atributo).
+ assert.match(header,/<strong translate="no">IROH <span>Simulator<\/span><\/strong><small>Simulador libre<\/small>/);
  assert.ok(!/>\s*Inicio\s*</.test(header));
  assert.ok(!/bitiro-piloto/.test(html),'sin referencias a BITIRO Lab');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);
+});
+test('SIM-IROH-UI-1: cabecera con exactamente 2 accesos con nombre accesible, título nuevo y ningún «BITIRO» visible',()=>{
+ const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
+ const btns=[...header.matchAll(/<button\b[^>]*>.*?<\/button>/gs)].map(m=>m[0]);
+ assert.equal(btns.length,2,'la cabecera lleva exactamente los accesos «Bienvenida» y «Acerca de»');
+ assert.deepEqual(btns.map(b=>b.match(/id="([^"]+)"/)[1]),['welcomeReopen','aboutOpen']);
+ for(const b of btns){assert.match(b,/type="button"/);assert.match(b,/aria-haspopup="dialog"/);assert.ok(b.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<[^>]+>/g,'').trim().length>0,'nombre accesible (texto visible o recortado) en '+b.slice(0,60));assert.match(b,/<svg\b[^>]*aria-hidden="true"/);}
+ assert.match(html,/<title>IROH Simulator · Simulador libre<\/title>/);
+ // Visible al estudiante = el HTML sin scripts/comentarios. «BITIRO_*» y «bitiro:» viven en JS, no aquí.
+ for(const [name,src] of [['index.html',html],['pages/404.html',fs.readFileSync(path.join(root,'pages/404.html'),'utf8')]]){
+  const visible=src.replace(/<!--[\s\S]*?-->/g,'').replace(/<script\b[\s\S]*?<\/script>/g,'');
+  assert.ok(!/bitiro/i.test(visible),name+' no debe mostrar «BITIRO»: '+(visible.match(/.{0,30}bitiro.{0,30}/i)||[''])[0]);
+ }
+ assert.match(fs.readFileSync(path.join(root,'pages/404.html'),'utf8'),/<title>[^<]*IROH Simulator<\/title>/);
+ assert.match(html,/IROH \/ <span id="stageLabel">/);
+});
+test('SIM-IROH-UI-1: estilos y scripts locales, sin style= en línea (CSP style-src «self»)',()=>{
+ assert.ok(!/\sstyle\s*=/.test(html),'index.html no puede llevar atributos style');
+ assert.ok(!/<style\b/i.test(html),'index.html no puede llevar <style>');
+ assert.match(html,/<link rel="stylesheet" href="iroh-brand\.css">/);
+ assert.match(html,/<script src="iroh-brand\.js"><\/script>/);
+ assert.ok(html.indexOf('href="styles.css"')<html.indexOf('href="iroh-brand.css"'),'iroh-brand.css se carga después de styles.css');
 });
 console.log(`\n${checks} comprobaciones de contrato de interfaz superadas.`);

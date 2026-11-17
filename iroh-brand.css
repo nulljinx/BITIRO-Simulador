@@ -1,0 +1,165 @@
+/* IROH Simulator · identidad visual (SIM-IROH-UI-1): cabecera, diálogo «Acerca de» y bienvenida de primera visita.
+   Se carga DESPUÉS de styles.css y no lo modifica: colores, medidas y patrones del simulador siguen siendo los de styles.css/tokens.css.
+   Sin estilos en línea (CSP style-src 'self'). Movimiento solo con transform/opacity y sin bucles; prefers-reduced-motion lo anula. */
+
+/* ===== Cabecera y «Acerca de» ===== */
+/* 1 · Cabecera: el nombre conserva el patrón real «Marca en 600 + producto en 400 gris»; solo se añaden los accesos de la derecha. */
+.topbar{padding-inline:max(clamp(12px,2.2vw,32px),env(safe-area-inset-left)) max(clamp(12px,2.2vw,32px),env(safe-area-inset-right))}   /* muescas en móvil horizontal */
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-2)}
+.topbar-btn svg{flex:none;color:var(--focus-ring)}
+.topbar .brand img{border-radius:8px}
+@media(max-width:767px){.topbar-btn--welcome{display:none}}                 /* «Bienvenida» pasa a «Acerca de» en pantallas estrechas */
+@media(max-width:479px){                                                      /* solo icono; el nombre accesible se conserva */
+  .topbar-btn{width:44px;padding:0}
+  .topbar-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+}
+@media(pointer:coarse){.topbar-btn{min-height:44px;min-width:44px}}
+.topbar .button,.topbar-btn{touch-action:manipulation}
+
+/* 2 · «Acerca de»: reutiliza el <dialog> real (.confirm-dialog, .reference-title, .confirm-actions). */
+.about-dialog{width:min(92vw,440px);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain}
+.about-id{display:flex;align-items:center;gap:var(--space-3);min-width:0}
+.about-id img{border-radius:9px;flex:none}
+.about-intro{margin:0 0 var(--space-4);font-size:var(--text-body);line-height:1.55;color:var(--text-secondary)}
+.about-list{margin:0 0 var(--space-5);display:grid;gap:var(--space-3)}
+.about-list div{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--border-subtle);font-size:var(--text-body)}
+.about-list dt{margin:0;color:var(--text-secondary)}
+.about-list dd{margin:0}
+.about-list a{color:var(--action-primary);font-weight:600;text-underline-offset:3px}
+.about-list a:hover{color:var(--action-primary-hover)}
+/* Botones siempre a la vista: pie fijo dentro del diálogo (mismo recurso que el pie del diálogo de escenario real) */
+.about-actions{position:sticky;bottom:calc(-1 * var(--space-5));margin:0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5));padding:var(--space-3) var(--space-5);background:var(--surface-panel-raised);border-top:1px solid var(--border-subtle)}
+@media(max-height:520px){.about-dialog{padding:var(--space-3) var(--space-4)}.about-actions{bottom:calc(-1 * var(--space-3));margin:0 calc(-1 * var(--space-4)) calc(-1 * var(--space-3));padding:var(--space-2) var(--space-4)}.about-intro{margin-bottom:var(--space-3);font-size:var(--text-label)}.about-list{gap:var(--space-2);margin-bottom:var(--space-3)}.about-list div{padding-top:var(--space-2);font-size:var(--text-label)}.about-id img{width:32px;height:32px}}
+@media(max-width:480px){.about-list div{grid-template-columns:minmax(0,1fr);gap:2px}.about-actions{flex-direction:column-reverse}.about-actions .button{min-height:44px;width:100%}}
+@media(pointer:coarse){.about-actions .button,.about-list a{min-height:44px}.about-list a{display:inline-flex;align-items:center}}
+
+/* ===== Bienvenida de primera visita ===== */
+:root{--w-bg:#06101F;--w-bg-2:#0B1B32;--w-blue:#0043E1;--w-cyan:#24A6FD;--w-text:#F4F7FB;--w-muted:#B4C3D8;--w-line:rgba(180,195,216,.18);--w-yellow:#F7AE05;--w-yellow-hover:#FFC433;--w-on-yellow:#071426}
+
+.welcome{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:auto;overscroll-behavior:contain;
+  color:var(--w-text);font-family:var(--font-sans);
+  background:
+    radial-gradient(60% 70% at 72% 46%,rgba(0,67,225,.42),transparent 70%),
+    linear-gradient(rgba(180,195,216,.055) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg,rgba(180,195,216,.055) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(180deg,var(--w-bg-2),var(--w-bg))}
+.welcome:not([open]){display:none}
+.welcome::backdrop{background:transparent}
+.welcome *{box-sizing:border-box}
+.nowrap{white-space:nowrap}
+
+.welcome__track{position:absolute;left:0;right:0;bottom:3dvh;width:100%;height:clamp(90px,18dvh,200px);color:rgba(180,195,216,.34);pointer-events:none}
+.welcome__stage{position:relative;overflow:clip;min-height:100%;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);align-items:center;gap:clamp(16px,4vw,64px);
+  padding:max(24px,env(safe-area-inset-top)) max(clamp(20px,5vw,72px),env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(clamp(20px,5vw,72px),env(safe-area-inset-left))}
+
+.welcome__close{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:3;display:grid;place-items:center;width:44px;height:44px;border-radius:var(--radius-pill);border:1px solid var(--w-line);background:rgba(6,16,31,.55);color:var(--w-text);cursor:pointer;transition:background var(--motion-fast) var(--ease-out),border-color var(--motion-fast) var(--ease-out)}
+.welcome__close:hover{background:rgba(255,255,255,.12);border-color:rgba(180,195,216,.45)}
+
+.welcome__copy{position:relative;z-index:2;max-width:560px}
+.welcome__eyebrow{margin:0 0 14px;font-size:13px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--w-cyan)}
+.welcome__title{margin:0 0 16px;font-size:clamp(1.9rem,1rem + 3.2vw,3.1rem);font-weight:600;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.welcome__desc{margin:0 0 22px;font-size:clamp(1rem,.94rem + .25vw,1.1875rem);line-height:1.55;color:var(--w-muted);max-width:50ch}
+.welcome__steps{list-style:none;margin:0 0 28px;padding:0;display:flex;flex-wrap:wrap;gap:10px}
+.welcome__steps li{display:inline-flex;align-items:center;gap:9px;padding:7px 14px 7px 8px;border:1px solid var(--w-line);border-radius:var(--radius-pill);background:rgba(255,255,255,.04);font-size:14px;font-weight:500}
+.welcome__num{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--w-blue);color:#fff;font-size:12px;font-weight:600}
+.welcome__actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.welcome__cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border:0;border-radius:var(--radius-pill);background:var(--w-yellow);color:var(--w-on-yellow);font:600 17px/1 var(--font-sans);cursor:pointer;box-shadow:0 10px 28px rgba(247,174,5,.28);transition:transform var(--motion-fast) var(--ease-out),background var(--motion-fast) var(--ease-out),box-shadow var(--motion-fast) var(--ease-out)}
+.welcome__cta svg{transition:transform var(--motion-fast) var(--ease-out)}
+.welcome__cta:hover{background:var(--w-yellow-hover);transform:translateY(-1px);box-shadow:0 14px 32px rgba(247,174,5,.34)}
+.welcome__cta:hover svg{transform:translateX(3px)}
+.welcome__cta:active{transform:translateY(0) scale(.985)}
+.welcome :focus-visible{outline:3px solid #fff;outline-offset:3px}
+.welcome__hint{margin:0;font-size:13.5px;line-height:1.45;color:var(--w-muted)}
+.welcome__credit{margin:30px 0 0;font-size:12.5px;color:#93A3BA;letter-spacing:.01em}
+.welcome__credit a{display:inline-block;margin:-8px -2px;padding:8px 2px;color:var(--w-muted);font-weight:500;text-decoration:underline;text-decoration-color:rgba(180,195,216,.38);text-decoration-thickness:1px;text-underline-offset:3px;border-radius:3px;transition:color var(--motion-fast) var(--ease-out),text-decoration-color var(--motion-fast) var(--ease-out)}
+.welcome__credit a:hover{color:#fff;text-decoration-color:currentColor}
+@media(pointer:coarse){.welcome__credit a{min-height:44px;display:inline-flex;align-items:center;margin-block:-14px}}
+
+.welcome__mascot{position:relative;z-index:1;margin:0;display:grid;place-items:center;justify-self:center;width:100%}
+.welcome__halo{position:absolute;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(36,166,253,.34),rgba(36,166,253,0) 68%);inset:auto;top:50%;left:50%;transform:translate(-50%,-52%)}
+.welcome__roll,.welcome__float{position:relative;width:min(100%,clamp(260px,42vw,590px));max-height:78dvh}
+.welcome__float img{display:block;width:100%;height:auto;max-height:78dvh;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
+.welcome__shadow{position:absolute;bottom:3%;left:50%;width:42%;height:3.2%;transform:translateX(-50%);border-radius:50%;background:rgba(0,0,0,.5);filter:blur(6px)}
+
+/* Tablet vertical y móvil: una columna, mascota arriba */
+@media(max-width:899px){
+  .welcome__track{display:none}
+  .welcome__stage{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;gap:6px;align-content:center;padding-top:max(56px,env(safe-area-inset-top))}
+  .welcome__mascot{order:-1}
+  .welcome__roll,.welcome__float{width:min(100%,clamp(200px,46dvh,420px));max-height:42dvh}
+  .welcome__float img{max-height:42dvh}
+  .welcome__copy{max-width:600px}
+  .welcome__desc{margin-inline:auto}
+  .welcome__steps{justify-content:center}
+  .welcome__actions{align-items:center}
+  .welcome__halo{width:96%}
+}
+@media(max-width:480px){
+  .welcome__roll,.welcome__float{max-height:36dvh}.welcome__float img{max-height:36dvh}
+  .welcome__stage{gap:0}
+  .welcome__copy{margin-top:10px}
+  .welcome__track{display:none}
+  .welcome__eyebrow{margin-bottom:8px;font-size:12px}
+  .welcome__title{margin-bottom:10px}
+  .welcome__desc{margin-bottom:14px}
+  .welcome__steps{display:none}
+  .welcome__actions{align-self:stretch}
+  .welcome__cta{width:100%}
+  .welcome__esc,.welcome__credit{display:none}
+}
+@media(max-width:480px) and (min-height:700px){.welcome__steps{display:flex;margin-bottom:18px;gap:8px}.welcome__steps li{font-size:13px;padding:6px 12px 6px 7px}}
+/* Teléfonos pequeños (320 × 568): menos aire para que el botón siempre quede a la vista */
+@media(max-width:480px) and (max-height:620px){
+  .welcome__stage{padding-top:max(48px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  .welcome__eyebrow{display:none}
+  .welcome__roll,.welcome__float{max-height:30dvh}.welcome__float img{max-height:30dvh}
+  .welcome__hint{font-size:13px}
+  .welcome__title{font-size:1.65rem}
+  .welcome__desc{font-size:.9375rem;line-height:1.45;margin-bottom:12px}
+}
+/* Móvil horizontal y pantallas muy bajas: dos columnas, sin pasos ni créditos */
+@media(max-height:520px) and (orientation:landscape){
+  .welcome__stage{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);justify-items:stretch;text-align:left;gap:20px;padding-block:14px;padding-inline:max(28px,env(safe-area-inset-left)) max(64px,env(safe-area-inset-right))}
+  .welcome__mascot{order:0}
+  .welcome__roll,.welcome__float{width:min(100%,78dvh);max-height:80dvh}
+  .welcome__float img{max-height:80dvh}
+  .welcome__title{font-size:clamp(1.35rem,4.2dvh + .7rem,1.9rem);margin-bottom:8px}
+  .welcome__eyebrow{margin-bottom:6px;font-size:11px}
+  .welcome__desc{font-size:.9375rem;line-height:1.45;margin:0 0 14px}
+  .welcome__steps,.welcome__credit,.welcome__esc{display:none}
+  .welcome__actions{align-items:flex-start}
+  .welcome__cta{min-height:48px;width:auto}
+  .welcome__track{display:none}
+}
+
+@media(max-height:360px) and (orientation:landscape){
+  .welcome__stage{padding-block:10px}
+  .welcome__eyebrow{display:none}
+  .welcome__title{font-size:1.3rem;margin-bottom:6px}
+  .welcome__desc{font-size:.875rem;line-height:1.4;margin-bottom:10px}
+  .welcome__cta{min-height:46px}
+}
+
+/* Movimiento: solo transform y opacity; una entrada breve (≈ 0,9 s en total) y después todo queda estático. Sin bucles. */
+@keyframes w-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes w-roll{from{opacity:0;transform:translateX(56px)}to{opacity:1;transform:none}}
+@keyframes w-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes w-out{to{opacity:0;transform:scale(.985)}}
+.welcome[open]{animation:w-fade-in var(--motion-panel) var(--ease-out) both}
+.welcome[open] .welcome__eyebrow,.welcome[open] .welcome__title,.welcome[open] .welcome__desc,.welcome[open] .welcome__steps,.welcome[open] .welcome__actions,.welcome[open] .welcome__credit{animation:w-rise .5s var(--ease-out) both}
+.welcome[open] .welcome__title{animation-delay:60ms}
+.welcome[open] .welcome__desc{animation-delay:120ms}
+.welcome[open] .welcome__steps{animation-delay:180ms}
+.welcome[open] .welcome__actions{animation-delay:240ms}
+.welcome[open] .welcome__credit{animation-delay:300ms}
+.welcome[open] .welcome__roll{animation:w-roll .75s var(--ease-out) 120ms both}
+.welcome.is-leaving{animation:w-out var(--motion-panel) ease-in forwards}
+
+@media(prefers-reduced-motion:reduce){
+  .welcome,.welcome *,.welcome[open],.welcome[open] *,.welcome.is-leaving{animation:none!important;transition:none!important}
+}
+@media(forced-colors:active){
+  .welcome{background:Canvas;color:CanvasText}
+  .welcome__cta{background:ButtonFace;color:ButtonText;border:2px solid ButtonText}
+  .welcome__halo,.welcome__shadow,.welcome__track{display:none}
+}

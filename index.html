@@ -3,13 +3,27 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#FCFBF8">
-  <title>BITIRO Simulador · IROH</title>
-  <link rel="icon" href="assets/bitiro-symbol.png"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="styles.css">
+  <title>IROH Simulator · Simulador libre</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/iroh-favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="assets/iroh-favicon-192.png"><link rel="apple-touch-icon" href="assets/iroh-favicon-180.png">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="iroh-brand.css">
 </head>
 <body>
   <a class="skip-link" href="#workspace">Saltar al simulador</a>
   <header class="topbar">
-    <div class="brand"><img src="assets/bitiro-symbol.png" alt="" width="34" height="34"><span><strong>BITIRO <span>Simulador</span></strong><small>Simulador libre del IROH</small></span></div>
+    <div class="brand">
+      <img src="assets/iroh-isotipo-68.webp" alt="" width="34" height="34">
+      <span><strong translate="no">IROH <span>Simulator</span></strong><small>Simulador libre</small></span>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" id="welcomeReopen" class="button topbar-btn topbar-btn--welcome" aria-haspopup="dialog" aria-controls="welcome">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.4 9.6c.6 1 1.5 1.5 2.6 1.5s2-.5 2.6-1.5M5.9 6.3v.1M10.1 6.3v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="topbar-label">Bienvenida</span>
+      </button>
+      <button type="button" id="aboutOpen" class="button topbar-btn" aria-haspopup="dialog" aria-controls="aboutDialog">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v3.6M8 5.1v.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span class="topbar-label">Acerca de</span>
+      </button>
+    </div>
   </header>
   <main id="workspace" tabindex="-1" class="workspace editor-open" aria-label="Simulador libre del IROH">
     <h1 class="sr-only">Simulador libre del IROH</h1>
@@ -33,9 +47,9 @@
         </div>
         <div class="scene-wrap" id="sceneWrap">
           <canvas id="scene" role="img" aria-label="Escena 3D del robot IROH en la pista. Arrastra para girar y usa la rueda para acercar."></canvas>
-          <div class="scene-top-label"><span>BITIRO / <span id="stageLabel">S01</span> / 3D</span><small><span id="viewLabel">PERSPECTIVA LIBRE</span><span class="sep"> · </span><span id="trackSize">100 × 140 cm</span><span id="trackName">PLOTTER S01</span></small></div>
+          <div class="scene-top-label"><span>IROH / <span id="stageLabel">S01</span> / 3D</span><small><span id="viewLabel">PERSPECTIVA LIBRE</span><span class="sep"> · </span><span id="trackSize">100 × 140 cm</span><span id="trackName">PLOTTER S01</span></small></div>
           <span class="live-badge" id="statusBadge" role="status">EN ESPERA</span>
-          <div class="scene-source" id="sceneSource">S01 · Geometría del proyecto BITIRO</div>
+          <div class="scene-source" id="sceneSource">S01 · Geometría del proyecto IROH</div>
           <div class="zoom-controls"><button id="zoomOut" type="button" aria-label="Alejar cámara">−</button><output id="zoomText" aria-live="off">100%</output><button id="zoomIn" type="button" aria-label="Acercar cámara">+</button><button id="full" type="button" aria-label="Pantalla completa"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 1.5H1.5V5M9 1.5h3.5V5M5 12.5H1.5V9M9 12.5h3.5V9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
           <div class="calibration-layer" id="calibrationLayer" hidden>
             <div class="calibration-grab" id="calibrationGrab" tabindex="0" role="application" aria-roledescription="robot arrastrable" aria-label="IROH. Arrástralo por el plotter o usa las flechas del teclado."></div>
@@ -575,6 +589,63 @@ detenerse();</code></pre>
     </dialog>
     <dialog id="referenceDialog" class="reference-dialog" aria-labelledby="referenceHeading"><div class="reference-title"><h2 id="referenceHeading">Plotter de referencia</h2><button type="button" id="referenceClose" aria-label="Cerrar plotter">✕</button></div><p>Compara la pista 3D virtual con la imagen de referencia. S01–S06 y S08 usan geometrías reconstruidas desde los PDF vectoriales oficiales; S07 es un repaso sin plotter propio.</p><img id="referenceImg" alt="Imagen original del plotter seleccionado"></dialog>
   </main>
-  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="line-geometry.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="head-sonar.js"></script><script src="head-config.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="calibration-mode.js"></script><script src="scenario-editor.js"></script>
+
+  <dialog id="aboutDialog" class="about-dialog" aria-labelledby="aboutTitle" aria-describedby="aboutIntro">
+    <div class="reference-title">
+      <div class="about-id"><img src="assets/iroh-isotipo-68.webp" alt="" width="40" height="40"><h2 id="aboutTitle" translate="no">Acerca de IROH Simulator</h2></div>
+      <button type="button" id="aboutClose" aria-label="Cerrar «Acerca de»">✕</button>
+    </div>
+    <p id="aboutIntro" class="about-intro">Simulador educativo para aprender a programar un robot en una pista virtual: escribes tu código, lo ejecutas y observas cómo responden los sensores.</p>
+    <dl class="about-list">
+      <div><dt>Desarrollado por</dt><dd><a href="https://nulljinx.com" target="_blank" rel="noopener noreferrer" translate="no">nulljinx<span class="sr-only"> (abre nulljinx.com en una pestaña nueva)</span></a></dd></div>
+      <div><dt>Tu trabajo</dt><dd>Se guarda en este navegador. No hay cuentas.</dd></div>
+    </dl>
+    <div class="confirm-actions about-actions">
+      <button type="button" id="aboutWelcome" class="button">Ver la bienvenida</button>
+      <button type="button" id="aboutDone" class="button primary">Cerrar</button>
+    </div>
+  </dialog>
+
+  <dialog id="welcome" class="welcome" aria-labelledby="welcome-title" aria-describedby="welcome-desc">
+    <svg class="welcome__track" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 170 C 220 170, 260 80, 520 96 S 860 200, 1220 120" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 22"/></svg>
+    <button type="button" class="welcome__close" id="welcomeClose" aria-label="Cerrar bienvenida">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="welcome__stage">
+      <div class="welcome__copy">
+        <p class="welcome__eyebrow">Simulador educativo de robótica</p>
+        <h2 id="welcome-title" class="welcome__title">¡Bienvenido a <span class="nowrap">IROH Simulator!</span></h2>
+        <p id="welcome-desc" class="welcome__desc">Programa un robot en una pista virtual: escribe tu código, ejecútalo y observa cómo responden sus sensores. Pensado para estudiantes y docentes, sin cuentas ni instalaciones.</p>
+        <ol class="welcome__steps" aria-label="Cómo empezar: escribe tu programa, ejecútalo en la pista y observa los sensores">
+          <li><span class="welcome__num" aria-hidden="true">1</span>Escribe</li>
+          <li><span class="welcome__num" aria-hidden="true">2</span>Ejecuta</li>
+          <li><span class="welcome__num" aria-hidden="true">3</span>Observa</li>
+        </ol>
+        <div class="welcome__actions">
+          <button type="button" id="welcomeEnter" class="welcome__cta">
+            <span>Entrar al simulador</span>
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3.5 9h10M9.5 4.5L14 9l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="welcome__hint">Tu código se guarda en este navegador. <span class="welcome__esc">Esc para cerrar.</span></p>
+        </div>
+        <p class="welcome__credit">Desarrollado por <a href="https://nulljinx.com" target="_blank" rel="noopener noreferrer">nulljinx<span class="sr-only"> (abre nulljinx.com en una pestaña nueva)</span></a></p>
+      </div>
+      <figure class="welcome__mascot">
+        <div class="welcome__halo" aria-hidden="true"></div>
+        <div class="welcome__roll">
+          <div class="welcome__float">
+            <img id="welcomeImg" src="assets/iroh-mascot-640.webp"
+                 srcset="assets/iroh-mascot-420.webp 420w, assets/iroh-mascot-640.webp 640w, assets/iroh-mascot-960.webp 960w"
+                 sizes="(min-width: 1024px) 44vw, (min-width: 640px) 50vw, 62vw"
+                 width="960" height="960" loading="lazy" decoding="async"
+                 alt="Mascota de IROH Simulator: un robot azul con chaqueta, ojos luminosos y ruedas amarillas que levanta la mano para saludar.">
+          </div>
+        </div>
+        <div class="welcome__shadow" aria-hidden="true"></div>
+      </figure>
+    </div>
+  </dialog>
+
+  <script src="tracks.js"></script><script src="extra-tracks.js"></script><script src="line-geometry.js"></script><script src="calibration.js"></script><script src="iroh-runtime.js"></script><script src="strike-physics.js"></script><script src="scenario-props.js"></script><script src="renderer3d.js"></script><script src="starters.js"></script><script src="head-sonar.js"></script><script src="head-config.js"></script><script src="simulator.js"></script><script src="syntax-highlight.js"></script><script src="ui-shell.js"></script><script src="calibration-mode.js"></script><script src="scenario-editor.js"></script><script src="iroh-brand.js"></script>
 </body>
 </html>

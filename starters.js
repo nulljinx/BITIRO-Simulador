@@ -22,11 +22,16 @@
  ]);
  const isFree=id=>FREE.includes(id);
  const hasStarter=id=>Object.prototype.hasOwnProperty.call(TITLES,id);
- function starter(id){
-  if(!hasStarter(id))return null;
+ // Primera línea del starter. SIM-IROH-UI-1 la renombra; la anterior se conserva SOLO para reconocer (nunca reescribir) código ya guardado.
+ const HEADER='// IROH Simulator · ',LEGACY_HEADER='// BITIRO Simulador · ';
+ const build=(id,header)=>{
   const inits=(INITS[id]||DEFAULT_INITS).map(n=>'  '+n+'();').join('\n');
-  return '// BITIRO Simulador · '+TITLES[id]+'\n#include <KnightRoboticsLibs_Iroh.h>\n\nvoid setup() {\n'+inits+'\n}\n\nvoid loop() {\n  // Divide el desafío en tareas pequeñas.\n  // Escribe aquí tu programa.\n}\n';
- }
+  return header+TITLES[id]+'\n#include <KnightRoboticsLibs_Iroh.h>\n\nvoid setup() {\n'+inits+'\n}\n\nvoid loop() {\n  // Divide el desafío en tareas pequeñas.\n  // Escribe aquí tu programa.\n}\n';
+ };
+ function starter(id){return hasStarter(id)?build(id,HEADER):null;}
+ // Starter que entregaba SIM-NOFIRVI-1 (encabezado «BITIRO Simulador»). Solo para comparar; resolve() NO lo usa para reemplazar nada.
+ function legacyStarter(id){return hasStarter(id)?build(id,LEGACY_HEADER):null;}
+ const isLegacyStarter=(code,id)=>typeof code==='string'&&(id===undefined?Object.keys(TITLES).some(t=>code===build(t,LEGACY_HEADER)):hasStarter(id)&&code===build(id,LEGACY_HEADER));
  const isLegacyExample=code=>LEGACY.includes(code);
  // Código que debe mostrar el editor al abrir una pista. `saved` es lo guardado en el navegador (o null); `fallback` el ejemplo por defecto de las pistas libres.
  function resolve(id,saved,fallback=''){
@@ -35,9 +40,9 @@
   if(!has||isLegacyExample(saved))return starter(id);              // sin código o ejemplo legacy exacto → starter
   return saved;                                                    // cualquier otro texto, aunque difiera en un carácter → íntegro
  }
- // ¿El código actual es distinto del starter? (para pedir confirmación antes de restaurar)
- const isModified=(id,code)=>hasStarter(id)&&code!==starter(id);
- const api=Object.freeze({freeTracks:FREE,isFree,hasStarter,starter,legacyExamples:LEGACY,isLegacyExample,resolve,isModified});
+ // ¿El código actual es distinto del starter? (para pedir confirmación antes de restaurar). El starter anterior (encabezado BITIRO) cuenta como SIN modificar.
+ const isModified=(id,code)=>hasStarter(id)&&code!==starter(id)&&code!==legacyStarter(id);
+ const api=Object.freeze({freeTracks:FREE,isFree,hasStarter,starter,legacyStarter,isLegacyStarter,legacyExamples:LEGACY,isLegacyExample,resolve,isModified});
  if(typeof window!=='undefined')window.BITIRO_STARTERS=api;
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();
