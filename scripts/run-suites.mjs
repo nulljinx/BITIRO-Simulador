@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// node scripts/run-suites.mjs            — las 21 suites Node oficiales (lista explícita, sin dependencias).
-// node scripts/run-suites.mjs --browser  — las 5 pruebas de navegador; exige CHROME_BIN y trata un SKIP como fallo.
+// node scripts/run-suites.mjs            — las 22 suites Node oficiales (lista explícita, sin dependencias).
+// node scripts/run-suites.mjs --browser  — las 6 pruebas de navegador; exige CHROME_BIN y trata un SKIP como fallo.
 // Falla ante cualquier código de salida distinto de 0, señal, tiempo agotado, SKIP/OMITIDA, archivo de pruebas sin clasificar
 // o cambio del árbol de trabajo (git status / git diff) causado por la ejecución.
 import { spawnSync } from 'node:child_process';
@@ -20,6 +20,7 @@ const NODE_SUITES = [
   ['tests/head-sonar.cjs'],
   ['tests/head/s08-matrix.cjs'],
   ['tests/head/s08-real-start.cjs'],
+  ['tests/iroh-brand.cjs'],
   ['tests/motor-dynamics.cjs'],
   ['tests/pilot5.cjs'],
   ['tests/regression.cjs'],
@@ -42,6 +43,7 @@ const BROWSER_SUITES = [
   ['tests/guide-ui.mjs'],
   ['tests/head-compat-ui.mjs'],
   ['tests/head-ui.mjs'],
+  ['tests/iroh-brand-ui.mjs'],
 ];
 // Bibliotecas, sondas y herramientas: se importan o se usan a mano, no son suites.
 const AUX = new Set([

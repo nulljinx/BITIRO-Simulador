@@ -26,7 +26,7 @@ const CSS = ['/tokens.css', '/styles.css'];
 const JS = ['/tracks.js', '/extra-tracks.js', '/calibration.js', '/iroh-runtime.js', '/strike-physics.js',
   '/scenario-props.js', '/renderer3d.js', '/starters.js', '/simulator.js', '/syntax-highlight.js',
   '/ui-shell.js', '/scenario-editor.js'];
-const IMG = ['/assets/bitiro-symbol.png'];
+const IMG = ['/assets/iroh-isotipo-68.webp'];
 const FONTS = ['sans-latin-400-normal', 'sans-latin-500-normal', 'sans-latin-600-normal',
   'mono-latin-400-normal', 'mono-latin-500-normal'].map((f) => `/assets/fonts/ibm-plex-${f}.woff2`);
 
