@@ -81,16 +81,18 @@ export async function launch({ headed = false, port = 9340, extraArgs = [] } = {
   return { send, on, close, version, pid: proc.pid };
 }
 
-// Clave de la bienvenida de primera visita (IROH Simulator). Las suites existentes parten de «ya entré» para que la bienvenida
-// no cubra la interfaz que prueban; tests/iroh-brand-ui.mjs la desactiva con { seed: false }.
-export const WELCOME_KEY = 'bitiro:standalone:welcome:v1';
+// Clave de la bienvenida (IROH Simulator): vive en sessionStorage, es decir, por pestaña. Las suites existentes parten de «ya entré» (siembran
+// la clave en sessionStorage de SU pestaña) para que la bienvenida no cubra la interfaz que prueban; tests/iroh-brand-ui.mjs lo desactiva con { seed: false }.
+export const WELCOME_KEY = 'bitiro:standalone:welcome:session:v1';
+// Indicador ANTIGUO (localStorage, SIM-IROH-UI-1): ya no decide nada. Se exporta solo para comprobar que se ignora y no se borra.
+export const WELCOME_LEGACY_KEY = 'bitiro:standalone:welcome:v1';
 
 // Sesión de una pestaña nueva (flatten) con helpers.
 export async function newPage(browser, { seed = true } = {}) {
   const { targetId } = await browser.send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await browser.send('Target.attachToTarget', { targetId, flatten: true });
   const send = (m, p = {}) => browser.send(m, p, sessionId);
-  if (seed) await send('Page.addScriptToEvaluateOnNewDocument', { source: `try{localStorage.setItem(${JSON.stringify(WELCOME_KEY)},'1')}catch(e){}` });
+  if (seed) await send('Page.addScriptToEvaluateOnNewDocument', { source: `try{sessionStorage.setItem(${JSON.stringify(WELCOME_KEY)},'1')}catch(e){}` });
   const handlers = new Map();
   const unsubscribe = browser.on((m) => { if (m.sessionId === sessionId) for (const h of handlers.get(m.method) || []) h(m.params); });
   const on = (method, h) => { if (!handlers.has(method)) handlers.set(method, []); handlers.get(method).push(h); };

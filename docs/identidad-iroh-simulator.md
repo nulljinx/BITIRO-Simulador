@@ -26,7 +26,7 @@
 
 ## Persistencia añadida
 
-Una sola clave nueva: `bitiro:standalone:welcome:v1` (valor `"1"`), escrita al cerrar la bienvenida por cualquier vía, mediante `window.BITIRO_STORAGE`. Si el almacenamiento falla, la bienvenida no se abre sola y sigue disponible desde «Bienvenida» (≥ 768 px) y desde «Acerca de».
+Una sola clave de bienvenida: `bitiro:standalone:welcome:session:v1` (valor `"1"`), en **`sessionStorage`** (por pestaña), escrita al cerrar la bienvenida por cualquier vía. Pestaña nueva → aparece; recargar la misma → no; cerrar la pestaña y abrir otra → aparece de nuevo. Si el almacenamiento falla, la bienvenida no se abre sola y sigue disponible desde «Acerca de» → «Ver la bienvenida». La cabecera ya no tiene botón «Bienvenida». El indicador antiguo `bitiro:standalone:welcome:v1` (`localStorage`, SIM-IROH-UI-1) ya no se lee ni se borra. Duplicar una pestaña o restaurar una sesión puede copiar `sessionStorage` (comportamiento del navegador). Código, escenarios y calibración (`localStorage`) no cambian. La composición de la bienvenida se adapta al ancho **y** al alto del viewport (zoom del navegador y tamaño de letra incluidos). Detalle, pruebas y limitaciones en [`release-sim-iroh-welcome-1.md`](release-sim-iroh-welcome-1.md).
 
 ## Crédito
 

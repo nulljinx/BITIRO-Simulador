@@ -1,25 +1,30 @@
-/* IROH Simulator · comportamiento de la identidad visual (SIM-IROH-UI-1): bienvenida de primera visita y diálogo «Acerca de».
+/* IROH Simulator · comportamiento de la identidad visual: bienvenida por sesión de pestaña y diálogo «Acerca de».
    Capa de interfaz pura: no lee ni escribe estado del simulador, no toca física, sensores, editor ni pistas.
-   Persistencia: UNA clave nueva, `bitiro:standalone:welcome:v1` (valor «1»), vía window.BITIRO_STORAGE. Las claves del código,
-   el escenario y la calibración no se tocan. Si el almacenamiento falla, la bienvenida NO se abre sola (nunca insistimos
-   si no podemos recordar la elección) y sigue disponible desde la cabecera.
+   Persistencia: UNA clave, `bitiro:standalone:welcome:session:v1` (valor «1»), en sessionStorage: vive lo que vive la pestaña.
+   · Pestaña nueva (o ventana nueva): la bienvenida se abre sola.
+   · Recargar la misma pestaña: no vuelve a abrirse.
+   · Cerrar la pestaña y abrir el simulador en otra: se abre de nuevo.
+   Los navegadores pueden copiar sessionStorage al duplicar una pestaña o restaurar una sesión; en esos casos la bienvenida no reaparece.
+   Las claves del código, el escenario y la calibración viven en localStorage y no se tocan. El indicador antiguo de localStorage
+   (`bitiro:standalone:welcome:v1`) NO se lee ni se borra: simplemente deja de usarse.
+   Si el almacenamiento falla, la bienvenida NO se abre sola (nunca insistimos si no podemos recordar la elección) y sigue
+   disponible desde «Acerca de» → «Ver la bienvenida».
    Si el navegador no soporta <dialog>, el simulador queda accesible sin bienvenida. Sin JavaScript, los <dialog> permanecen cerrados. */
 'use strict';
 (()=>{
- const KEY='bitiro:standalone:welcome:v1';
+ const KEY='bitiro:standalone:welcome:session:v1';
  const $=id=>document.getElementById(id);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 
  // ── Bienvenida ─────────────────────────────────────────────────────────────────────────────────────────────
  const welcome=$('welcome');
  if(welcome&&typeof welcome.showModal==='function'){
-  const enter=$('welcomeEnter'),closeBtn=$('welcomeClose'),reopen=$('welcomeReopen'),main=$('workspace'),img=$('welcomeImg');
-  const S=()=>window.BITIRO_STORAGE;
+  const enter=$('welcomeEnter'),closeBtn=$('welcomeClose'),main=$('workspace'),img=$('welcomeImg');
   const store={
-   get:()=>{const s=S();if(s)return s.get(KEY);try{return localStorage.getItem(KEY);}catch{return null;}},
-   set:()=>{const s=S();if(s)return s.set(KEY,'1');try{localStorage.setItem(KEY,'1');return true;}catch{return false;}},
+   get:()=>{try{return sessionStorage.getItem(KEY);}catch{return null;}},
+   set:()=>{try{sessionStorage.setItem(KEY,'1');return true;}catch{return false;}},
    // ¿Podemos recordar la elección? Sonda de escritura y borrado con una clave propia, sin tocar la clave real.
-   works:()=>{const s=S();if(!s)return false;return s.set(KEY+':probe','1')===true&&s.remove(KEY+':probe')===true;}
+   works:()=>{try{sessionStorage.setItem(KEY+':probe','1');sessionStorage.removeItem(KEY+':probe');return true;}catch{return false;}}
   };
   let opener=null,leaving=false;
   const open=from=>{
@@ -46,8 +51,7 @@
   welcome.addEventListener('cancel',e=>{e.preventDefault();dismiss();});   // Escape
   enter?.addEventListener('click',dismiss);
   closeBtn?.addEventListener('click',dismiss);
-  reopen?.addEventListener('click',()=>open(reopen));
-  document.addEventListener('iroh:welcome-open',e=>open(e.detail&&e.detail.from));   // p. ej. desde «Acerca de»
+  document.addEventListener('iroh:welcome-open',e=>open(e.detail&&e.detail.from));   // desde «Acerca de» → «Ver la bienvenida»
   if(!store.get()&&store.works())open(null);
  }
 

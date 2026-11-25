@@ -19,36 +19,57 @@ Los eventos de una misma rama se serializan con `concurrency` (`cancel-in-progre
 | `node-tests` | `node scripts/run-suites.mjs` (22 suites Node) | Sí | 20 min |
 | `browser-tests` | `node scripts/run-suites.mjs --browser` (6 pruebas de navegador) | **No** (`continue-on-error: true`) | 30 min |
 
-«Bloquea» describe el comportamiento del job, no la protección de rama: que un check sea obligatorio para fusionar se configura en GitHub, no en este archivo. `browser-tests` es informativo y **no debe exigirse como check obligatorio** hasta que se haya validado en GitHub. Si falla, un paso final emite una anotación `::error` y un resumen en `GITHUB_STEP_SUMMARY` para que el fallo no pase inadvertido.
+«Bloquea» describe el comportamiento del job, no la protección de rama: que un check sea obligatorio para fusionar se configura en GitHub, no en este archivo (y esta guía no puede comprobar esa configuración).
+
+- `pages-build` y `node-tests` **son los checks obligatorios**: deben pasar, y deben estar marcados como requeridos en la protección de rama de `main`.
+- `browser-tests` es **informativo** (`continue-on-error: true`) y no debe exigirse como check obligatorio hasta que se haya validado en GitHub. Por eso mismo **debe revisarse expresamente antes de fusionar**: un fallo no bloquea el merge por sí solo. Si falla, un paso final emite una anotación `::error` y un resumen en `GITHUB_STEP_SUMMARY` para que no pase inadvertido.
+
+Estado de SIM-IROH-WELCOME-1: el CI remoto **aún no se ha ejecutado** sobre esta release (no hay push ni Pull Request); las comprobaciones descritas aquí se han hecho solo en local.
 
 El job `browser-tests` localiza Chrome del runner y crea un envoltorio (`$RUNNER_TEMP/chrome-nosandbox`) que lo lanza con `--no-sandbox`, porque el runner restringe los user namespaces; lo exporta como `CHROME_BIN`.
 
 ### Variable `MANIFEST_SHA256`
 
-Definida a nivel de workflow en `ci.yml`. Es el SHA-256 de `scripts/pages-manifest.json` (candidato aprobado `9c0b492`). `verify-dist.mjs` la exige. Cambiar el manifiesto obliga a cambiar este valor **en el mismo commit**, de modo que la modificación quede visible en la revisión.
+Definida a nivel de workflow en `ci.yml`. Es el **pin aprobado**: el SHA-256 de `scripts/pages-manifest.json` del candidato vigente, **SIM-IROH-WELCOME-1** (`approvedCommit` `6b86a96eff17a513dd0d7bda55313dc882dd890f`, `approvedTree` `3e58a54acf7da83ec21d6cd6216d9b0c6712e43e`):
+
+```
+81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd
+```
+
+`verify-dist.mjs` la exige. Cambiar el manifiesto obliga a cambiar este valor **en el mismo commit**, de modo que la modificación quede visible en la revisión.
+
+Referencias históricas (ya no vigentes): SIM-IROH-UI-1, manifiesto `25a4d96e…26f82`, archivado en `docs/releases/sim-iroh-ui-1.pages-manifest.json`; SIM-NOFIRVI-1 (35 archivos), manifiesto `cd995db8…cbe24`, archivado en `docs/releases/sim-nofirvi-1.pages-manifest.json`. Los manifiestos archivados no se editan.
 
 ## `scripts/build-pages.mjs`
 
-Genera `dist/` (ignorado por Git) a partir de la allowlist de `scripts/pages-manifest.json`. Antes de copiar nada comprueba que hay 43 entradas y que cada origen existe y coincide con su SHA-256; después borra `dist/`, copia los 35 archivos y vuelve a comprobar que no sobra ni falta ninguno y que cada hash es el aprobado. Falla con código 1 y la lista completa de errores.
+Genera `dist/` (ignorado por Git) a partir de la allowlist de `scripts/pages-manifest.json`. Antes de copiar nada comprueba que hay 43 entradas y que cada origen existe y coincide con su SHA-256; después borra `dist/`, copia los 43 archivos y vuelve a comprobar que no sobra ni falta ninguno y que cada hash es el aprobado. Falla con código 1 y la lista completa de errores.
 
 ## `scripts/verify-dist.mjs`
 
 Comprobación **independiente** de `dist/`: no reutiliza código de `build-pages.mjs`, de modo que un error en el build no puede ocultarse a sí mismo. Exige:
 
-1. Que `MANIFEST_SHA256` esté definida y coincida con el SHA-256 real de `scripts/pages-manifest.json`.
+1. Que `MANIFEST_SHA256` esté definida y coincida con el SHA-256 real de `scripts/pages-manifest.json`; el valor es el pin aprobado, no se calcula a partir del manifiesto.
 2. Exactamente 43 archivos en `dist/`.
 3. El conjunto exacto de rutas del manifiesto (sin extras ni faltantes).
 4. El SHA-256 de cada archivo.
 5. Ninguna ruta bajo `docs/`, `tests/` o `examples/`, ni cuyo nombre contenga «firvi».
 
-Ejecución local (ejemplo):
+Verificación local **contra el pin aprobado** (esta es la comprobación de integridad):
 
 ```bash
 node scripts/build-pages.mjs
-MANIFEST_SHA256=$(sha256sum scripts/pages-manifest.json | cut -d' ' -f1) node scripts/verify-dist.mjs
+MANIFEST_SHA256=81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd node scripts/verify-dist.mjs
 ```
 
-Esa forma local toma el hash del propio archivo y por tanto **no** detecta un manifiesto modificado; la comprobación real es la de CI, que usa el valor fijado en `ci.yml`.
+Para que sea una comprobación real, el valor debe ser el pin escrito en `ci.yml` (puedes extraerlo de ahí), nunca un hash recalculado a partir del manifiesto que se está verificando.
+
+Para **diagnosticar** (por ejemplo, saber qué hash tiene ahora un manifiesto que acabas de cambiar y debes poner en el pin) sí puedes calcularlo:
+
+```bash
+sha256sum scripts/pages-manifest.json
+```
+
+Ese hash recalculado solo describe el archivo tal como está: **no** demuestra que sea el aprobado. Si lo pasas como `MANIFEST_SHA256`, `verify-dist.mjs` siempre pasará la comprobación del manifiesto, aunque haya sido alterado, por lo que no sirve como verificación de integridad. La comprobación real es la de CI, que usa el valor fijado en `ci.yml`.
 
 ## `scripts/run-suites.mjs`
 
@@ -87,14 +108,16 @@ El código de salida es 0 solo si todas las suites pasan y el árbol no cambió.
 
 ```bash
 node scripts/build-pages.mjs
-MANIFEST_SHA256=cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24 node scripts/verify-dist.mjs
-node scripts/run-suites.mjs
-CHROME_BIN=/ruta/a/chrome-o-envoltorio node scripts/run-suites.mjs --browser
+MANIFEST_SHA256=81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd node scripts/verify-dist.mjs
+node scripts/run-suites.mjs                                              # 22 suites Node
+CHROME_BIN=/ruta/a/chrome-o-envoltorio node scripts/run-suites.mjs --browser   # 6 suites de navegador
 ```
+
+Si cambias el manifiesto, el pin de esta página y el de `ci.yml` deben actualizarse juntos.
 
 Si Chrome local necesita `--no-sandbox`, usa un envoltorio como el del workflow.
 
 ## Mantener la lista de suites
 
-- Prueba nueva: añádela a `NODE_SUITES` o `BROWSER_SUITES` (o a `AUX` si no es una suite) en `scripts/run-suites.mjs`; si cambia el recuento, actualiza también los textos «21» y «5» de esta página, de `ci.yml` y del README.
-- Cambio del manifiesto de Pages: actualiza `MANIFEST_SHA256` en `ci.yml` en el mismo commit y justifica el cambio en la revisión.
+- Prueba nueva: añádela a `NODE_SUITES` o `BROWSER_SUITES` (o a `AUX` si no es una suite) en `scripts/run-suites.mjs`; si cambia el recuento, actualiza también los textos «22» y «6» de esta página, de `ci.yml` y del README.
+- Cambio del manifiesto de Pages: actualiza `MANIFEST_SHA256` en `ci.yml` (y el pin citado en esta página) en el mismo commit, archiva el manifiesto anterior en `docs/releases/` y justifica el cambio en la revisión.

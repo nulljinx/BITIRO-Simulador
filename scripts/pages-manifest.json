@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "candidate": "SIM-IROH-UI-1",
- "approvedCommit": "acb2679497ce6ed2851fcc814270edfd41764146",
- "approvedTree": "e453fd53cc13e79677dcfdd9c35241a3cefb6f11",
- "baseRelease": "SIM-NOFIRVI-1",
- "baseCommit": "5ffcc1568d3d9a16f831d49fa8d328b142b83d22",
- "baseApprovedCommit": "9c0b4922ffab228d5bf9af75abc51cf94c194264",
- "baseApprovedTree": "d68a79962b2313a70da5b31713c37c62598b957c",
- "baseManifestSha256": "cd995db8d9c4ec5fb44941fe10ecab03e9d08a9ae9f0e41db34450c7a27cbe24",
- "note": "Allowlist explícita del artefacto público de Cloudflare Pages: 43 archivos = 31 heredados de SIM-NOFIRVI-1 con hash idéntico + 3 modificados (index.html, starters.js, 404.html) + 9 nuevos (identidad IROH Simulator); se retira assets/bitiro-symbol.png del artefacto (el archivo permanece en el repositorio). Los assets de la mascota (assets/iroh-mascot-*.webp, con la inscripción de Fundación Mustakis) y sus derivados (isotipo y favicons) usan una identidad institucional cuya autorización declara el responsable del proyecto; este repositorio no incluye el documento ni verifica su alcance, y no implica alianza, patrocinio ni aprobación oficial adicional. La ilustración fue generada con ChatGPT según la procedencia C2PA del original. No se publican bajo licencia abierta. Publicar requiere confirmar que el permiso cubre el sitio web, el repositorio público y los derivados. Ver docs/identidad-iroh-simulator.md. No incluye docs/, tests/ ni examples/.",
+ "candidate": "SIM-IROH-WELCOME-1",
+ "approvedCommit": "6b86a96eff17a513dd0d7bda55313dc882dd890f",
+ "approvedTree": "3e58a54acf7da83ec21d6cd6216d9b0c6712e43e",
+ "baseRelease": "SIM-IROH-UI-1",
+ "baseCommit": "5f21d2fcb6fab3bc379190fa040904db2ed52d47",
+ "baseApprovedCommit": "acb2679497ce6ed2851fcc814270edfd41764146",
+ "baseApprovedTree": "e453fd53cc13e79677dcfdd9c35241a3cefb6f11",
+ "baseManifestSha256": "25a4d96e4950feb2695f92b488393326be4e0203bc94bda59540035599326f82",
+ "note": "Allowlist explícita del artefacto público de Cloudflare Pages: 43 archivos = 40 idénticos a SIM-IROH-UI-1 + 3 modificados (index.html, iroh-brand.css, iroh-brand.js) que corrigen la bienvenida: sin botón «Bienvenida» en la cabecera (se reabre desde «Acerca de»), recordada por pestaña en sessionStorage y con composición responsive por ancho y alto; no se añade ni se retira ninguna ruta pública. Los assets de la mascota (assets/iroh-mascot-*.webp, con la inscripción de Fundación Mustakis) y sus derivados (isotipo y favicons) usan una identidad institucional cuya autorización declara el responsable del proyecto; este repositorio no incluye el documento ni verifica su alcance, y no implica alianza, patrocinio ni aprobación oficial adicional. La ilustración fue generada con ChatGPT según la procedencia C2PA del original. No se publican bajo licencia abierta. Publicar requiere confirmar que el permiso cubre el sitio web, el repositorio público y los derivados. Ver docs/identidad-iroh-simulator.md y docs/release-sim-iroh-welcome-1.md. El manifiesto de SIM-IROH-UI-1 está archivado en docs/releases/sim-iroh-ui-1.pages-manifest.json. No incluye docs/, tests/ ni examples/.",
  "files": {
   "404.html": {
    "source": "pages/404.html",
@@ -147,18 +147,18 @@
   },
   "index.html": {
    "source": "index.html",
-   "sha256": "afa7c920a41c16b663ca2cac042bc6da3bd4fd92149a5512e547697ab0c5dd9d",
-   "bytes": 64136
+   "sha256": "e670cb33d1033d8a30435dd32a68beef8326430138695bc94e0d48275ed478b8",
+   "bytes": 63606
   },
   "iroh-brand.css": {
    "source": "iroh-brand.css",
-   "sha256": "a16cbbef05d53275f276de087dd45ab4f4897929672cd6314f50aeb8ce948232",
-   "bytes": 13392
+   "sha256": "f32c7d27da7ede2468c546c2221fe22db836d83d9f088bdcc902397d6d312f31",
+   "bytes": 15019
   },
   "iroh-brand.js": {
    "source": "iroh-brand.js",
-   "sha256": "50f661a26b0188ad3a1de77458146cf8ede2dc5b6b050cea809a7a1801440e33",
-   "bytes": 4266
+   "sha256": "221053757096409740df3ee29c50ee40f31135c3a48056a0b380ee292fede6fd",
+   "bytes": 4652
   },
   "iroh-runtime.js": {
    "source": "iroh-runtime.js",

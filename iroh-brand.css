@@ -1,14 +1,14 @@
-/* IROH Simulator · identidad visual (SIM-IROH-UI-1): cabecera, diálogo «Acerca de» y bienvenida de primera visita.
+/* IROH Simulator · identidad visual (SIM-IROH-UI-1): cabecera, diálogo «Acerca de» y bienvenida (una vez por sesión de pestaña).
    Se carga DESPUÉS de styles.css y no lo modifica: colores, medidas y patrones del simulador siguen siendo los de styles.css/tokens.css.
    Sin estilos en línea (CSP style-src 'self'). Movimiento solo con transform/opacity y sin bucles; prefers-reduced-motion lo anula. */
 
 /* ===== Cabecera y «Acerca de» ===== */
-/* 1 · Cabecera: el nombre conserva el patrón real «Marca en 600 + producto en 400 gris»; solo se añaden los accesos de la derecha. */
+/* 1 · Cabecera: el nombre conserva el patrón real «Marca en 600 + producto en 400 gris»; solo se añade «Acerca de» a la derecha
+   (la bienvenida se reabre desde «Acerca de» → «Ver la bienvenida»). */
 .topbar{padding-inline:max(clamp(12px,2.2vw,32px),env(safe-area-inset-left)) max(clamp(12px,2.2vw,32px),env(safe-area-inset-right))}   /* muescas en móvil horizontal */
 .topbar-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-2)}
 .topbar-btn svg{flex:none;color:var(--focus-ring)}
 .topbar .brand img{border-radius:8px}
-@media(max-width:767px){.topbar-btn--welcome{display:none}}                 /* «Bienvenida» pasa a «Acerca de» en pantallas estrechas */
 @media(max-width:479px){                                                      /* solo icono; el nombre accesible se conserva */
   .topbar-btn{width:44px;padding:0}
   .topbar-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -33,7 +33,11 @@
 @media(max-width:480px){.about-list div{grid-template-columns:minmax(0,1fr);gap:2px}.about-actions{flex-direction:column-reverse}.about-actions .button{min-height:44px;width:100%}}
 @media(pointer:coarse){.about-actions .button,.about-list a{min-height:44px}.about-list a{display:inline-flex;align-items:center}}
 
-/* ===== Bienvenida de primera visita ===== */
+/* ===== Bienvenida (una vez por sesión de pestaña) =====
+   Tamaños: tipografía y mascota se escalan con el MENOR de ancho y alto útiles (vw / dvh), no solo con el ancho. Así, a zoom 125–200 %
+   o en portátiles con poca altura, la mascota nunca pasa de ~58 % del alto y el título deja de crecer más que el espacio disponible.
+   Disposición: dos columnas solo si el viewport es apaisado (relación > 1,1) y de al menos 720 px de ancho; si no, una columna.
+   Nada esencial se oculta por falta de espacio: si no cabe, .welcome (overflow:auto) permite desplazarse. */
 :root{--w-bg:#06101F;--w-bg-2:#0B1B32;--w-blue:#0043E1;--w-cyan:#24A6FD;--w-text:#F4F7FB;--w-muted:#B4C3D8;--w-line:rgba(180,195,216,.18);--w-yellow:#F7AE05;--w-yellow-hover:#FFC433;--w-on-yellow:#071426}
 
 .welcome{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:auto;overscroll-behavior:contain;
@@ -46,7 +50,8 @@
 .welcome:not([open]){display:none}
 .welcome::backdrop{background:transparent}
 .welcome *{box-sizing:border-box}
-.nowrap{white-space:nowrap}
+/* «IROH Simulator!» se mantiene unido cuando cabe; si no cabe (letra o zoom al 200 %), inline-block lo envuelve en lugar de cortarlo */
+.nowrap{display:inline-block}
 
 .welcome__track{position:absolute;left:0;right:0;bottom:3dvh;width:100%;height:clamp(90px,18dvh,200px);color:rgba(180,195,216,.34);pointer-events:none}
 .welcome__stage{position:relative;overflow:clip;min-height:100%;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);align-items:center;gap:clamp(16px,4vw,64px);
@@ -57,7 +62,7 @@
 
 .welcome__copy{position:relative;z-index:2;max-width:560px}
 .welcome__eyebrow{margin:0 0 14px;font-size:13px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--w-cyan)}
-.welcome__title{margin:0 0 16px;font-size:clamp(1.9rem,1rem + 3.2vw,3.1rem);font-weight:600;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.welcome__title{margin:0 0 16px;font-size:clamp(1.75rem,.9rem + min(3vw,4.6dvh),3.1rem);font-weight:600;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
 .welcome__desc{margin:0 0 22px;font-size:clamp(1rem,.94rem + .25vw,1.1875rem);line-height:1.55;color:var(--w-muted);max-width:50ch}
 .welcome__steps{list-style:none;margin:0 0 28px;padding:0;display:flex;flex-wrap:wrap;gap:10px}
 .welcome__steps li{display:inline-flex;align-items:center;gap:9px;padding:7px 14px 7px 8px;border:1px solid var(--w-line);border-radius:var(--radius-pill);background:rgba(255,255,255,.04);font-size:14px;font-weight:500}
@@ -77,12 +82,12 @@
 
 .welcome__mascot{position:relative;z-index:1;margin:0;display:grid;place-items:center;justify-self:center;width:100%}
 .welcome__halo{position:absolute;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(36,166,253,.34),rgba(36,166,253,0) 68%);inset:auto;top:50%;left:50%;transform:translate(-50%,-52%)}
-.welcome__roll,.welcome__float{position:relative;width:min(100%,clamp(260px,42vw,590px));max-height:78dvh}
-.welcome__float img{display:block;width:100%;height:auto;max-height:78dvh;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
+.welcome__roll,.welcome__float{position:relative;width:min(100%,clamp(240px,40vw,560px),58dvh);max-height:58dvh}
+.welcome__float img{display:block;width:100%;height:auto;max-height:58dvh;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
 .welcome__shadow{position:absolute;bottom:3%;left:50%;width:42%;height:3.2%;transform:translateX(-50%);border-radius:50%;background:rgba(0,0,0,.5);filter:blur(6px)}
 
-/* Tablet vertical y móvil: una columna, mascota arriba */
-@media(max-width:899px){
+/* Tablet vertical, móvil y ventanas estrechas o casi cuadradas: una columna, mascota arriba */
+@media(max-width:719px),(max-aspect-ratio:11/10){
   .welcome__track{display:none}
   .welcome__stage{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;gap:6px;align-content:center;padding-top:max(56px,env(safe-area-inset-top))}
   .welcome__mascot{order:-1}
@@ -119,10 +124,10 @@
 }
 /* Móvil horizontal y pantallas muy bajas: dos columnas, sin pasos ni créditos */
 @media(max-height:520px) and (orientation:landscape){
-  .welcome__stage{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);justify-items:stretch;text-align:left;gap:20px;padding-block:14px;padding-inline:max(28px,env(safe-area-inset-left)) max(64px,env(safe-area-inset-right))}
+  .welcome__stage{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);justify-items:stretch;text-align:left;gap:20px;padding-block:14px;padding-inline:max(28px,env(safe-area-inset-left)) max(64px,env(safe-area-inset-right))}
   .welcome__mascot{order:0}
-  .welcome__roll,.welcome__float{width:min(100%,78dvh);max-height:80dvh}
-  .welcome__float img{max-height:80dvh}
+  .welcome__roll,.welcome__float{width:min(100%,70dvh);max-height:70dvh}
+  .welcome__float img{max-height:70dvh}
   .welcome__title{font-size:clamp(1.35rem,4.2dvh + .7rem,1.9rem);margin-bottom:8px}
   .welcome__eyebrow{margin-bottom:6px;font-size:11px}
   .welcome__desc{font-size:.9375rem;line-height:1.45;margin:0 0 14px}
@@ -132,6 +137,19 @@
   .welcome__track{display:none}
 }
 
+/* Estrecha y baja a la vez (p. ej. zoom 200 % sobre 1024 × 768 = 512 × 384): dos columnas dejarían el texto en ~200 px y partirían el botón.
+   Una columna con desplazamiento accesible; no se oculta nada esencial. Por debajo de 361 px de alto se mantienen dos columnas
+   (en una la mascota quedaría minúscula). */
+@media(max-width:560px) and (min-height:361px) and (max-height:520px) and (orientation:landscape){
+  .welcome__stage{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;align-content:center;gap:6px;padding-inline:max(20px,env(safe-area-inset-left)) max(20px,env(safe-area-inset-right))}
+  .welcome__mascot{order:-1}
+  .welcome__roll,.welcome__float{width:min(100%,34dvh);max-height:34dvh}
+  .welcome__float img{max-height:34dvh}
+  .welcome__copy{max-width:none}
+  .welcome__desc{margin-inline:auto}
+  .welcome__actions{align-items:center}
+  .welcome__cta{white-space:nowrap}
+}
 @media(max-height:360px) and (orientation:landscape){
   .welcome__stage{padding-block:10px}
   .welcome__eyebrow{display:none}
