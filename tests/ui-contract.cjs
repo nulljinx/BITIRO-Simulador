@@ -160,11 +160,12 @@ test('NAV-1 (SIM-UI-RELEASE): el logo es un elemento visual sin navegación y la
  assert.ok(!/bitiro-piloto/.test(html),'sin referencias a BITIRO Lab');
  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');assert.match(css,/\.brand\{color:inherit;display:inline-flex/);
 });
-test('SIM-IROH-UI-1: cabecera con exactamente 2 accesos con nombre accesible, título nuevo y ningún «BITIRO» visible',()=>{
+test('IROH Simulator: cabecera con exactamente 1 acceso («Acerca de») con nombre accesible, sin «Bienvenida», título nuevo y ningún «BITIRO» visible',()=>{
  const header=html.match(/<header class="topbar">.*?<\/header>/s)[0];
  const btns=[...header.matchAll(/<button\b[^>]*>.*?<\/button>/gs)].map(m=>m[0]);
- assert.equal(btns.length,2,'la cabecera lleva exactamente los accesos «Bienvenida» y «Acerca de»');
- assert.deepEqual(btns.map(b=>b.match(/id="([^"]+)"/)[1]),['welcomeReopen','aboutOpen']);
+ assert.equal(btns.length,1,'la cabecera lleva exactamente el acceso «Acerca de»');
+ assert.deepEqual(btns.map(b=>b.match(/id="([^"]+)"/)[1]),['aboutOpen']);
+ assert.ok(!/welcomeReopen|Bienvenida/.test(header),'«Bienvenida» ya no está en la cabecera (se reabre desde «Acerca de»)');
  for(const b of btns){assert.match(b,/type="button"/);assert.match(b,/aria-haspopup="dialog"/);assert.ok(b.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<[^>]+>/g,'').trim().length>0,'nombre accesible (texto visible o recortado) en '+b.slice(0,60));assert.match(b,/<svg\b[^>]*aria-hidden="true"/);}
  assert.match(html,/<title>IROH Simulator · Simulador libre<\/title>/);
  // Visible al estudiante = el HTML sin scripts/comentarios. «BITIRO_*» y «bitiro:» viven en JS, no aquí.

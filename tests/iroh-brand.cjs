@@ -1,4 +1,4 @@
-/* node tests/iroh-brand.cjs — SIM-IROH-UI-1: pruebas ESTÁTICAS de la identidad IROH Simulator (bienvenida, cabecera, «Acerca de»).
+/* node tests/iroh-brand.cjs — IROH Simulator (SIM-IROH-UI-1 y su corrección): pruebas ESTÁTICAS de la identidad IROH Simulator (bienvenida, cabecera, «Acerca de»).
    Corren en `node-tests` (bloqueante en CI); las de navegador (tests/iroh-brand-ui.mjs) son informativas, por eso lo que debe impedir
    un merge malo vive aquí: contrato de HTML, CSP-compatibilidad, claves de almacenamiento, movimiento y runtime intacto. Sin git, sin dependencias. */
 'use strict';
@@ -68,7 +68,9 @@ test('index.html: los <dialog> de bienvenida y «Acerca de» están cerrados por
   assert.ok(!main.includes('id="'+id+'"'),id+' va fuera de <main>');
   assert.match(tag[0],/aria-labelledby="/);assert.match(tag[0],/aria-describedby="/);
  }
- for(const id of ['welcomeEnter','welcomeClose','welcomeReopen','welcomeImg','aboutOpen','aboutClose','aboutDone','aboutWelcome','aboutTitle','welcome-title'])assert.ok(html.includes('id="'+id+'"'),'falta #'+id);
+ for(const id of ['welcomeEnter','welcomeClose','welcomeImg','aboutOpen','aboutClose','aboutDone','aboutWelcome','aboutTitle','welcome-title'])assert.ok(html.includes('id="'+id+'"'),'falta #'+id);
+ assert.ok(!html.includes('welcomeReopen'),'el botón #welcomeReopen se eliminó del HTML (no basta con ocultarlo)');
+ assert.ok(!/topbar-btn--welcome/.test(html),'sin clases del botón retirado');
  assert.match(html,/<h2 id="welcome-title"[^>]*>¡Bienvenido a (?:<span[^>]*>)?IROH Simulator!/);
  assert.match(html,/<h2 id="aboutTitle"[^>]*>Acerca de IROH Simulator<\/h2>/);
  assert.ok(html.indexOf('id="welcome"')>html.indexOf('</main>')&&html.indexOf('id="aboutDialog"')>html.indexOf('</main>'));
@@ -90,14 +92,22 @@ test('404.html: título con «IROH Simulator» y sin «BITIRO» visible',()=>{
 });
 
 /* ───────── 2. JavaScript de la bienvenida: claves y contrato ───────── */
-test('iroh-brand.js: la ÚNICA clave nueva es bitiro:standalone:welcome:v1 y se usa BITIRO_STORAGE',()=>{
- const keys=[...js.matchAll(/['"`]bitiro:[^'"`]*['"`]/g)].map(m=>m[0].slice(1,-1));
+const jsCode=js.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'');   // sin comentarios: lo que cuenta es el código ejecutable
+test('iroh-brand.js: la bienvenida se recuerda SOLO en sessionStorage con la clave bitiro:standalone:welcome:session:v1',()=>{
+ const keys=[...jsCode.matchAll(/['"`]bitiro:[^'"`]*['"`]/g)].map(m=>m[0].slice(1,-1));
  assert.ok(keys.length>=1);
- for(const k of keys)assert.equal(k,'bitiro:standalone:welcome:v1','clave no autorizada: '+k);
- assert.ok(!/bitiro:standalone:(code|scenario)|bitiro:line-calibration/.test(js),'no se tocan las claves de código, escenario ni calibración');
- assert.ok(/BITIRO_STORAGE/.test(js),'usa el contenedor de almacenamiento existente');
- assert.ok(!/localStorage\.clear|removeItem\(\s*['"`]bitiro:standalone:code/.test(js));
- assert.ok(!/URLSearchParams|location\.search/.test(js),'sin parámetros de URL de revisión (?reset, ?storage=off)');
+ for(const k of keys)assert.equal(k,'bitiro:standalone:welcome:session:v1','clave no autorizada: '+k);
+ assert.ok(/sessionStorage/.test(jsCode),'usa sessionStorage (vida = la pestaña)');
+ assert.ok(!/localStorage/.test(jsCode),'iroh-brand.js no usa localStorage: el código, el escenario y la calibración viven ahí y no se tocan');
+ assert.ok(!/BITIRO_STORAGE/.test(jsCode),'BITIRO_STORAGE envuelve localStorage; no se usa para la bienvenida');
+ assert.ok(!/welcome:v1['"`]/.test(jsCode),'el indicador antiguo (localStorage, welcome:v1) no se lee, no se escribe y no se borra');
+ assert.ok(!/bitiro:standalone:(code|scenario)|bitiro:line-calibration/.test(jsCode),'no se tocan las claves de código, escenario ni calibración');
+ assert.ok(!/\.clear\s*\(|removeItem\(\s*['"`]bitiro:standalone:(code|scenario|welcome:v1)|removeItem\(\s*KEY\s*\)/.test(jsCode),'no borra nada que no sea su propia sonda');
+ assert.ok(!/URLSearchParams|location\.search/.test(jsCode),'sin parámetros de URL de revisión (?reset, ?storage=off)');
+});
+test('iroh-brand.js: ya no hay botón «Bienvenida» en la cabecera ni listeners asociados; «Ver la bienvenida» sigue conectada',()=>{
+ assert.ok(!/welcomeReopen/.test(js),'sin referencias a #welcomeReopen');
+ assert.match(js,/aboutWelcome/);assert.match(js,/iroh:welcome-open/);
 });
 test('iroh-brand.js: contrato (evento, Escape, retorno de foco, sin autoapertura si el almacenamiento falla)',()=>{
  assert.match(js,/iroh:welcome-open/);
@@ -127,6 +137,15 @@ test('iroh-brand.css: prefers-reduced-motion desactiva toda animación de la bie
  assert.ok(!/outline\s*:\s*(?:none|0)\b/.test(css),'no se elimina el contorno de foco');
  assert.match(css,/:focus-visible/);
  assert.match(css,/overscroll-behavior\s*:\s*contain/);
+});
+test('iroh-brand.css: sin estilos del botón retirado; tipografía y mascota escalan también con la ALTURA (dvh) y el diseño pasa a una columna',()=>{
+ assert.ok(!/topbar-btn--welcome|welcomeReopen/.test(css),'estilos exclusivos del botón «Bienvenida» eliminados');
+ assert.match(css,/\.welcome__title\{[^}]*font-size:clamp\([^}]*dvh/,'el título depende también de la altura útil');
+ const roll=css.match(/\.welcome__roll,\.welcome__float\{[^}]*\}/)[0];
+ assert.match(roll,/58dvh/,'la mascota nunca pasa de ~58 % del alto en dos columnas');
+ assert.ok(!/78dvh/.test(css),'sin el tope antiguo del 78 % del alto');
+ assert.match(css,/@media\(max-width:719px\),\(max-aspect-ratio:11\/10\)/,'una columna si es estrecho o casi cuadrado/vertical');
+ assert.match(css,/\.welcome\{[^}]*overflow:auto/,'si no cabe, la bienvenida se desplaza en lugar de recortar');
 });
 test('iroh-brand.css: no usa recursos externos ni @import',()=>{
  assert.ok(!/https?:\/\//.test(css),'URL externa');

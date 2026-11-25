@@ -1,16 +1,18 @@
 #!/usr/bin/env node
-// SIM-IROH-UI-1 — pruebas de NAVEGADOR de la identidad IROH Simulator: bienvenida de primera visita, cabecera y «Acerca de».
+// IROH Simulator — pruebas de NAVEGADOR de la identidad: bienvenida por sesión de pestaña, cabecera (solo «Acerca de») y «Acerca de».
 //   node tests/iroh-brand-ui.mjs        # requiere Chrome/Chromium (CHROME_BIN o ~/.cache/ms-playwright). Sin Chrome FALLA (un SKIP no cuenta).
 //   SHOTS_DIR=/ruta node tests/iroh-brand-ui.mjs   # además guarda capturas.
 // Sirve la RAÍZ del repositorio con las cabeceras REALES de pages/_headers (CSP incluida): lo que se prueba es lo que Pages aplicaría.
-// Las demás suites parten de «ya entré» (tests/perf/cdp.mjs siembra la clave); esta abre con { seed: false } para ver la bienvenida real.
+// Las demás suites parten de «ya entré» (tests/perf/cdp.mjs siembra la clave en sessionStorage); esta abre con { seed: false } para ver la bienvenida real.
+// «Pestaña nueva» = un target nuevo de CDP en el mismo navegador: comparte localStorage pero tiene sessionStorage PROPIO y vacío (como una pestaña real).
+// Duplicar una pestaña o restaurar una sesión copia sessionStorage en los navegadores: ese caso NO es una pestaña nueva independiente (ver prueba 3d).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { launch, newPage, findChrome, WELCOME_KEY } from './perf/cdp.mjs';
+import { launch, newPage, findChrome, WELCOME_KEY, WELCOME_LEGACY_KEY } from './perf/cdp.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -48,18 +50,18 @@ const test = async (name, fn) => {
   catch (e) { results.push({ name, ok: false }); console.log('FALLO · ' + name + ' · ' + String(e.message).split('\n').slice(0, 4).join(' | ')); }
 };
 async function goto(page, url) { const l = new Promise((r) => page.on('Page.loadEventFired', r)); await page.send('Page.navigate', { url }); await l; await sleep(700); }
-/** Abre la página. seen: marca «ya entré» antes de cargar · blocked: almacenamiento que lanza excepciones · pre: scripts previos a la carga. */
-async function open(w, h, { mobile = false, reduced = false, forced = false, seen = false, blocked = false, pre = [], clear = true } = {}) {
+/** Abre la página (una PESTAÑA nueva cada vez). seen: marca «ya entré» en sessionStorage antes de cargar · blocked: almacenamiento que lanza excepciones · pre: scripts previos a la carga. */
+async function open(w, h, { mobile = false, reduced = false, forced = false, seen = false, blocked = false, pre = [], clear = true, dsf = 1 } = {}) {
   const page = await newPage(browser, { seed: false });
   await page.send('Page.enable'); await page.send('Runtime.enable'); await page.send('Log.enable');
   page.on('Log.entryAdded', (p) => { if (p.entry.level === 'error' || /Content Security Policy/i.test(p.entry.text)) logs.push(p.entry.text); });
   page.on('Runtime.exceptionThrown', (p) => logs.push('EXC ' + (p.exceptionDetails.exception?.description || p.exceptionDetails.text)));
-  await page.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile });
+  await page.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dsf, mobile });
   await page.send('Emulation.setTouchEmulationEnabled', mobile ? { enabled: true, maxTouchPoints: 5 } : { enabled: false });
   await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }, { name: 'forced-colors', value: forced ? 'active' : 'none' }] });
   if (clear) { await goto(page, URL_); await page.evaluate('try{localStorage.clear()}catch(e){}'); }
   if (blocked) await page.send('Page.addScriptToEvaluateOnNewDocument', { source: `for(const m of ['getItem','setItem','removeItem'])Storage.prototype[m]=function(){throw new DOMException('bloqueado','SecurityError')}` });
-  if (seen) await page.send('Page.addScriptToEvaluateOnNewDocument', { source: `try{localStorage.setItem(${JSON.stringify(WELCOME_KEY)},'1')}catch(e){}` });
+  if (seen) await page.send('Page.addScriptToEvaluateOnNewDocument', { source: `try{sessionStorage.setItem(${JSON.stringify(WELCOME_KEY)},'1')}catch(e){}` });
   for (const src of pre) await page.send('Page.addScriptToEvaluateOnNewDocument', { source: src });
   await goto(page, URL_);
   return page;
@@ -69,9 +71,10 @@ const key = async (page, k, code, vk, mods = 0, text) => {
   await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: k, code, windowsVirtualKeyCode: vk, modifiers: mods });
 };
 const shot = async (page, name) => { if (!SHOTS) return; const r = await page.send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(SHOTS, name), Buffer.from(r.data, 'base64')); };
-const state = (page) => page.evaluate(`(()=>{const d=document.getElementById('welcome');return {open:d.open,modal:d.matches(':modal'),active:document.activeElement.id||document.activeElement.tagName,flag:(()=>{try{return localStorage.getItem(${JSON.stringify(WELCOME_KEY)})}catch(e){return 'ERR'}})()}})()`);
+const state = (page) => page.evaluate(`(()=>{const d=document.getElementById('welcome');return {open:d.open,modal:d.matches(':modal'),active:document.activeElement.id||document.activeElement.tagName,flag:(()=>{try{return sessionStorage.getItem(${JSON.stringify(WELCOME_KEY)})}catch(e){return 'ERR'}})(),lsFlags:(()=>{try{return [localStorage.getItem(${JSON.stringify(WELCOME_KEY)}),localStorage.getItem(${JSON.stringify(WELCOME_LEGACY_KEY)})]}catch(e){return 'ERR'}})()}})()`);
 const runningInWelcome = (page) => page.evaluate(`document.getAnimations().filter(a=>a.playState==='running'&&a.effect&&a.effect.target&&a.effect.target.closest&&a.effect.target.closest('#welcome')).length`);
 const infinite = (page) => page.evaluate(`document.getAnimations().filter(a=>a.effect&&a.effect.getComputedTiming().iterations===Infinity).length`);
+const lsSnapshot = (page) => page.evaluate(`JSON.stringify(Object.keys(localStorage).sort().map(k=>[k,localStorage.getItem(k)]))`);
 const click = (page, id) => page.evaluate(`document.getElementById(${JSON.stringify(id)}).click()`);
 
 // ───────── 0. Recursos obligatorios (si faltan, FALLA: nunca se omite) ─────────
@@ -95,11 +98,12 @@ await test('2 · «Entrar»: cierra, recuerda la elección, devuelve el foco y N
   assert.equal(await infinite(p), 0, 'no debe haber animaciones infinitas (WCAG 2.2.2)');
   await sleep(1600); assert.equal(await runningInWelcome(p), 0, 'tras la entrada no debe seguir moviéndose nada en la bienvenida');
   await click(p, 'welcomeEnter'); await sleep(600);
-  const s = await state(p); assert.equal(s.open, false); assert.equal(s.flag, '1'); assert.equal(s.active, 'workspace');
+  const s = await state(p); assert.equal(s.open, false); assert.equal(s.flag, '1', 'la elección se recuerda en sessionStorage'); assert.equal(s.active, 'workspace');
+  assert.deepEqual(s.lsFlags, [null, null], 'la bienvenida no escribe NINGÚN indicador en localStorage');
   assert.equal(await p.evaluate('document.getAnimations().filter(a=>/^w-/.test(a.animationName||"")).length'), 0);
   await p.close();
 });
-await test('3 · usuario frecuente: al recargar entra directo y NO descarga la mascota', async () => {
+await test('3 · recargar LA MISMA pestaña: no vuelve a aparecer y NO descarga la mascota', async () => {
   const p = await open(1440, 900); await click(p, 'welcomeEnter'); await sleep(600);
   const n = hits.length; await goto(p, URL_); await sleep(400);
   assert.equal((await state(p)).open, false);
@@ -108,12 +112,55 @@ await test('3 · usuario frecuente: al recargar entra directo y NO descarga la m
   assert.ok(bytes <= 40 * 1024, 'el peso fijo de la identidad para quien ya entró debe ser ≤ 40 KB: ' + bytes);
   await p.close(); return { pesoFijoKB: +(bytes / 1024).toFixed(1) };
 });
-await test('4 · reapertura desde la cabecera; Escape cierra y devuelve el foco al botón', async () => {
+await test('3b · pestaña NUEVA independiente: la bienvenida reaparece; recargar la misma no; el código guardado (localStorage) se conserva', async () => {
+  const codigo = '// mi programa guardado\nvoid setup() {\n  inicializarMovimiento();\n}\nvoid loop() {\n  avanzar(30);\n}\n';
+  const a = await open(1440, 900, { pre: [`try{localStorage.setItem('bitiro:standalone:code:s01',${JSON.stringify(codigo)})}catch(e){}`] });
+  assert.equal((await state(a)).open, true, 'pestaña A: abre sola');
+  await click(a, 'welcomeEnter'); await sleep(600); assert.equal((await state(a)).open, false);
+  await a.send('Page.reload'); await sleep(900); assert.equal((await state(a)).open, false, 'recargar la misma pestaña (Page.reload) no la reabre');
+  const snapA = await lsSnapshot(a);
+  const b = await open(1440, 900, { clear: false });                        // pestaña B: sessionStorage propio y vacío; localStorage compartido
+  const sb = await state(b); assert.equal(sb.open, true, 'pestaña nueva: la bienvenida debe aparecer otra vez'); assert.equal(sb.modal, true); assert.equal(sb.active, 'welcomeEnter'); assert.equal(sb.flag, null);
+  assert.equal(await b.evaluate(`localStorage.getItem('bitiro:standalone:code:s01')`), codigo, 'el código del estudiante sigue ahí, sin migrar ni tocar');
+  assert.equal(await lsSnapshot(b), snapA, 'localStorage idéntico: abrir la bienvenida en otra pestaña no cambia nada del código, escenario ni calibración');
+  assert.equal((await state(a)).open, false, 'la pestaña A no se ve afectada por la B'); assert.equal((await state(a)).flag, '1');
+  await click(b, 'welcomeEnter'); await sleep(600); await b.send('Page.reload'); await sleep(900); assert.equal((await state(b)).open, false, 'B también la recuerda al recargar');
+  await b.close();                                                          // se cierra la pestaña…
+  const c = await open(1440, 900, { clear: false });                        // …y se abre el simulador en otra nueva
+  assert.equal((await state(c)).open, true, 'tras cerrar la pestaña y abrir otra, la bienvenida aparece de nuevo');
+  assert.equal(await lsSnapshot(c), snapA, 'localStorage sigue idéntico'); await c.close(); await a.close();
+});
+await test('3c · el indicador ANTIGUO de localStorage (welcome:v1) no decide nada y NO se borra', async () => {
+  const p = await open(1440, 900, { pre: [`try{localStorage.setItem(${JSON.stringify(WELCOME_LEGACY_KEY)},'1')}catch(e){}`] });
+  const s = await state(p); assert.equal(s.open, true, 'con el indicador antiguo presente la bienvenida DEBE abrirse (pestaña nueva)'); assert.equal(s.lsFlags[1], '1');
+  await click(p, 'welcomeEnter'); await sleep(600); const t = await state(p);
+  assert.equal(t.open, false); assert.equal(t.flag, '1'); assert.equal(t.lsFlags[1], '1', 'el indicador antiguo sigue en localStorage (no se elimina automáticamente)'); assert.equal(t.lsFlags[0], null, 'no se crea la clave nueva en localStorage');
+  await p.close();
+});
+await test('3d · pestaña duplicada o restaurada (el navegador copia sessionStorage): no reaparece; NO es una pestaña nueva independiente', async () => {
+  // Chrome/Firefox copian sessionStorage al duplicar una pestaña o restaurar una sesión; lo simulamos sembrando la clave antes de cargar.
+  const p = await open(1440, 900, { seen: true });
+  assert.equal((await state(p)).open, false, 'con sessionStorage copiado la bienvenida no se abre sola'); assert.equal((await state(p)).flag, '1'); await p.close();
+});
+await test('4 · reapertura manual desde «Acerca de» → «Ver la bienvenida»; Escape cierra, devuelve el foco y no altera localStorage', async () => {
   const p = await open(1440, 900); await click(p, 'welcomeEnter'); await sleep(600);
-  await p.evaluate(`document.getElementById('welcomeReopen').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(300);
+  const antes = await lsSnapshot(p);
+  await p.evaluate(`document.getElementById('aboutOpen').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(250);
+  assert.equal(await p.evaluate(`document.getElementById('aboutDialog').open`), true);
+  await p.evaluate(`document.getElementById('aboutWelcome').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(350);
   assert.equal((await state(p)).open, true, 'no reabrió'); assert.equal((await state(p)).active, 'welcomeEnter');
   await key(p, 'Escape', 'Escape', 27); await sleep(600);
-  const s = await state(p); assert.equal(s.open, false); assert.equal(s.active, 'welcomeReopen'); await p.close();
+  const s = await state(p); assert.equal(s.open, false); assert.equal(s.active, 'aboutOpen'); assert.equal(s.flag, '1');
+  assert.equal(await lsSnapshot(p), antes, 'localStorage (código, escenario, calibración) idéntico tras reabrir y cerrar la bienvenida'); await p.close();
+});
+await test('4b · «Bienvenida» ya NO existe en la cabecera (ni oculta): solo «Acerca de», y la bienvenida se alcanza desde ahí', async () => {
+  const out = {};
+  for (const [w, h, m] of [[1440, 900, 0], [1024, 768, 0], [768, 1024, 1], [390, 844, 1]]) {
+    const p = await open(w, h, { mobile: !!m, seen: true });
+    const r = await p.evaluate(`(()=>{const tb=document.querySelector('.topbar');return {nodo:document.getElementById('welcomeReopen'),clase:tb.querySelectorAll('.topbar-btn--welcome').length,botones:[...tb.querySelectorAll('button')].map(b=>b.id),texto:/bienvenida/i.test(tb.textContent),html:/welcomeReopen/.test(document.documentElement.outerHTML),verBienv:document.getElementById('aboutWelcome').textContent.trim()}})()`);
+    assert.equal(r.nodo, null, 'el nodo #welcomeReopen no debe existir'); assert.equal(r.clase, 0); assert.deepEqual(r.botones, ['aboutOpen']); assert.equal(r.texto, false, 'ni siquiera texto «Bienvenida» (visible u oculto) en la cabecera'); assert.equal(r.html, false);
+    assert.equal(r.verBienv, 'Ver la bienvenida'); out[`${w}x${h}`] = r.botones; await p.close();
+  } return out;
 });
 await test('5 · teclado: el foco queda atrapado en la bienvenida (Tab / Shift+Tab) y Enter activa el botón', async () => {
   const p = await open(1440, 900); const seen = new Set();
@@ -125,11 +172,11 @@ await test('5 · teclado: el foco queda atrapado en la bienvenida (Tab / Shift+T
   await p.evaluate(`document.getElementById('welcomeEnter').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(600);
   assert.equal((await state(p)).open, false); await p.close(); return [...seen];
 });
-await test('6 · almacenamiento bloqueado: no se abre sola, no falla y sigue disponible desde la cabecera', async () => {
+await test('6 · almacenamiento bloqueado: no se abre sola, no falla y sigue disponible desde «Acerca de»', async () => {
   const before = logs.length;
   const p = await open(1440, 900, { blocked: true, clear: false });
   assert.equal(await p.evaluate(`document.getElementById('welcome').open`), false, 'no debe abrirse sola si no puede recordar la elección');
-  await click(p, 'welcomeReopen'); await sleep(300); assert.equal(await p.evaluate(`document.getElementById('welcome').open`), true);
+  await click(p, 'aboutOpen'); await sleep(200); await click(p, 'aboutWelcome'); await sleep(350); assert.equal(await p.evaluate(`document.getElementById('welcome').open`), true);
   await click(p, 'welcomeEnter'); await sleep(600); assert.equal(await p.evaluate(`document.getElementById('welcome').open`), false);
   assert.ok(await p.evaluate(`document.getElementById('workspace').getBoundingClientRect().height>300`), 'el simulador debe quedar visible');
   assert.deepEqual(logs.slice(before).filter((l) => /^EXC .*(welcome|iroh-brand)/i.test(l)), [], 'la bienvenida no debe lanzar excepciones con el almacenamiento bloqueado');
@@ -143,7 +190,25 @@ await test('7 · prefers-reduced-motion: sin animaciones, contenido visible al i
 });
 
 // ───────── 8. Responsive de la bienvenida ─────────
-const VPS = [[1440, 900, 0], [1280, 720, 0], [1024, 768, 0], [768, 1024, 1], [820, 1180, 1], [390, 844, 1], [375, 667, 1], [320, 568, 1], [667, 375, 1], [812, 375, 1], [568, 320, 1]];
+// Medición de la composición REAL de la bienvenida (estilos calculados, sin valores supuestos) y reglas que debe cumplir en cualquier viewport.
+const measureWelcome = (p) => p.evaluate(`(()=>{const d=document.getElementById('welcome'),q=(s)=>document.querySelector(s),cs=(e)=>getComputedStyle(e),
+  rc=(e)=>{const r=e.getBoundingClientRect();return {t:r.top,b:r.bottom,l:r.left,r:r.right,w:r.width,h:r.height}},cta=document.getElementById('welcomeEnter'),title=q('.welcome__title');
+  const r={vw:innerWidth,vh:innerHeight,two:cs(q('.welcome__stage')).gridTemplateColumns.split(' ').length>1,
+    essential:['welcome-title','welcomeEnter','welcomeImg','welcomeClose'].every((id)=>{const c=cs(document.getElementById(id));return c.display!=='none'&&c.visibility!=='hidden'}),
+    hOver:d.scrollWidth>d.clientWidth+1,vScroll:d.scrollHeight>d.clientHeight+1,titlePx:parseFloat(cs(title).fontSize),titleClip:title.scrollWidth>title.clientWidth+1,
+    title:rc(title),img:rc(document.getElementById('welcomeImg')),copy:rc(q('.welcome__copy')),cta:rc(cta),close:rc(document.getElementById('welcomeClose'))};
+  d.scrollTop=d.scrollHeight; r.ctaAfterScroll=rc(cta); d.scrollTop=0; return r})()`);
+function checkWelcome(r, label, { maxTitle = 3.1 * 16 } = {}) {
+  const e = (c, m) => assert.ok(c, `${label}: ${m}`);
+  e(!r.hOver, 'desborde horizontal'); e(r.essential, 'un elemento esencial está oculto (título, botón, mascota o cierre)');
+  e(r.title.l >= -0.5 && r.title.r <= r.vw + 0.5 && !r.titleClip, `título cortado (${Math.round(r.title.l)}–${Math.round(r.title.r)} de ${r.vw})`);
+  e(r.img.l >= -0.5 && r.img.r <= r.vw + 0.5, `mascota cortada en horizontal (${Math.round(r.img.l)}–${Math.round(r.img.r)} de ${r.vw})`);
+  e(r.cta.h >= 44, 'botón principal < 44 px de alto'); e(r.titlePx <= maxTitle + 0.5, `título demasiado grande: ${r.titlePx}px (máx ${maxTitle})`);
+  if (!r.vScroll) { e(r.cta.t >= 0 && r.cta.b <= r.vh, `botón fuera de pantalla (${Math.round(r.cta.t)}–${Math.round(r.cta.b)} de ${r.vh})`); e(r.img.t >= -1 && r.img.b <= r.vh + 1, 'mascota cortada en vertical'); }
+  else e(r.ctaAfterScroll.b <= r.vh + 1 && r.ctaAfterScroll.t >= 0, 'con desplazamiento el botón debe quedar alcanzable');
+  if (r.two) { e(r.img.h <= (r.vh < 520 ? 0.72 : 0.6) * r.vh + 1, `mascota demasiado grande para el alto: ${Math.round(r.img.h)} de ${r.vh}`); e(r.copy.r <= r.img.l + 1, 'texto y mascota se solapan'); }
+}
+const VPS = [[1920, 1080, 0], [1747, 860, 0], [1650, 900, 0], [1440, 900, 0], [1366, 768, 0], [1280, 720, 0], [1024, 768, 0], [768, 1024, 1], [820, 1180, 1], [390, 844, 1], [375, 667, 1], [320, 568, 1], [667, 375, 1], [812, 375, 1], [568, 320, 1]];
 for (const [w, h, m] of VPS) await test(`8 · bienvenida ${w}×${h}${w > h && h < 520 ? ' (móvil horizontal)' : ''}: sin desborde ni scroll, botón y mascota visibles, objetivos ≥ 44 px`, async () => {
   const p = await open(w, h, { mobile: !!m }); await sleep(1300);
   const r = await p.evaluate(`(()=>{const d=document.getElementById('welcome'),c=document.getElementById('welcomeEnter').getBoundingClientRect(),im=document.getElementById('welcomeImg').getBoundingClientRect(),cl=document.getElementById('welcomeClose').getBoundingClientRect();
@@ -152,8 +217,23 @@ for (const [w, h, m] of VPS) await test(`8 · bienvenida ${w}×${h}${w > h && h 
   assert.ok(r.ctaH >= 44 && r.closeSize >= 44, 'objetivos < 44 px'); assert.ok(r.imgH >= (h < 620 ? 150 : 180), 'mascota demasiado pequeña ' + r.imgH);
   assert.ok(r.descPx >= (h < 360 ? 14 : 15), 'texto demasiado pequeño ' + r.descPx);
   if (w < 900 || h < 520) assert.equal(r.vScroll, false, 'la bienvenida necesita desplazarse');
-  await shot(p, `bienvenida-${w}x${h}.png`); await p.close(); return r;
+  checkWelcome(await measureWelcome(p), `${w}×${h}`); await shot(p, `bienvenida-${w}x${h}.png`); await p.close(); return r;
 });
+// Zoom del navegador: 125 / 150 / 200 % equivalen a un viewport CSS más pequeño con más píxeles por píxel CSS.
+const ZOOM_BASE = [[1920, 1080], [1747, 860], [1440, 900], [1366, 768], [1280, 720], [1024, 768], [768, 1024], [390, 844]];
+for (const z of [1.25, 1.5, 2]) for (const [w, h] of ZOOM_BASE) await test(`8z · bienvenida ${w}×${h} a zoom ${z * 100} % (${Math.round(w / z)}×${Math.round(h / z)} px CSS): composición sin cortes y botón alcanzable`, async () => {
+  const p = await open(Math.round(w / z), Math.round(h / z), { dsf: z, clear: false }); await sleep(1300);
+  const r = await measureWelcome(p); checkWelcome(r, `${w}×${h}@${z * 100}%`); await shot(p, `bienvenida-${w}x${h}-zoom${z * 100}.png`); await p.close();
+  return { vp: `${r.vw}x${r.vh}`, dosCol: r.two, tituloPx: +r.titlePx.toFixed(1), mascotaH: Math.round(r.img.h), scroll: r.vScroll };
+});
+// Escala de fuente del sistema/navegador (tamaño de letra mayor): el texto crece, nada esencial se recorta y todo sigue alcanzable.
+for (const f of [1.25, 1.5, 2]) for (const [w, h] of [[1440, 900], [1280, 720], [1024, 768], [390, 844], [320, 568]]) await test(`8f · bienvenida ${w}×${h} con letra al ${f * 100} %: sin cortes y botón alcanzable`, async () => {
+  const p = await open(w, h, { mobile: w < 800, clear: false, pre: [`document.addEventListener('DOMContentLoaded',()=>{document.documentElement.style.fontSize='${f * 100}%'})`] }); await sleep(1300);
+  assert.equal(await p.evaluate(`getComputedStyle(document.documentElement).fontSize`), `${16 * f}px`, 'la escala de letra no se aplicó');
+  const r = await measureWelcome(p); checkWelcome(r, `${w}×${h} letra ${f * 100}%`, { maxTitle: 3.1 * 16 * f }); await shot(p, `bienvenida-${w}x${h}-letra${f * 100}.png`); await p.close();
+  return { dosCol: r.two, tituloPx: +r.titlePx.toFixed(1), mascotaH: Math.round(r.img.h), scroll: r.vScroll };
+});
+
 
 // ───────── 9. Tras entrar: el simulador sigue intacto ─────────
 await test('9 · tras entrar, el simulador funciona (pistas, editor, canvas) en escritorio, tablet y móvil sin desborde', async () => {
@@ -178,24 +258,24 @@ await test('10 · transición: entrada y salida suceden sin saltos de maquetaci�
 const HEAD = [[1440, 900, 0], [1024, 768, 0], [820, 1180, 1], [768, 1024, 1], [600, 900, 1], [480, 800, 1], [390, 844, 1], [375, 667, 1], [320, 568, 1]];
 for (const [w, h, m] of HEAD) await test(`11 · cabecera ${w}×${h}: marca completa, accesos correctos, sin desborde ni objetivos pequeños`, async () => {
   const p = await open(w, h, { mobile: !!m, seen: true });
-  const r = await p.evaluate(`(()=>{const tb=document.querySelector('.topbar'),b=document.querySelector('.brand'),st=b.querySelector('strong'),sm=b.querySelector('small'),wb=document.getElementById('welcomeReopen'),ab=document.getElementById('aboutOpen'),img=b.querySelector('img');
+  const r = await p.evaluate(`(()=>{const tb=document.querySelector('.topbar'),b=document.querySelector('.brand'),st=b.querySelector('strong'),sm=b.querySelector('small'),ab=document.getElementById('aboutOpen'),img=b.querySelector('img');
     const vis=e=>getComputedStyle(e).display!=='none',rc=e=>e.getBoundingClientRect(),lab=ab.querySelector('.topbar-label');
     return {h:Math.round(rc(tb).height),nombre:st.textContent,partes:[...st.childNodes].map(n=>n.nodeType===3?n.textContent.trim():n.tagName+':'+getComputedStyle(n).fontWeight),strongWeight:getComputedStyle(st).fontWeight,
       translateStrong:st.getAttribute('translate'),brandAttrs:[...b.attributes].map(a=>a.name),links:document.querySelectorAll('.topbar a').length,imgW:Math.round(rc(img).width),imgOk:img.complete&&img.naturalWidth>0,
-      brandTrunc:b.scrollWidth>b.clientWidth+1,sub:vis(sm)?sm.textContent:null,welcomeVisible:vis(wb),aboutW:Math.round(rc(ab).width),aboutH:Math.round(rc(ab).height),aboutRight:Math.round(rc(ab).right),aboutLeft:Math.round(rc(ab).left),brandRight:Math.round(rc(b).right),
+      brandTrunc:b.scrollWidth>b.clientWidth+1,sub:vis(sm)?sm.textContent:null,nButtons:tb.querySelectorAll('button').length,noWelcome:!document.getElementById('welcomeReopen')&&!/bienvenida/i.test(tb.textContent),aboutW:Math.round(rc(ab).width),aboutH:Math.round(rc(ab).height),aboutRight:Math.round(rc(ab).right),aboutLeft:Math.round(rc(ab).left),brandRight:Math.round(rc(b).right),
       vw:innerWidth,labelClip:getComputedStyle(lab).position==='absolute',aboutName:ab.textContent.trim(),hOver:document.documentElement.scrollWidth>innerWidth}})()`);
   assert.equal(r.h, 56); assert.equal(r.nombre, 'IROH Simulator'); assert.deepEqual(r.partes, ['IROH', 'SPAN:400']); assert.equal(r.strongWeight, '600');
   assert.equal(r.translateStrong, 'no'); assert.deepEqual(r.brandAttrs, ['class'], 'la marca solo lleva class'); assert.equal(r.links, 0, 'la cabecera no tiene enlaces'); assert.equal(r.imgW, 34); assert.ok(r.imgOk, 'isotipo no cargó');
-  assert.equal(r.brandTrunc, false); assert.equal(r.hOver, false); assert.equal(r.welcomeVisible, w >= 768, '«Bienvenida» solo desde 768 px'); assert.equal(r.sub, w >= 768 ? 'Simulador libre' : null, 'subtítulo');
+  assert.equal(r.brandTrunc, false); assert.equal(r.hOver, false); assert.equal(r.nButtons, 1, 'la cabecera solo tiene «Acerca de»'); assert.equal(r.noWelcome, true, '«Bienvenida» no existe en la cabecera a ningún ancho'); assert.equal(r.sub, w >= 768 ? 'Simulador libre' : null, 'subtítulo');
   assert.ok(r.aboutRight <= r.vw - 8, '«Acerca de» pegado al borde'); assert.ok(r.brandRight + 8 <= r.aboutLeft, 'la marca y «Acerca de» se pisan');
   if (m) assert.ok(r.aboutH >= 44 && r.aboutW >= 44, `objetivo táctil ${r.aboutW}×${r.aboutH}`);
   assert.equal(r.aboutName, 'Acerca de'); assert.equal(r.labelClip, w <= 479, 'etiqueta recortada (solo icono) únicamente ≤ 479 px');
   await shot(p, `cabecera-${w}x${h}.png`); await p.close(); return r;
 });
-await test('12 · orden de Tab tras la bienvenida: enlace de salto → Bienvenida → Acerca de → barra del simulador', async () => {
+await test('12 · orden de Tab tras la bienvenida: enlace de salto → Acerca de → barra del simulador', async () => {
   const p = await open(1440, 900, { seen: true }); const ids = [];
   for (let i = 0; i < 5; i++) { await key(p, 'Tab', 'Tab', 9); ids.push(await p.evaluate(`document.activeElement.id||document.activeElement.className||document.activeElement.tagName`)); }
-  assert.equal(ids[0], 'skip-link'); assert.deepEqual(ids.slice(1, 3), ['welcomeReopen', 'aboutOpen']); assert.equal(ids[3], 'track', 'tras la cabecera sigue la barra del simulador: ' + ids); await p.close(); return ids;
+  assert.equal(ids[0], 'skip-link'); assert.equal(ids[1], 'aboutOpen'); assert.equal(ids[2], 'track', 'tras la cabecera sigue la barra del simulador: ' + ids); await p.close(); return ids;
 });
 
 // ───────── 14–17. «Acerca de» ─────────
@@ -278,8 +358,9 @@ await test('19 · el código escrito por el estudiante se conserva al recargar y
   const keys = await p.evaluate(`Object.keys(localStorage).sort()`);
   const codeKey = keys.find((k) => /^bitiro:standalone:code:s01$/.test(k)); assert.ok(codeKey, 'el simulador sigue guardando bajo bitiro:standalone:code:<pista>: ' + keys);
   assert.equal(await p.evaluate(`localStorage.getItem(${JSON.stringify(codeKey)})`), mio, 'el valor guardado es exactamente lo escrito');
-  const allowed = [/^bitiro:standalone:code:[a-z0-9]+$/, /^bitiro:standalone:scenario:v1:[a-z0-9]+$/, /^bitiro:line-calibration:v1$/, /^bitiro:standalone:welcome:v1$/];
+  const allowed = [/^bitiro:standalone:code:[a-z0-9]+$/, /^bitiro:standalone:scenario:v1:[a-z0-9]+$/, /^bitiro:line-calibration:v1$/];   // NINGUNA clave de bienvenida en localStorage (ni la antigua ni la nueva)
   for (const k of keys) assert.ok(allowed.some((re) => re.test(k)), 'clave inesperada en localStorage: ' + k);
+  assert.deepEqual(await p.evaluate(`Object.keys(sessionStorage).sort()`), [WELCOME_KEY], 'sessionStorage solo contiene la clave de la bienvenida');
   await goto(p, URL_); assert.equal(await p.evaluate(`document.getElementById('src').value`), mio, 'tras recargar el editor muestra el mismo código');
   assert.equal(await p.evaluate(`localStorage.getItem(${JSON.stringify(codeKey)})`), mio); await p.close(); return { claves: keys };
 });
@@ -311,5 +392,5 @@ await test('21 · sin violaciones de CSP, errores de consola ni excepciones en T
 
 await browser.close(); server.close();
 const failed = results.filter((r) => !r.ok);
-console.log(`\n${results.length - failed.length}/${results.length} comprobaciones de navegador de SIM-IROH-UI-1 correctas${failed.length ? ' · FALLAN: ' + failed.map((f) => f.name.split(' · ')[0]).join(', ') : ''}`);
+console.log(`\n${results.length - failed.length}/${results.length} comprobaciones de navegador de la identidad IROH Simulator correctas${failed.length ? ' · FALLAN: ' + failed.map((f) => f.name.split(' · ')[0]).join(', ') : ''}`);
 process.exit(failed.length ? 1 : 0);
