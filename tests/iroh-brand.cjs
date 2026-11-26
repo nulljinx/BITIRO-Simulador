@@ -68,13 +68,21 @@ test('index.html: los <dialog> de bienvenida y «Acerca de» están cerrados por
   assert.ok(!main.includes('id="'+id+'"'),id+' va fuera de <main>');
   assert.match(tag[0],/aria-labelledby="/);assert.match(tag[0],/aria-describedby="/);
  }
- for(const id of ['welcomeEnter','welcomeClose','welcomeImg','aboutOpen','aboutClose','aboutDone','aboutWelcome','aboutTitle','welcome-title'])assert.ok(html.includes('id="'+id+'"'),'falta #'+id);
+ for(const id of ['welcomeEnter','welcomeImg','aboutOpen','aboutClose','aboutDone','aboutWelcome','aboutTitle','welcome-title'])assert.ok(html.includes('id="'+id+'"'),'falta #'+id);
  assert.ok(!html.includes('welcomeReopen'),'el botón #welcomeReopen se eliminó del HTML (no basta con ocultarlo)');
  assert.ok(!/topbar-btn--welcome/.test(html),'sin clases del botón retirado');
  assert.match(html,/<h2 id="welcome-title"[^>]*>¡Bienvenido a (?:<span[^>]*>)?IROH Simulator!/);
  assert.match(html,/<h2 id="aboutTitle"[^>]*>Acerca de IROH Simulator<\/h2>/);
  assert.ok(html.indexOf('id="welcome"')>html.indexOf('</main>')&&html.indexOf('id="aboutDialog"')>html.indexOf('</main>'));
  assert.ok(Math.max(html.indexOf('id="welcome"'),html.indexOf('id="aboutDialog"'))<html.indexOf('<script src='),'los diálogos van antes de los scripts');
+});
+test('index.html: la bienvenida solo se cierra con «Entrar al simulador» (sin X, sin pista inferior y closedby="none")',()=>{
+ assert.ok(!/welcomeClose|welcome__close|welcome__hint|welcome__esc/.test(html),'la X y la pista se eliminan del HTML (no basta con ocultarlas)');
+ assert.ok(!/Tu código se guarda en este navegador|Esc para cerrar|Cerrar bienvenida/.test(html),'texto retirado');
+ const d=html.match(/<dialog id="welcome"[\s\S]*?<\/dialog>/)[0];
+ assert.match(d,/^<dialog\b[^>]*\bclosedby="none"/);
+ assert.deepEqual([...d.matchAll(/<button\b[^>]*id="([^"]+)"/g)].map(m=>m[1]),['welcomeEnter'],'un único botón en la bienvenida');
+ assert.ok(!/<form\b|method="dialog"/.test(d),'sin cierre nativo por formulario');
 });
 test('Mascota de la bienvenida: img con dimensiones, alt descriptivo, srcset 420/640/960 y carga diferida (los usuarios recurrentes no la descargan)',()=>{
  const img=html.match(/<img\b[^>]*id="welcomeImg"[^>]*>/)[0];
@@ -118,6 +126,14 @@ test('iroh-brand.js: contrato (evento, Escape, retorno de foco, sin autoapertura
  assert.ok(!/fetch\(|XMLHttpRequest|navigator\.sendBeacon/.test(js),'no hace peticiones de red');
 });
 
+test('iroh-brand.js: solo «Entrar al simulador» llama a dismiss(); cancel y Escape se anulan sin cerrar',()=>{
+ assert.ok(!/welcomeClose|closeBtn/.test(js),'sin referencias a la X retirada');
+ assert.deepEqual(jsCode.match(/\bdismiss\b/g),['dismiss','dismiss'],'dismiss: su definición y un único listener');
+ assert.match(jsCode,/enter\?\.addEventListener\('click',dismiss\)/);
+ assert.match(jsCode,/welcome\.addEventListener\('cancel',e=>\{e\.preventDefault\(\);\}\);/,'cancel solo llama a preventDefault');
+ assert.match(jsCode,/e\.key==='Escape'&&welcome\.open\)e\.preventDefault\(\)/,'respaldo de teclado limitado a la bienvenida abierta');
+});
+
 /* ───────── 3. CSS: movimiento accesible ───────── */
 test('iroh-brand.css: @keyframes solo con transform/opacity y sin animaciones infinitas',()=>{
  const frames=[...css.matchAll(/@keyframes\s+([\w-]+)\s*\{([\s\S]*?\}\s*)\}/g)];
@@ -146,6 +162,9 @@ test('iroh-brand.css: sin estilos del botón retirado; tipografía y mascota esc
  assert.ok(!/78dvh/.test(css),'sin el tope antiguo del 78 % del alto');
  assert.match(css,/@media\(max-width:719px\),\(max-aspect-ratio:11\/10\)/,'una columna si es estrecho o casi cuadrado/vertical');
  assert.match(css,/\.welcome\{[^}]*overflow:auto/,'si no cabe, la bienvenida se desplaza en lugar de recortar');
+});
+test('iroh-brand.css: sin reglas de la X ni de la pista retiradas',()=>{
+ assert.ok(!/welcome__close|welcome__hint|welcome__esc/.test(css));
 });
 test('iroh-brand.css: no usa recursos externos ni @import',()=>{
  assert.ok(!/https?:\/\//.test(css),'URL externa');

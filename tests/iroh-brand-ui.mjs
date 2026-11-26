@@ -77,6 +77,11 @@ const infinite = (page) => page.evaluate(`document.getAnimations().filter(a=>a.e
 const lsSnapshot = (page) => page.evaluate(`JSON.stringify(Object.keys(localStorage).sort().map(k=>[k,localStorage.getItem(k)]))`);
 const click = (page, id) => page.evaluate(`document.getElementById(${JSON.stringify(id)}).click()`);
 
+const pressEscape = async (page, veces) => { for (let i = 0; i < veces; i++) { await key(page, 'Escape', 'Escape', 27); await sleep(150); } await sleep(450); };
+/** Clic REAL (cuenta como activación del usuario) en un punto del viewport. */
+const clickAt = async (page, x, y) => { for (const type of ['mousePressed', 'mouseReleased']) await page.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 }); await sleep(120); };
+const center = (page, sel) => page.evaluate(`(()=>{const r=document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()`);
+
 // ───────── 0. Recursos obligatorios (si faltan, FALLA: nunca se omite) ─────────
 await test('0 · los recursos de la identidad existen en disco (mascota, isotipo, favicons, CSS y JS)', async () => {
   const need = ['assets/iroh-mascot-420.webp', 'assets/iroh-mascot-640.webp', 'assets/iroh-mascot-960.webp', 'assets/iroh-isotipo-68.webp', 'assets/iroh-favicon-32.png', 'assets/iroh-favicon-180.png', 'assets/iroh-favicon-192.png', 'iroh-brand.css', 'iroh-brand.js'];
@@ -142,15 +147,18 @@ await test('3d · pestaña duplicada o restaurada (el navegador copia sessionSto
   const p = await open(1440, 900, { seen: true });
   assert.equal((await state(p)).open, false, 'con sessionStorage copiado la bienvenida no se abre sola'); assert.equal((await state(p)).flag, '1'); await p.close();
 });
-await test('4 · reapertura manual desde «Acerca de» → «Ver la bienvenida»; Escape cierra, devuelve el foco y no altera localStorage', async () => {
+await test('4 · reapertura manual desde «Acerca de» → «Ver la bienvenida»; Escape NO la cierra, el botón sí, devuelve el foco y no altera localStorage', async () => {
   const p = await open(1440, 900); await click(p, 'welcomeEnter'); await sleep(600);
   const antes = await lsSnapshot(p);
   await p.evaluate(`document.getElementById('aboutOpen').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(250);
   assert.equal(await p.evaluate(`document.getElementById('aboutDialog').open`), true);
   await p.evaluate(`document.getElementById('aboutWelcome').focus()`); await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(350);
   assert.equal((await state(p)).open, true, 'no reabrió'); assert.equal((await state(p)).active, 'welcomeEnter');
-  await key(p, 'Escape', 'Escape', 27); await sleep(600);
+  await pressEscape(p, 3); assert.equal((await state(p)).open, true, 'Escape no debe cerrar la bienvenida reabierta');
+  await key(p, 'Enter', 'Enter', 13, 0, '\r'); await sleep(600);
   const s = await state(p); assert.equal(s.open, false); assert.equal(s.active, 'aboutOpen'); assert.equal(s.flag, '1');
+  await click(p, 'aboutOpen'); await sleep(200); await pressEscape(p, 1);
+  assert.equal(await p.evaluate(`document.getElementById('aboutDialog').open`), false, 'Escape sigue cerrando «Acerca de»');
   assert.equal(await lsSnapshot(p), antes, 'localStorage (código, escenario, calibración) idéntico tras reabrir y cerrar la bienvenida'); await p.close();
 });
 await test('4b · «Bienvenida» ya NO existe en la cabecera (ni oculta): solo «Acerca de», y la bienvenida se alcanza desde ahí', async () => {
@@ -189,18 +197,62 @@ await test('7 · prefers-reduced-motion: sin animaciones, contenido visible al i
   await click(p, 'welcomeEnter'); await sleep(80); assert.equal((await state(p)).open, false, 'con reduced motion el cierre es inmediato'); await p.close(); return a;
 });
 
+// ───────── 7b–7f. La bienvenida solo se cierra con «Entrar al simulador» ─────────
+await test('7b · no existen la X ni la pista inferior; el único botón de la bienvenida es «Entrar al simulador»', async () => {
+  const p = await open(1440, 900);
+  const r = await p.evaluate(`(()=>{const d=document.getElementById('welcome');return {x:document.getElementById('welcomeClose'),nodos:d.querySelectorAll('.welcome__close,.welcome__hint,.welcome__esc').length,texto:/Tu código se guarda|Esc para cerrar/.test(d.textContent),botones:[...d.querySelectorAll('button')].map(b=>b.id),closedby:d.getAttribute('closedby'),nombre:document.getElementById('welcome-title').textContent,etiqueta:d.getAttribute('aria-labelledby'),desc:d.getAttribute('aria-describedby')}})()`);
+  assert.equal(r.x, null); assert.equal(r.nodos, 0); assert.equal(r.texto, false); assert.deepEqual(r.botones, ['welcomeEnter']); assert.equal(r.closedby, 'none');
+  assert.equal(r.etiqueta, 'welcome-title'); assert.equal(r.desc, 'welcome-desc'); await p.close(); return r;
+});
+// Sin activación previa o al repetirse, el navegador cierra un <dialog> aunque `cancel` llame a preventDefault: por eso se pulsa varias veces.
+for (const sinClosedby of [false, true]) await test(`7c · Escape repetido no cierra ni registra la entrada${sinClosedby ? ' (respaldo: sin closedby, como en navegadores que no lo admiten)' : ''}`, async () => {
+  const p = await open(1440, 900); const antes = await lsSnapshot(p);
+  if (sinClosedby) await p.evaluate(`document.getElementById('welcome').removeAttribute('closedby')`);
+  const check = async (cuando) => { const s = await state(p); assert.equal(s.open, true, 'se cerró ' + cuando); assert.equal(s.modal, true, 'dejó de ser modal ' + cuando); assert.equal(s.flag, null, 'se registró la entrada ' + cuando); };
+  await pressEscape(p, 1); await check('con el primer Escape, sin interacción previa');
+  await pressEscape(p, 4); await check('con Escape repetido');
+  await clickAt(p, 20, 20); await pressEscape(p, 4); await check('con Escape tras un clic');
+  assert.equal(await lsSnapshot(p), antes, 'localStorage intacto');
+  await goto(p, URL_); assert.equal((await state(p)).open, true, 'sin haber entrado, recargar vuelve a mostrarla'); await p.close();
+});
+await test('7d · clics en el fondo, la mascota, el título, la descripción y los pasos no la cierran ni registran la entrada', async () => {
+  const p = await open(1440, 900); await sleep(1300);
+  const puntos = [['fondo', { x: 20, y: 20 }], ['esquina de la antigua X', { x: 1404, y: 36 }], ['pie', { x: 720, y: 880 }]];
+  for (const sel of ['#welcomeImg', '#welcome-title', '.welcome__desc', '.welcome__eyebrow', '.welcome__steps li']) puntos.push([sel, await center(p, sel)]);
+  for (const [n, { x, y }] of puntos) { await clickAt(p, x, y); await sleep(100); const s = await state(p); assert.equal(s.open, true, 'se cerró al pulsar ' + n); assert.equal(s.flag, null, 'se registró al pulsar ' + n); }
+  await p.close(); return puntos.map(([n]) => n);
+});
+const ACTIVAR = {
+  'ratón': async (p) => { const { x, y } = await center(p, '#welcomeEnter'); await clickAt(p, x, y); },
+  'toque': async (p) => { const { x, y } = await center(p, '#welcomeEnter'); await p.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] }); await p.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); },
+  'Enter': (p) => key(p, 'Enter', 'Enter', 13, 0, '\r'),
+  'Espacio': (p) => key(p, ' ', 'Space', 32, 0, ' '),
+};
+for (const [via, activar] of Object.entries(ACTIVAR)) await test(`7e · «Entrar al simulador» con ${via}: cierra, registra la entrada y devuelve el foco`, async () => {
+  const p = via === 'toque' ? await open(390, 844, { mobile: true }) : await open(1440, 900); await sleep(1300);
+  assert.equal((await state(p)).flag, null);
+  await activar(p); await sleep(700);
+  const s = await state(p); assert.equal(s.open, false); assert.equal(s.flag, '1'); assert.equal(s.active, 'workspace');
+  await goto(p, URL_); assert.equal((await state(p)).open, false, 'recargar no la reabre'); await p.close();
+});
+await test('7f · el botón amarillo conserva un contorno de foco visible', async () => {
+  const p = await open(1440, 900);
+  const r = await p.evaluate(`(()=>{const c=getComputedStyle(document.getElementById('welcomeEnter'));return {foco:document.activeElement.id,ring:c.outlineStyle+' '+c.outlineWidth}})()`);
+  assert.equal(r.foco, 'welcomeEnter'); assert.equal(r.ring, 'solid 3px'); await p.close(); return r;
+});
+
 // ───────── 8. Responsive de la bienvenida ─────────
 // Medición de la composición REAL de la bienvenida (estilos calculados, sin valores supuestos) y reglas que debe cumplir en cualquier viewport.
 const measureWelcome = (p) => p.evaluate(`(()=>{const d=document.getElementById('welcome'),q=(s)=>document.querySelector(s),cs=(e)=>getComputedStyle(e),
   rc=(e)=>{const r=e.getBoundingClientRect();return {t:r.top,b:r.bottom,l:r.left,r:r.right,w:r.width,h:r.height}},cta=document.getElementById('welcomeEnter'),title=q('.welcome__title');
   const r={vw:innerWidth,vh:innerHeight,two:cs(q('.welcome__stage')).gridTemplateColumns.split(' ').length>1,
-    essential:['welcome-title','welcomeEnter','welcomeImg','welcomeClose'].every((id)=>{const c=cs(document.getElementById(id));return c.display!=='none'&&c.visibility!=='hidden'}),
+    essential:['welcome-title','welcomeEnter','welcomeImg'].every((id)=>{const c=cs(document.getElementById(id));return c.display!=='none'&&c.visibility!=='hidden'}),
     hOver:d.scrollWidth>d.clientWidth+1,vScroll:d.scrollHeight>d.clientHeight+1,titlePx:parseFloat(cs(title).fontSize),titleClip:title.scrollWidth>title.clientWidth+1,
-    title:rc(title),img:rc(document.getElementById('welcomeImg')),copy:rc(q('.welcome__copy')),cta:rc(cta),close:rc(document.getElementById('welcomeClose'))};
+    title:rc(title),img:rc(document.getElementById('welcomeImg')),copy:rc(q('.welcome__copy')),cta:rc(cta)};
   d.scrollTop=d.scrollHeight; r.ctaAfterScroll=rc(cta); d.scrollTop=0; return r})()`);
 function checkWelcome(r, label, { maxTitle = 3.1 * 16 } = {}) {
   const e = (c, m) => assert.ok(c, `${label}: ${m}`);
-  e(!r.hOver, 'desborde horizontal'); e(r.essential, 'un elemento esencial está oculto (título, botón, mascota o cierre)');
+  e(!r.hOver, 'desborde horizontal'); e(r.essential, 'un elemento esencial está oculto (título, botón o mascota)');
   e(r.title.l >= -0.5 && r.title.r <= r.vw + 0.5 && !r.titleClip, `título cortado (${Math.round(r.title.l)}–${Math.round(r.title.r)} de ${r.vw})`);
   e(r.img.l >= -0.5 && r.img.r <= r.vw + 0.5, `mascota cortada en horizontal (${Math.round(r.img.l)}–${Math.round(r.img.r)} de ${r.vw})`);
   e(r.cta.h >= 44, 'botón principal < 44 px de alto'); e(r.titlePx <= maxTitle + 0.5, `título demasiado grande: ${r.titlePx}px (máx ${maxTitle})`);
@@ -211,10 +263,10 @@ function checkWelcome(r, label, { maxTitle = 3.1 * 16 } = {}) {
 const VPS = [[1920, 1080, 0], [1747, 860, 0], [1650, 900, 0], [1440, 900, 0], [1366, 768, 0], [1280, 720, 0], [1024, 768, 0], [768, 1024, 1], [820, 1180, 1], [390, 844, 1], [375, 667, 1], [320, 568, 1], [667, 375, 1], [812, 375, 1], [568, 320, 1]];
 for (const [w, h, m] of VPS) await test(`8 · bienvenida ${w}×${h}${w > h && h < 520 ? ' (móvil horizontal)' : ''}: sin desborde ni scroll, botón y mascota visibles, objetivos ≥ 44 px`, async () => {
   const p = await open(w, h, { mobile: !!m }); await sleep(1300);
-  const r = await p.evaluate(`(()=>{const d=document.getElementById('welcome'),c=document.getElementById('welcomeEnter').getBoundingClientRect(),im=document.getElementById('welcomeImg').getBoundingClientRect(),cl=document.getElementById('welcomeClose').getBoundingClientRect();
-    return {hOverflow:d.scrollWidth>d.clientWidth+1,vScroll:d.scrollHeight>d.clientHeight+1,ctaTop:Math.round(c.top),ctaBottom:Math.round(c.bottom),ctaH:Math.round(c.height),imgH:Math.round(im.height),closeSize:Math.round(cl.width),descPx:parseFloat(getComputedStyle(document.querySelector('.welcome__desc')).fontSize),vh:innerHeight}})()`);
+  const r = await p.evaluate(`(()=>{const d=document.getElementById('welcome'),c=document.getElementById('welcomeEnter').getBoundingClientRect(),im=document.getElementById('welcomeImg').getBoundingClientRect();
+    return {hOverflow:d.scrollWidth>d.clientWidth+1,vScroll:d.scrollHeight>d.clientHeight+1,ctaTop:Math.round(c.top),ctaBottom:Math.round(c.bottom),ctaH:Math.round(c.height),imgH:Math.round(im.height),descPx:parseFloat(getComputedStyle(document.querySelector('.welcome__desc')).fontSize),vh:innerHeight}})()`);
   assert.equal(r.hOverflow, false, 'desborde horizontal'); assert.ok(r.ctaTop >= 0 && r.ctaBottom <= r.vh, `botón fuera de pantalla (${r.ctaTop}-${r.ctaBottom} de ${r.vh})`);
-  assert.ok(r.ctaH >= 44 && r.closeSize >= 44, 'objetivos < 44 px'); assert.ok(r.imgH >= (h < 620 ? 150 : 180), 'mascota demasiado pequeña ' + r.imgH);
+  assert.ok(r.ctaH >= 44, 'objetivo < 44 px'); assert.ok(r.imgH >= (h < 620 ? 150 : 180), 'mascota demasiado pequeña ' + r.imgH);
   assert.ok(r.descPx >= (h < 360 ? 14 : 15), 'texto demasiado pequeño ' + r.descPx);
   if (w < 900 || h < 520) assert.equal(r.vScroll, false, 'la bienvenida necesita desplazarse');
   checkWelcome(await measureWelcome(p), `${w}×${h}`); await shot(p, `bienvenida-${w}x${h}.png`); await p.close(); return r;
@@ -304,7 +356,8 @@ await test('15 · de «Acerca de» a la bienvenida y de vuelta: el foco regresa 
   const p = await open(1440, 900, { seen: true }); await click(p, 'aboutOpen'); await sleep(200); await click(p, 'aboutWelcome'); await sleep(350);
   const a = await p.evaluate(`({about:document.getElementById('aboutDialog').open,welcome:document.getElementById('welcome').open,foco:document.activeElement.id})`);
   assert.equal(a.about, false); assert.equal(a.welcome, true); assert.equal(a.foco, 'welcomeEnter');
-  await key(p, 'Escape', 'Escape', 27); await sleep(600); const b = await p.evaluate(`({welcome:document.getElementById('welcome').open,foco:document.activeElement.id})`);
+  await pressEscape(p, 2); assert.equal((await state(p)).open, true, 'Escape no cierra la bienvenida');
+  await click(p, 'welcomeEnter'); await sleep(600); const b = await p.evaluate(`({welcome:document.getElementById('welcome').open,foco:document.activeElement.id})`);
   assert.equal(b.welcome, false); assert.equal(b.foco, 'aboutOpen'); await p.close(); return { abre: a, cierra: b };
 });
 
@@ -314,7 +367,7 @@ await test('16 · pie «Desarrollado por nulljinx»: texto exacto, enlace seguro
   const r = await p.evaluate(`(()=>{const c=document.querySelector('.welcome__credit'),a=c.querySelector('a'),k=c.cloneNode(true);k.querySelectorAll('.sr-only').forEach(n=>n.remove());const rect=a.getBoundingClientRect(),cta=document.getElementById('welcomeEnter').getBoundingClientRect();
     return {texto:k.textContent.trim(),href:a.href,target:a.target,rel:a.rel,nombre:a.textContent,orden:[...document.querySelectorAll('#welcome button,#welcome a[href]')].map(e=>e.id||e.tagName),dist:Math.round(rect.top-cta.bottom),sub:getComputedStyle(a).textDecorationLine,translate:a.getAttribute('translate')}})()`);
   assert.equal(r.texto, 'Desarrollado por nulljinx'); assert.equal(r.href, 'https://nulljinx.com/'); assert.equal(r.target, '_blank'); assert.ok(/noopener/.test(r.rel) && /noreferrer/.test(r.rel)); assert.ok(r.nombre.includes('pestaña nueva'));
-  assert.deepEqual(r.orden, ['welcomeClose', 'welcomeEnter', 'A']); assert.ok(r.dist >= 40, 'enlace demasiado cerca del botón principal: ' + r.dist); assert.equal(r.sub, 'underline');
+  assert.deepEqual(r.orden, ['welcomeEnter', 'A']); assert.ok(r.dist >= 40, 'enlace demasiado cerca del botón principal: ' + r.dist); assert.equal(r.sub, 'underline');
   for (let i = 0; i < 6 && (await p.evaluate('document.activeElement.tagName')) !== 'A'; i++) await key(p, 'Tab', 'Tab', 9);
   const f = await p.evaluate(`(()=>{const a=document.activeElement;return {es:a.tagName,ring:getComputedStyle(a).outlineStyle+' '+getComputedStyle(a).outlineWidth,dentro:!!a.closest('#welcome')}})()`);
   assert.equal(f.es, 'A'); assert.equal(f.ring, 'solid 3px'); assert.ok(f.dentro); assert.equal((await state(p)).open, true, 'enfocar el enlace no cierra la bienvenida'); await p.close(); return r;
@@ -329,7 +382,7 @@ for (const [w, h, m] of [[1440, 900, 0], [1024, 768, 0], [768, 1024, 1], [820, 1
 await test('18 · contraste WCAG de texto y controles, medido sobre los colores calculados (peor caso bajo el halo)', async () => {
   const p = await open(1440, 900);
   const c = await p.evaluate(`(()=>{const q=s=>document.querySelector(s),cs=(e,pr)=>getComputedStyle(e)[pr];const o=(s)=>({fg:cs(q(s),'color'),bg:cs(q(s),'backgroundColor')});
-    return {title:o('#welcome-title'),desc:o('.welcome__desc'),eyebrow:o('.welcome__eyebrow'),hint:o('.welcome__hint'),credit:o('.welcome__credit'),creditLink:o('.welcome__credit a'),cta:o('#welcomeEnter'),num:o('.welcome__num'),
+    return {title:o('#welcome-title'),desc:o('.welcome__desc'),eyebrow:o('.welcome__eyebrow'),credit:o('.welcome__credit'),creditLink:o('.welcome__credit a'),cta:o('#welcomeEnter'),num:o('.welcome__num'),
       brand:o('.brand strong'),brandSub:o('.brand small'),topbar:o('.topbar'),aboutBtn:o('#aboutOpen'),aboutDlg:o('#aboutDialog'),aboutLink:o('#aboutDialog a'),aboutDt:o('#aboutDialog dt'),aboutIcon:{fg:cs(q('#aboutOpen svg'),'color'),bg:cs(q('#aboutOpen'),'backgroundColor')}}})()`);
   const rgb = (s) => { const m = s.match(/[\d.]+/g).map(Number); return { r: m[0], g: m[1], b: m[2], a: m[3] ?? 1 }; };
   const lum = ({ r, g, b }) => { const f = [r, g, b].map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * f[0] + .7152 * f[1] + .0722 * f[2]; };
@@ -340,7 +393,7 @@ await test('18 · contraste WCAG de texto y controles, medido sobre los colores 
   const opaque = (bg, fallback) => { const x = rgb(bg); return x.a > 0.99 ? x : rgb(fallback); };
   const topbarBg = opaque(c.topbar.bg, 'rgb(252,251,248)'), dlgBg = opaque(c.aboutDlg.bg, 'rgb(255,255,255)');
   const items = {
-    'título (bienvenida)': [onStage(c.title.fg), 4.5], 'descripción': [onStage(c.desc.fg), 4.5], 'eyebrow': [onStage(c.eyebrow.fg), 4.5], 'pista «Tu código se guarda…»': [onStage(c.hint.fg), 4.5], 'crédito': [onStage(c.credit.fg), 4.5], 'enlace nulljinx': [onStage(c.creditLink.fg), 4.5],
+    'título (bienvenida)': [onStage(c.title.fg), 4.5], 'descripción': [onStage(c.desc.fg), 4.5], 'eyebrow': [onStage(c.eyebrow.fg), 4.5], 'crédito': [onStage(c.credit.fg), 4.5], 'enlace nulljinx': [onStage(c.creditLink.fg), 4.5],
     'botón «Entrar»': [cr(rgb(c.cta.fg), rgb(c.cta.bg)), 4.5], 'botón «Entrar» sobre el fondo (no texto)': [onStage(c.cta.bg), 3], 'número de paso': [cr(rgb(c.num.fg), rgb(c.num.bg)), 4.5],
     'cabecera: marca': [cr(rgb(c.brand.fg), topbarBg), 4.5], 'cabecera: subtítulo': [cr(rgb(c.brandSub.fg), topbarBg), 4.5], 'cabecera: «Acerca de»': [cr(rgb(c.aboutBtn.fg), opaque(c.aboutBtn.bg, 'rgb(252,251,248)')), 4.5], 'cabecera: icono (no texto)': [cr(rgb(c.aboutIcon.fg), opaque(c.aboutIcon.bg, 'rgb(252,251,248)')), 3],
     '«Acerca de»: enlace': [cr(rgb(c.aboutLink.fg), dlgBg), 4.5], '«Acerca de»: etiquetas': [cr(rgb(c.aboutDt.fg), dlgBg), 4.5],

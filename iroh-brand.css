@@ -57,9 +57,6 @@
 .welcome__stage{position:relative;overflow:clip;min-height:100%;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);align-items:center;gap:clamp(16px,4vw,64px);
   padding:max(24px,env(safe-area-inset-top)) max(clamp(20px,5vw,72px),env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(clamp(20px,5vw,72px),env(safe-area-inset-left))}
 
-.welcome__close{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:3;display:grid;place-items:center;width:44px;height:44px;border-radius:var(--radius-pill);border:1px solid var(--w-line);background:rgba(6,16,31,.55);color:var(--w-text);cursor:pointer;transition:background var(--motion-fast) var(--ease-out),border-color var(--motion-fast) var(--ease-out)}
-.welcome__close:hover{background:rgba(255,255,255,.12);border-color:rgba(180,195,216,.45)}
-
 .welcome__copy{position:relative;z-index:2;max-width:560px}
 .welcome__eyebrow{margin:0 0 14px;font-size:13px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--w-cyan)}
 .welcome__title{margin:0 0 16px;font-size:clamp(1.75rem,.9rem + min(3vw,4.6dvh),3.1rem);font-weight:600;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
@@ -74,8 +71,7 @@
 .welcome__cta:hover svg{transform:translateX(3px)}
 .welcome__cta:active{transform:translateY(0) scale(.985)}
 .welcome :focus-visible{outline:3px solid #fff;outline-offset:3px}
-.welcome__hint{margin:0;font-size:13.5px;line-height:1.45;color:var(--w-muted)}
-.welcome__credit{margin:30px 0 0;font-size:12.5px;color:#93A3BA;letter-spacing:.01em}
+.welcome__credit{margin:52px 0 0;font-size:12.5px;color:#93A3BA;letter-spacing:.01em}
 .welcome__credit a{display:inline-block;margin:-8px -2px;padding:8px 2px;color:var(--w-muted);font-weight:500;text-decoration:underline;text-decoration-color:rgba(180,195,216,.38);text-decoration-thickness:1px;text-underline-offset:3px;border-radius:3px;transition:color var(--motion-fast) var(--ease-out),text-decoration-color var(--motion-fast) var(--ease-out)}
 .welcome__credit a:hover{color:#fff;text-decoration-color:currentColor}
 @media(pointer:coarse){.welcome__credit a{min-height:44px;display:inline-flex;align-items:center;margin-block:-14px}}
@@ -110,7 +106,7 @@
   .welcome__steps{display:none}
   .welcome__actions{align-self:stretch}
   .welcome__cta{width:100%}
-  .welcome__esc,.welcome__credit{display:none}
+  .welcome__credit{display:none}
 }
 @media(max-width:480px) and (min-height:700px){.welcome__steps{display:flex;margin-bottom:18px;gap:8px}.welcome__steps li{font-size:13px;padding:6px 12px 6px 7px}}
 /* Teléfonos pequeños (320 × 568): menos aire para que el botón siempre quede a la vista */
@@ -118,7 +114,6 @@
   .welcome__stage{padding-top:max(48px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom))}
   .welcome__eyebrow{display:none}
   .welcome__roll,.welcome__float{max-height:30dvh}.welcome__float img{max-height:30dvh}
-  .welcome__hint{font-size:13px}
   .welcome__title{font-size:1.65rem}
   .welcome__desc{font-size:.9375rem;line-height:1.45;margin-bottom:12px}
 }
@@ -131,7 +126,7 @@
   .welcome__title{font-size:clamp(1.35rem,4.2dvh + .7rem,1.9rem);margin-bottom:8px}
   .welcome__eyebrow{margin-bottom:6px;font-size:11px}
   .welcome__desc{font-size:.9375rem;line-height:1.45;margin:0 0 14px}
-  .welcome__steps,.welcome__credit,.welcome__esc{display:none}
+  .welcome__steps,.welcome__credit{display:none}
   .welcome__actions{align-items:flex-start}
   .welcome__cta{min-height:48px;width:auto}
   .welcome__track{display:none}

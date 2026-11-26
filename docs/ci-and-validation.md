@@ -24,21 +24,21 @@ Los eventos de una misma rama se serializan con `concurrency` (`cancel-in-progre
 - `pages-build` y `node-tests` **son los checks obligatorios**: deben pasar, y deben estar marcados como requeridos en la protección de rama de `main`.
 - `browser-tests` es **informativo** (`continue-on-error: true`) y no debe exigirse como check obligatorio hasta que se haya validado en GitHub. Por eso mismo **debe revisarse expresamente antes de fusionar**: un fallo no bloquea el merge por sí solo. Si falla, un paso final emite una anotación `::error` y un resumen en `GITHUB_STEP_SUMMARY` para que no pase inadvertido.
 
-Estado de SIM-IROH-WELCOME-1: el CI remoto **aún no se ha ejecutado** sobre esta release (no hay push ni Pull Request); las comprobaciones descritas aquí se han hecho solo en local.
+Estado de SIM-IROH-WELCOME-2 (candidato, **no publicado**): validado en local; el CI remoto **aún no se ha ejecutado** sobre esta release (no hay push ni Pull Request). Ver [`release-sim-iroh-welcome-2.md`](release-sim-iroh-welcome-2.md).
 
 El job `browser-tests` localiza Chrome del runner y crea un envoltorio (`$RUNNER_TEMP/chrome-nosandbox`) que lo lanza con `--no-sandbox`, porque el runner restringe los user namespaces; lo exporta como `CHROME_BIN`.
 
 ### Variable `MANIFEST_SHA256`
 
-Definida a nivel de workflow en `ci.yml`. Es el **pin aprobado**: el SHA-256 de `scripts/pages-manifest.json` del candidato vigente, **SIM-IROH-WELCOME-1** (`approvedCommit` `6b86a96eff17a513dd0d7bda55313dc882dd890f`, `approvedTree` `3e58a54acf7da83ec21d6cd6216d9b0c6712e43e`):
+Definida a nivel de workflow en `ci.yml`. Es el **pin aprobado**: el SHA-256 de `scripts/pages-manifest.json` del candidato vigente, **SIM-IROH-WELCOME-2** (`approvedCommit` `403e243c8374e5effce0636adfae752644c3a007`, `approvedTree` `7a9b7033660e227e6b44879fbb31ad2a24c2dcd4`):
 
 ```
-81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd
+c8ed94a54a2b926672dee7afde025258f4e335ec999e242d924086aa9e56dda3
 ```
 
 `verify-dist.mjs` la exige. Cambiar el manifiesto obliga a cambiar este valor **en el mismo commit**, de modo que la modificación quede visible en la revisión.
 
-Referencias históricas (ya no vigentes): SIM-IROH-UI-1, manifiesto `25a4d96e…26f82`, archivado en `docs/releases/sim-iroh-ui-1.pages-manifest.json`; SIM-NOFIRVI-1 (35 archivos), manifiesto `cd995db8…cbe24`, archivado en `docs/releases/sim-nofirvi-1.pages-manifest.json`. Los manifiestos archivados no se editan.
+Referencias históricas (ya no vigentes): SIM-IROH-WELCOME-1, manifiesto `81ea7df5…8ebd`, archivado en `docs/releases/sim-iroh-welcome-1.pages-manifest.json`; SIM-IROH-UI-1, manifiesto `25a4d96e…26f82`, archivado en `docs/releases/sim-iroh-ui-1.pages-manifest.json`; SIM-NOFIRVI-1 (35 archivos), manifiesto `cd995db8…cbe24`, archivado en `docs/releases/sim-nofirvi-1.pages-manifest.json`. Los manifiestos archivados no se editan.
 
 ## `scripts/build-pages.mjs`
 
@@ -58,7 +58,7 @@ Verificación local **contra el pin aprobado** (esta es la comprobación de inte
 
 ```bash
 node scripts/build-pages.mjs
-MANIFEST_SHA256=81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd node scripts/verify-dist.mjs
+MANIFEST_SHA256=c8ed94a54a2b926672dee7afde025258f4e335ec999e242d924086aa9e56dda3 node scripts/verify-dist.mjs
 ```
 
 Para que sea una comprobación real, el valor debe ser el pin escrito en `ci.yml` (puedes extraerlo de ahí), nunca un hash recalculado a partir del manifiesto que se está verificando.
@@ -80,7 +80,12 @@ node scripts/run-suites.mjs             # 22 suites Node (NODE_SUITES)
 node scripts/run-suites.mjs --browser   # 6 pruebas de navegador (BROWSER_SUITES); requiere CHROME_BIN
 ```
 
-Cada suite se ejecuta en un proceso aparte, con `cwd` en la raíz y un máximo de 300 s. Una suite **falla** si:
+Cada suite se ejecuta en un proceso aparte, con `cwd` en la raíz y un límite de tiempo por suite:
+
+- **300 s** para 27 de las 28 suites (las 22 de Node y 5 de navegador);
+- **600 s** solo para `tests/iroh-brand-ui.mjs`, que recorre la matriz responsive, zoom, letra ampliada e interacción de la bienvenida (alrededor de 5 minutos en local; se han medido entre 249 y 313 s, según la ejecución).
+
+Una suite **falla** si:
 
 - no se puede ejecutar o excede el tiempo;
 - termina por señal;
@@ -108,7 +113,7 @@ El código de salida es 0 solo si todas las suites pasan y el árbol no cambió.
 
 ```bash
 node scripts/build-pages.mjs
-MANIFEST_SHA256=81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd node scripts/verify-dist.mjs
+MANIFEST_SHA256=c8ed94a54a2b926672dee7afde025258f4e335ec999e242d924086aa9e56dda3 node scripts/verify-dist.mjs
 node scripts/run-suites.mjs                                              # 22 suites Node
 CHROME_BIN=/ruta/a/chrome-o-envoltorio node scripts/run-suites.mjs --browser   # 6 suites de navegador
 ```

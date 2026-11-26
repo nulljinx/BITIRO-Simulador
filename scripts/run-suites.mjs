@@ -82,7 +82,9 @@ if (browser) {
 const failures = [];
 for (const [file, ...args] of list) {
   const t0 = Date.now();
-  const r = spawnSync(process.execPath, [...nodeArgs, join(ROOT, file), ...args], { cwd: ROOT, env, encoding: 'utf8', timeout: 300_000, maxBuffer: 1 << 28 });
+  // La suite de la bienvenida recorre la matriz responsive, zoom, letra ampliada e interacción (≈ 5 min): solo ella dispone de 10 min.
+  const timeout = file === 'tests/iroh-brand-ui.mjs' ? 600_000 : 300_000;
+  const r = spawnSync(process.execPath, [...nodeArgs, join(ROOT, file), ...args], { cwd: ROOT, env, encoding: 'utf8', timeout, maxBuffer: 1 << 28 });
   const out = `${r.stdout || ''}${r.stderr || ''}`;
   let why = null;
   if (r.error) why = `no se pudo ejecutar o excedió el tiempo: ${r.error.message}`;
