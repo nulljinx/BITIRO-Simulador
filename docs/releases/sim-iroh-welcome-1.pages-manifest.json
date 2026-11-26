@@ -1,0 +1,229 @@
+{
+ "schema": 1,
+ "candidate": "SIM-IROH-WELCOME-1",
+ "approvedCommit": "6b86a96eff17a513dd0d7bda55313dc882dd890f",
+ "approvedTree": "3e58a54acf7da83ec21d6cd6216d9b0c6712e43e",
+ "baseRelease": "SIM-IROH-UI-1",
+ "baseCommit": "5f21d2fcb6fab3bc379190fa040904db2ed52d47",
+ "baseApprovedCommit": "acb2679497ce6ed2851fcc814270edfd41764146",
+ "baseApprovedTree": "e453fd53cc13e79677dcfdd9c35241a3cefb6f11",
+ "baseManifestSha256": "25a4d96e4950feb2695f92b488393326be4e0203bc94bda59540035599326f82",
+ "note": "Allowlist explícita del artefacto público de Cloudflare Pages: 43 archivos = 40 idénticos a SIM-IROH-UI-1 + 3 modificados (index.html, iroh-brand.css, iroh-brand.js) que corrigen la bienvenida: sin botón «Bienvenida» en la cabecera (se reabre desde «Acerca de»), recordada por pestaña en sessionStorage y con composición responsive por ancho y alto; no se añade ni se retira ninguna ruta pública. Los assets de la mascota (assets/iroh-mascot-*.webp, con la inscripción de Fundación Mustakis) y sus derivados (isotipo y favicons) usan una identidad institucional cuya autorización declara el responsable del proyecto; este repositorio no incluye el documento ni verifica su alcance, y no implica alianza, patrocinio ni aprobación oficial adicional. La ilustración fue generada con ChatGPT según la procedencia C2PA del original. No se publican bajo licencia abierta. Publicar requiere confirmar que el permiso cubre el sitio web, el repositorio público y los derivados. Ver docs/identidad-iroh-simulator.md y docs/release-sim-iroh-welcome-1.md. El manifiesto de SIM-IROH-UI-1 está archivado en docs/releases/sim-iroh-ui-1.pages-manifest.json. No incluye docs/, tests/ ni examples/.",
+ "files": {
+  "404.html": {
+   "source": "pages/404.html",
+   "sha256": "8ea59ac15e8d2c545137865cb765607d8564dd476ac5d0397ef6d6fa5384b8b5",
+   "bytes": 323
+  },
+  "_headers": {
+   "source": "pages/_headers",
+   "sha256": "1d1b1ecc474264b7b9388134c7dedee9029a533af8a72475749a36c9c03f03b5",
+   "bytes": 528
+  },
+  "assets/fonts/OFL-IBM-Plex.txt": {
+   "source": "assets/fonts/OFL-IBM-Plex.txt",
+   "sha256": "d0283623ef57e722fd0eb688a8041589670c608ab780cd3612d06ba6f153d3fd",
+   "bytes": 4429
+  },
+  "assets/fonts/ibm-plex-mono-latin-400-normal.woff2": {
+   "source": "assets/fonts/ibm-plex-mono-latin-400-normal.woff2",
+   "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
+   "bytes": 14708
+  },
+  "assets/fonts/ibm-plex-mono-latin-500-normal.woff2": {
+   "source": "assets/fonts/ibm-plex-mono-latin-500-normal.woff2",
+   "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
+   "bytes": 14888
+  },
+  "assets/fonts/ibm-plex-sans-latin-400-normal.woff2": {
+   "source": "assets/fonts/ibm-plex-sans-latin-400-normal.woff2",
+   "sha256": "3b646991d30055a93a4ecc499713d4347953a74a947ecab435ab72070cbdab0e",
+   "bytes": 22588
+  },
+  "assets/fonts/ibm-plex-sans-latin-500-normal.woff2": {
+   "source": "assets/fonts/ibm-plex-sans-latin-500-normal.woff2",
+   "sha256": "0717336fb31fcdcde4b8deb3675bb4a0f7f6d484864afcd6751ac29975962203",
+   "bytes": 24184
+  },
+  "assets/fonts/ibm-plex-sans-latin-600-normal.woff2": {
+   "source": "assets/fonts/ibm-plex-sans-latin-600-normal.woff2",
+   "sha256": "8960851d691c054ed38e259bdcf1a6190d157b4203ed5bb32c632a863fb8ec2f",
+   "bytes": 24252
+  },
+  "assets/iroh-favicon-180.png": {
+   "source": "assets/iroh-favicon-180.png",
+   "sha256": "b4f97f8fe2be73146ea0556ee1b904caf622470b91d69789b01253f95165fb9b",
+   "bytes": 13420
+  },
+  "assets/iroh-favicon-192.png": {
+   "source": "assets/iroh-favicon-192.png",
+   "sha256": "1e4f04e2dad997bd370f9c15c2d3ebd5a7cd73c3a6d22265554a7bb99ab122be",
+   "bytes": 14903
+  },
+  "assets/iroh-favicon-32.png": {
+   "source": "assets/iroh-favicon-32.png",
+   "sha256": "264e7f4a545f3d5a8c38c41409edb16b90a4c8583577c6f3eba63c8779917659",
+   "bytes": 1901
+  },
+  "assets/iroh-isotipo-68.webp": {
+   "source": "assets/iroh-isotipo-68.webp",
+   "sha256": "3973d106b2e6c06c3fd1a7c6698c3719f79e04a37694a205a586475d36faa084",
+   "bytes": 2688
+  },
+  "assets/iroh-mascot-420.webp": {
+   "source": "assets/iroh-mascot-420.webp",
+   "sha256": "2cf56c9e99023c579e9b8e4d336a1da1a3934cce62eb7b50d944dd0ea9081f76",
+   "bytes": 34630
+  },
+  "assets/iroh-mascot-640.webp": {
+   "source": "assets/iroh-mascot-640.webp",
+   "sha256": "c3898058e6a215811538b215bb5ec3dd47e0889b32a9b3f99236c4dc572b78ac",
+   "bytes": 58452
+  },
+  "assets/iroh-mascot-960.webp": {
+   "source": "assets/iroh-mascot-960.webp",
+   "sha256": "77c4e781bf1db555f7564cff2171fff17fe3bc2f67f3ed8e1992bcb9067ee838",
+   "bytes": 96560
+  },
+  "assets/plotters/s01.png": {
+   "source": "assets/plotters/s01.png",
+   "sha256": "7e20eca11207b8e2bbf9696a74b250ee4d6887534f5630bf04de49e969e8b18d",
+   "bytes": 366401
+  },
+  "assets/plotters/s02.png": {
+   "source": "assets/plotters/s02.png",
+   "sha256": "6c7720f1165a2ee4e6d2e49c2dd4e587bf247fbbd36abf33d7ea7ccff2a4ae99",
+   "bytes": 466143
+  },
+  "assets/plotters/s03.png": {
+   "source": "assets/plotters/s03.png",
+   "sha256": "e49cdbea8d73426c1a4be6ff78025394901dffebf4e9e16e070f79cd01cc07c5",
+   "bytes": 540289
+  },
+  "assets/plotters/s04.png": {
+   "source": "assets/plotters/s04.png",
+   "sha256": "12d869f6004678f3bb9099e4cf2e7f6978315274316340b8d1aa5943e16a165f",
+   "bytes": 429925
+  },
+  "assets/plotters/s05.png": {
+   "source": "assets/plotters/s05.png",
+   "sha256": "3e735073efe7ff6653e3ee5daabb96643e0e454aeba88aae5929d2accbb975d1",
+   "bytes": 633104
+  },
+  "assets/plotters/s06.png": {
+   "source": "assets/plotters/s06.png",
+   "sha256": "b6134b0493c92c1fa783f898b874f393223e2e53ab3bdc37e355da312729175b",
+   "bytes": 608436
+  },
+  "assets/plotters/s08.png": {
+   "source": "assets/plotters/s08.png",
+   "sha256": "2d887c21b6147cad57dc3e8945bcb43fa8081e5003c5a23948e0978a0c1600eb",
+   "bytes": 547042
+  },
+  "calibration-mode.js": {
+   "source": "calibration-mode.js",
+   "sha256": "b4516b2fe3d20aea2d13f69e9437f87b5d250642f5ce2d83aa132e2a2a76b4fc",
+   "bytes": 7857
+  },
+  "calibration.js": {
+   "source": "calibration.js",
+   "sha256": "6662fbdfca6549f364cecd6867cb25a6d5b26fad55bf008bea7eb4249b0c496c",
+   "bytes": 5262
+  },
+  "extra-tracks.js": {
+   "source": "extra-tracks.js",
+   "sha256": "3e530b770c223feadc69ce5a9b4cd1ae92c34811c9cbea2c525971916c6d83e7",
+   "bytes": 17997
+  },
+  "head-config.js": {
+   "source": "head-config.js",
+   "sha256": "37053579590ce8f9d61573a4c0f8296f4c8bfed8e8149f75583a405c8e30f702",
+   "bytes": 378
+  },
+  "head-sonar.js": {
+   "source": "head-sonar.js",
+   "sha256": "ae4577d63a082eaaaf7888cd0707d9cb6d3ccdc911c4ec6baf9d773c9df0c1b5",
+   "bytes": 5727
+  },
+  "index.html": {
+   "source": "index.html",
+   "sha256": "e670cb33d1033d8a30435dd32a68beef8326430138695bc94e0d48275ed478b8",
+   "bytes": 63606
+  },
+  "iroh-brand.css": {
+   "source": "iroh-brand.css",
+   "sha256": "f32c7d27da7ede2468c546c2221fe22db836d83d9f088bdcc902397d6d312f31",
+   "bytes": 15019
+  },
+  "iroh-brand.js": {
+   "source": "iroh-brand.js",
+   "sha256": "221053757096409740df3ee29c50ee40f31135c3a48056a0b380ee292fede6fd",
+   "bytes": 4652
+  },
+  "iroh-runtime.js": {
+   "source": "iroh-runtime.js",
+   "sha256": "03a61341cc6f75e0b520d40b96b5b8e3390cc128a81137a76dc5082879719da3",
+   "bytes": 24504
+  },
+  "line-geometry.js": {
+   "source": "line-geometry.js",
+   "sha256": "dec09c63fea36d176523f1670457eed68fc4e8b450070ba7e8d8e49e45d6ff79",
+   "bytes": 2375
+  },
+  "renderer3d.js": {
+   "source": "renderer3d.js",
+   "sha256": "2c7934a209311cf8b4b45d32635eb93976da0513eaca98a0e447ec6675007f76",
+   "bytes": 20078
+  },
+  "scenario-editor.js": {
+   "source": "scenario-editor.js",
+   "sha256": "28e3c91671ea389d78f1acad6db1cd7d6bd65b1fb6c301d22a1bbffc1c44c210",
+   "bytes": 8062
+  },
+  "scenario-props.js": {
+   "source": "scenario-props.js",
+   "sha256": "6803df0f42fafe1ce15186f040c0e607e3f675a3b080bc9fe00b434f84aee231",
+   "bytes": 6827
+  },
+  "simulator.js": {
+   "source": "simulator.js",
+   "sha256": "f0a68a59b47e8a3836445aced66754183df420dbd8202b4b390153638a1d28af",
+   "bytes": 43655
+  },
+  "starters.js": {
+   "source": "starters.js",
+   "sha256": "67f39142fbf8b13d2bf32f349f24ffe0ac996f779edee6aa6877c508e72431f0",
+   "bytes": 6193
+  },
+  "strike-physics.js": {
+   "source": "strike-physics.js",
+   "sha256": "f17522c353ed1fa37f57a5fd7a03800e91b596ecc7f11920d314dcbf34df9687",
+   "bytes": 11882
+  },
+  "styles.css": {
+   "source": "styles.css",
+   "sha256": "d80ddd1f64019c07c60d55572433647a499cd932e1df4a84e1c08556ad1784e6",
+   "bytes": 40002
+  },
+  "syntax-highlight.js": {
+   "source": "syntax-highlight.js",
+   "sha256": "111c82af42f4a4683cb9bf3986713f1fad55292f77ecc8f40ac940489e5ec825",
+   "bytes": 4409
+  },
+  "tokens.css": {
+   "source": "tokens.css",
+   "sha256": "da6a5a10c0e9d0966f3e7b8a60c54a7b1608549a72983ccadea9b67771303eea",
+   "bytes": 3927
+  },
+  "tracks.js": {
+   "source": "tracks.js",
+   "sha256": "fbdae9bda13e4081f2f244aa82999c1078c8fc00f3ea4d30b7caea082e03de6b",
+   "bytes": 12442
+  },
+  "ui-shell.js": {
+   "source": "ui-shell.js",
+   "sha256": "0e434c0643a558336f4805161b822e565c6540ba4ecad420d691b73b30ea5900",
+   "bytes": 18350
+  }
+ }
+}

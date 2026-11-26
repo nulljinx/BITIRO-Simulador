@@ -1,6 +1,6 @@
 # Identidad de IROH Simulator
 
-> **Estado:** criterios de SIM-IROH-UI-1 (preparada, no desplegada). Este documento fija el nombre, el crédito y las reglas de uso de la mascota. El responsable del proyecto **confirmó expresamente** contar con la autorización de Fundación Mustakis y su alcance público (ver «Autorización institucional y su alcance»). Este repositorio **no incluye** el documento de autorización ni registra entidad firmante, fecha, referencia ni condiciones.
+> **Estado:** la identidad se originó en SIM-IROH-UI-1; el candidato actual es SIM-IROH-WELCOME-2 (**no publicado**), que solo cambia cómo se entra desde la bienvenida. Este documento fija el nombre, el crédito y las reglas de uso de la mascota. El responsable del proyecto **confirmó expresamente** contar con la autorización de Fundación Mustakis y su alcance público (ver «Autorización institucional y su alcance»). Este repositorio **no incluye** el documento de autorización ni registra entidad firmante, fecha, referencia ni condiciones.
 
 ## Nombre
 
@@ -26,7 +26,7 @@
 
 ## Persistencia añadida
 
-Una sola clave de bienvenida: `bitiro:standalone:welcome:session:v1` (valor `"1"`), en **`sessionStorage`** (por pestaña), escrita al cerrar la bienvenida por cualquier vía. Pestaña nueva → aparece; recargar la misma → no; cerrar la pestaña y abrir otra → aparece de nuevo. Si el almacenamiento falla, la bienvenida no se abre sola y sigue disponible desde «Acerca de» → «Ver la bienvenida». La cabecera ya no tiene botón «Bienvenida». El indicador antiguo `bitiro:standalone:welcome:v1` (`localStorage`, SIM-IROH-UI-1) ya no se lee ni se borra. Duplicar una pestaña o restaurar una sesión puede copiar `sessionStorage` (comportamiento del navegador). Código, escenarios y calibración (`localStorage`) no cambian. La composición de la bienvenida se adapta al ancho **y** al alto del viewport (zoom del navegador y tamaño de letra incluidos). Detalle, pruebas y limitaciones en [`release-sim-iroh-welcome-1.md`](release-sim-iroh-welcome-1.md).
+Una sola clave de bienvenida: `bitiro:standalone:welcome:session:v1` (valor `"1"`), en **`sessionStorage`** (por pestaña), escrita **únicamente al activar «Entrar al simulador»**, que es la única forma de cerrar la bienvenida desde la interfaz (ni Escape ni un clic fuera del botón la cierran ni registran la entrada). Pestaña nueva → aparece; recargar la misma → no; cerrar la pestaña y abrir otra → aparece de nuevo. Si el almacenamiento falla, la bienvenida no se abre sola y sigue disponible desde «Acerca de» → «Ver la bienvenida». La cabecera ya no tiene botón «Bienvenida». El indicador antiguo `bitiro:standalone:welcome:v1` (`localStorage`, SIM-IROH-UI-1) ya no se lee ni se borra. Duplicar una pestaña o restaurar una sesión puede copiar `sessionStorage` (comportamiento del navegador). Código, escenarios y calibración (`localStorage`) no cambian. La composición de la bienvenida se adapta al ancho **y** al alto del viewport (zoom del navegador y tamaño de letra incluidos). Detalle, pruebas y limitaciones en [`release-sim-iroh-welcome-2.md`](release-sim-iroh-welcome-2.md) (antecedente: [`release-sim-iroh-welcome-1.md`](release-sim-iroh-welcome-1.md)).
 
 ## Crédito
 

@@ -7,7 +7,7 @@
 | Capa | Qué es |
 |---|---|
 | Fuente | rama `main` |
-| Artefacto | `dist/` producido por `node scripts/build-pages.mjs`; el número de archivos lo fija `scripts/pages-manifest.json` (35 en SIM-NOFIRVI-1; 43 en SIM-IROH-UI-1) |
+| Artefacto | `dist/` producido por `node scripts/build-pages.mjs`; el número de archivos lo fija `scripts/pages-manifest.json` (35 en SIM-NOFIRVI-1; 43 desde SIM-IROH-UI-1, también en el candidato SIM-IROH-WELCOME-2) |
 | Deployment | Cloudflare Pages sirviendo exactamente ese `dist/` |
 | Identidad del deployment | los SHA-256 de `scripts/pages-manifest.json`, no un nombre de rama |
 
@@ -54,9 +54,10 @@ El ruleset `protect-main` (27346085, `active`, sobre la rama por defecto) es una
 ## Verificación previa a cada deployment
 
 1. `git status` limpio y el commit a publicar identificado.
-2. `node scripts/build-pages.mjs` termina con código 0 (todos los archivos del manifiesto verificados: 35 en SIM-NOFIRVI-1; 43 en SIM-IROH-UI-1).
+2. `node scripts/build-pages.mjs` termina con código 0 (todos los archivos del manifiesto verificados: 35 en SIM-NOFIRVI-1; 43 desde SIM-IROH-UI-1).
 3. Suites Node y de navegador en verde (`node scripts/run-suites.mjs` y `--browser`; ver [`ci-and-validation.md`](ci-and-validation.md)).
 4. Tras publicar: comprobar por HTTPS los hashes y el comportamiento de `404.html` y `_headers` (ver «Comprobación por HTTPS»).
+5. Si la release toca la bienvenida, validarla en el navegador (ver «Despliegue de SIM-IROH-WELCOME-2»).
 
 ## Rollback
 
@@ -109,7 +110,7 @@ Antes de la migración, Pages servía los archivos de `deploy/cloudflare-pages` 
 
 `404.html` y `_headers` son archivos especiales de Pages y **no se exige que se puedan descargar directamente**: `_headers` lo consume Pages para aplicar cabeceras y normalmente no se sirve como contenido, y `404.html` se entrega como respuesta a rutas inexistentes (una petición directa a `/404.html` puede devolver 404 o redirigir). Su integridad queda garantizada por los hashes del artefacto (`build-pages.mjs` y `verify-dist.mjs`) y su efecto se comprueba por comportamiento:
 
-- Los **archivos restantes** (todos menos esos dos: 33 en SIM-NOFIRVI-1; 41 en SIM-IROH-UI-1) se descargan y su SHA-256 debe coincidir con el manifiesto.
+- Los **archivos restantes** (todos menos esos dos: 33 en SIM-NOFIRVI-1; 41 desde SIM-IROH-UI-1) se descargan y su SHA-256 debe coincidir con el manifiesto.
 - `404.html`: una ruta inexistente debe responder **404** con un cuerpo cuyo SHA-256 sea el de `404.html`.
 - `_headers`: la respuesta de `/` (o de cualquier archivo servido) debe incluir las cabeceras que declara `pages/_headers` (como mínimo `Content-Security-Policy`, `X-Content-Type-Options` y `Strict-Transport-Security`).
 
@@ -189,3 +190,20 @@ El rollback no requiere tocar `deploy/cloudflare-pages` ni `main`, y es posible 
 **Los datos del navegador no requieren migración en ninguna dirección:** SIM-IROH-UI-1 solo añade la clave `bitiro:standalone:welcome:v1`; las claves del código, del escenario y de la calibración no cambian. La versión anterior ignora la clave nueva.
 
 Con `Preview branch: None` en el proyecto de Pages (estado registrado el 2026-11-16), subir una rama **no** crea una vista previa pública; solo el merge a `main` publica.
+
+### Despliegue de SIM-IROH-WELCOME-2
+
+> **Estado:** procedimiento preparado; **la release no está desplegada** y nada de lo siguiente se ha ejecutado. Registro: [`release-sim-iroh-welcome-2.md`](release-sim-iroh-welcome-2.md).
+
+El artefacto sigue teniendo 43 archivos; respecto de SIM-IROH-WELCOME-1 cambian `index.html`, `iroh-brand.css` e `iroh-brand.js`. Como en toda release, fusionar en `main` equivale a desplegar.
+
+**Antes del merge (obligatorio):** confirmar en Cloudflare Pages → Deployments, **inmediatamente antes**, el deployment de producción activo (ID, rama, commit, fecha y estado) y que puede restaurarse. Ese es el destino de rollback; este documento no registra ni asume ningún ID. Comprobar además por HTTPS qué sirve producción contra el manifiesto que corresponda a ese commit (si es WELCOME-1: [`releases/sim-iroh-welcome-1.pages-manifest.json`](releases/sim-iroh-welcome-1.pages-manifest.json)).
+
+**Validación de la bienvenida tras el deployment** (pestaña nueva en cada caso):
+1. Se abre sola, con el foco en «Entrar al simulador», sin botón de cierre ni línea informativa bajo el botón.
+2. Escape repetido y clics en el fondo, la mascota o el título no la cierran; recargar la vuelve a mostrar.
+3. «Entrar al simulador» la cierra (ratón o toque, y teclado); recargar la misma pestaña no la reabre.
+4. «Acerca de» → «Ver la bienvenida» la reabre y se cierra con el botón; Escape sigue cerrando «Acerca de».
+5. El código guardado se conserva; sin errores de consola ni violaciones de CSP.
+
+**Rollback:** el procedimiento general de «Rollback». Criterios: un hash distinto, el comportamiento de `404.html` o `_headers` alterado, que no se pueda entrar al simulador, que la bienvenida se cierre sin activar el botón en un navegador soportado, errores de consola o de CSP, o código guardado que no se conserva. No hay migración de datos: se mantiene la clave `bitiro:standalone:welcome:session:v1`.

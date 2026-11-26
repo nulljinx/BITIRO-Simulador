@@ -15,10 +15,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # SHA-256 de scripts/pages-manifest.json (candidato SIM-IROH-WELCOME-1, 43 archivos; base SIM-IROH-UI-1 con manifiesto 25a4d96e…26f82,
-  # archivado en docs/releases/, igual que el de SIM-NOFIRVI-1 cd995db8…cbe24). Cambiar el manifiesto exige cambiar este valor en el
-  # mismo commit, de modo que la modificación sea visible en la revisión.
-  MANIFEST_SHA256: 81ea7df53abbdfa54cdbb6ea464bb82e0662b6bcc2db07258f996a8c0c2e8ebd
+  # SHA-256 de scripts/pages-manifest.json (candidato SIM-IROH-WELCOME-2, 43 archivos; base SIM-IROH-WELCOME-1 con manifiesto 81ea7df5…8ebd,
+  # archivado en docs/releases/, igual que los de SIM-IROH-UI-1 25a4d96e…26f82 y SIM-NOFIRVI-1 cd995db8…cbe24). Cambiar el manifiesto exige
+  # cambiar este valor en el mismo commit, de modo que la modificación sea visible en la revisión.
+  MANIFEST_SHA256: c8ed94a54a2b926672dee7afde025258f4e335ec999e242d924086aa9e56dda3
 
 jobs:
   pages-build:
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '24'
-      - name: Suites Node oficiales (21, lista explícita, el árbol no debe cambiar)
+      - name: Suites Node oficiales (22, lista explícita, el árbol no debe cambiar)
         run: node scripts/run-suites.mjs
 
   # Informativo: NO exigirlo como check obligatorio hasta validarlo en GitHub.
