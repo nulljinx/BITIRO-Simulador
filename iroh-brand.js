@@ -19,7 +19,7 @@
  // ── Bienvenida ─────────────────────────────────────────────────────────────────────────────────────────────
  const welcome=$('welcome');
  if(welcome&&typeof welcome.showModal==='function'){
-  const enter=$('welcomeEnter'),closeBtn=$('welcomeClose'),main=$('workspace'),img=$('welcomeImg');
+  const enter=$('welcomeEnter'),main=$('workspace'),img=$('welcomeImg');
   const store={
    get:()=>{try{return sessionStorage.getItem(KEY);}catch{return null;}},
    set:()=>{try{sessionStorage.setItem(KEY,'1');return true;}catch{return false;}},
@@ -48,9 +48,11 @@
    welcome.addEventListener('animationend',e=>{if(e.target===welcome)go();},{once:true});
    setTimeout(go,400);                               // red de seguridad si no llega animationend
   };
-  welcome.addEventListener('cancel',e=>{e.preventDefault();dismiss();});   // Escape
+  welcome.addEventListener('cancel',e=>{e.preventDefault();});             // Escape no cierra: solo «Entrar al simulador»
+  // `cancel` no basta: sin interacción previa (o al repetir Escape) el navegador cierra el <dialog> sin permitir cancelarlo. Lo impiden
+  // closedby="none" (index.html) y, donde no se admite, anular la tecla; solo mientras la bienvenida está abierta.
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&welcome.open)e.preventDefault();},true);
   enter?.addEventListener('click',dismiss);
-  closeBtn?.addEventListener('click',dismiss);
   document.addEventListener('iroh:welcome-open',e=>open(e.detail&&e.detail.from));   // desde «Acerca de» → «Ver la bienvenida»
   if(!store.get()&&store.works())open(null);
  }
